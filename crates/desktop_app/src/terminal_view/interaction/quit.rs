@@ -33,12 +33,12 @@ impl TerminalView {
                 match blocker {
                     workspaces::WorkspaceDeleteBlocker::Missing => {}
                     workspaces::WorkspaceDeleteBlocker::LastWorkspace => {
-                        crate::ui::toast::info("The last workspace cannot be deleted");
+                        crate::ui::toast::info(t!("The last workspace cannot be deleted"));
                         self.notify_overlay(cx);
                     }
                     workspaces::WorkspaceDeleteBlocker::PinnedWorkspace => {
                         crate::ui::toast::info(
-                            "Pinned workspaces must be unpinned before deleting",
+                            t!("Pinned workspaces must be unpinned before deleting"),
                         );
                         self.notify_overlay(cx);
                     }
@@ -53,7 +53,7 @@ impl TerminalView {
     }
 
     fn notify_pinned_tab_close_blocked(&mut self, cx: &mut Context<Self>) {
-        crate::ui::toast::info("Pinned tabs must be unpinned before closing");
+        crate::ui::toast::info(t!("Pinned tabs must be unpinned before closing"));
         self.notify_overlay(cx);
     }
 
@@ -99,7 +99,7 @@ impl TerminalView {
                         cx.quit();
                     }
                     Err(error) => {
-                        crate::ui::toast::error(format!("Restart failed: {error}"));
+                        crate::ui::toast::error(t!("Restart failed: {error}", error = error));
                         self.notify_overlay(cx);
                     }
                 }
@@ -220,10 +220,10 @@ impl TerminalView {
 
     fn close_warning_title(target: CloseRequestTarget) -> &'static str {
         match target {
-            CloseRequestTarget::Application => "Quit Termy?",
-            CloseRequestTarget::WindowClose => "Close Window?",
-            CloseRequestTarget::TabClose { .. } => "Close Tab?",
-            CloseRequestTarget::WorkspaceDelete { .. } => "Delete Workspace?",
+            CloseRequestTarget::Application => t!("Quit Termy?"),
+            CloseRequestTarget::WindowClose => t!("Close Window?"),
+            CloseRequestTarget::TabClose { .. } => t!("Close Tab?"),
+            CloseRequestTarget::WorkspaceDelete { .. } => t!("Delete Workspace?"),
         }
     }
 
@@ -238,10 +238,10 @@ impl TerminalView {
 
     fn close_warning_final_prompt(target: CloseRequestTarget) -> &'static str {
         match target {
-            CloseRequestTarget::Application => "Quit anyway?",
-            CloseRequestTarget::WindowClose => "Close this window anyway?",
-            CloseRequestTarget::TabClose { .. } => "Close it anyway?",
-            CloseRequestTarget::WorkspaceDelete { .. } => "Delete this workspace anyway?",
+            CloseRequestTarget::Application => t!("Quit anyway?"),
+            CloseRequestTarget::WindowClose => t!("Close this window anyway?"),
+            CloseRequestTarget::TabClose { .. } => t!("Close it anyway?"),
+            CloseRequestTarget::WorkspaceDelete { .. } => t!("Delete this workspace anyway?"),
         }
     }
 
@@ -252,7 +252,8 @@ impl TerminalView {
 
         if matches!(target, CloseRequestTarget::TabClose { .. }) {
             let mut detail =
-                "This tab is running a command or fullscreen terminal app:\n".to_string();
+                t!("This tab is running a command or fullscreen terminal app:").to_string();
+            detail.push('\n');
 
             if let Some(title) = busy_titles.first() {
                 detail.push_str("- ");
@@ -260,17 +261,24 @@ impl TerminalView {
                 detail.push('\n');
             }
 
-            detail.push_str("\nClose this tab anyway?");
+            detail.push('\n');
+            detail.push_str(t!("Close this tab anyway?"));
             return Some(detail);
         }
 
         let count = busy_titles.len();
-        let mut detail = format!(
-            "{} tab{} {} running a command or fullscreen terminal app:\n",
-            count,
-            if count == 1 { "" } else { "s" },
-            if count == 1 { "has" } else { "have" },
-        );
+        let mut detail = if count == 1 {
+            t!(
+                "{count} tab has running a command or fullscreen terminal app:",
+                count = count
+            )
+        } else {
+            t!(
+                "{count} tabs have running a command or fullscreen terminal app:",
+                count = count
+            )
+        };
+        detail.push('\n');
 
         for title in busy_titles {
             detail.push_str("- ");
@@ -367,11 +375,15 @@ impl TerminalView {
 
         self.quit_prompt_in_flight = true;
         let detail = Self::close_warning_detail(target, &busy_titles);
+        let buttons: Vec<&str> = Self::close_warning_buttons(target)
+            .iter()
+            .map(|label| termy::i18n::tr(label))
+            .collect();
         let prompt = window.prompt(
             PromptLevel::Warning,
             Self::close_warning_title(target),
             detail.as_deref(),
-            Self::close_warning_buttons(target),
+            &buttons,
             cx,
         );
         let window_handle = window.window_handle();

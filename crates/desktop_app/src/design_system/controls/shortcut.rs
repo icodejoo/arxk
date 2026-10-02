@@ -256,7 +256,7 @@ impl RenderOnce for ShortcutBox {
                     div()
                         .text_size(CAPTION_SIZE)
                         .text_color(theme.accent)
-                        .child("Press shortcut…"),
+                        .child(t!("Press shortcut…")),
                 ),
             ShortcutState::Unbound => container
                 .child(
@@ -265,14 +265,14 @@ impl RenderOnce for ShortcutBox {
                         .min_w(px(0.0))
                         .text_size(CAPTION_SIZE)
                         .text_color(theme.text_muted)
-                        .child("Unbound"),
+                        .child(t!("Unbound")),
                 )
                 .child(
                     div()
                         .flex_none()
                         .text_size(LABEL_SIZE)
                         .text_color(theme.accent)
-                        .child("Set"),
+                        .child(t!("Set")),
                 ),
         }
     }

@@ -104,7 +104,7 @@ impl TerminalView {
             && !self.runtime_uses_tmux()
             && self.cached_tmux_command_prefix.is_empty()
         {
-            crate::ui::toast::info("Configure tmux_command_prefix to use tmux on Windows");
+            crate::ui::toast::info(t!("Configure tmux_command_prefix to use tmux on Windows"));
             self.notify_overlay(cx);
             return;
         }
@@ -115,12 +115,12 @@ impl TerminalView {
         if !availability.enabled {
             match availability.reason {
                 Some(CommandUnavailableReason::RequiresTmuxRuntime) => {
-                    crate::ui::toast::info("Attach a tmux session to use this command");
+                    crate::ui::toast::info(t!("Attach a tmux session to use this command"));
                     self.notify_overlay(cx);
                     return;
                 }
                 Some(CommandUnavailableReason::InstallCliAlreadyInstalled) => {
-                    crate::ui::toast::info("CLI is already installed");
+                    crate::ui::toast::info(t!("CLI is already installed"));
                     self.notify_overlay(cx);
                     return;
                 }
@@ -130,7 +130,7 @@ impl TerminalView {
                         action,
                         availability.reason
                     );
-                    crate::ui::toast::info("Command unavailable");
+                    crate::ui::toast::info(t!("Command unavailable"));
                     self.notify_overlay(cx);
                     return;
                 }
@@ -440,9 +440,10 @@ impl TerminalView {
                 .as_deref()
                 .is_some_and(|current| current.eq_ignore_ascii_case(layout_name))
         {
-            crate::ui::toast::info(format!(
-                "Load saved layout \"{layout_name}\" before running task \"{}\"",
-                task.name
+            crate::ui::toast::info(t!(
+                "Load saved layout \"{layout_name}\" before running task \"{task_name}\"",
+                layout_name = layout_name,
+                task_name = task.name
             ));
             self.notify_overlay(cx);
             return;

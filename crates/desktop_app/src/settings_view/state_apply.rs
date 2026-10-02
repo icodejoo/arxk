@@ -13,6 +13,7 @@ impl SettingsWindow {
             | EditableField::ThemeLight
             | EditableField::ThemeDark
             | EditableField::AppIcon
+            | EditableField::Language
             | EditableField::BackgroundOpacity
             | EditableField::FontFamily
             | EditableField::UiFontFamily
@@ -60,7 +61,7 @@ impl SettingsWindow {
         match field {
             EditableField::Theme => {
                 if value.is_empty() {
-                    return Err("Theme cannot be empty".to_string());
+                    return Err(t!("Theme cannot be empty").to_string());
                 }
                 let message = crate::config::set_theme_in_config(value)?;
                 let canonical_theme = message
@@ -74,7 +75,7 @@ impl SettingsWindow {
                 let parsed = match value.to_ascii_lowercase().as_str() {
                     "manual" | "off" | "fixed" => termy_core::config_core::AppearanceMode::Manual,
                     "system" | "auto" | "sync" => termy_core::config_core::AppearanceMode::System,
-                    _ => return Err("Theme mode must be manual or system".to_string()),
+                    _ => return Err(t!("Theme mode must be manual or system").to_string()),
                 };
                 self.config.theme_mode = parsed;
                 let canonical = match parsed {
@@ -88,7 +89,7 @@ impl SettingsWindow {
             }
             EditableField::ThemeLight => {
                 if value.is_empty() {
-                    return Err("Light theme cannot be empty".to_string());
+                    return Err(t!("Light theme cannot be empty").to_string());
                 }
                 config::set_root_setting(
                     termy_core::config_core::RootSettingId::ThemeLight,
@@ -99,7 +100,7 @@ impl SettingsWindow {
             }
             EditableField::ThemeDark => {
                 if value.is_empty() {
-                    return Err("Dark theme cannot be empty".to_string());
+                    return Err(t!("Dark theme cannot be empty").to_string());
                 }
                 config::set_root_setting(termy_core::config_core::RootSettingId::ThemeDark, value)?;
                 self.config.theme_dark = value.to_string();
@@ -107,7 +108,7 @@ impl SettingsWindow {
             }
             EditableField::AppIcon => {
                 let parsed = termy_core::config_core::AppIcon::from_str(value)
-                    .ok_or_else(|| "App icon must be default or old".to_string())?;
+                    .ok_or_else(|| t!("App icon must be default or old").to_string())?;
                 let canonical = match parsed {
                     termy_core::config_core::AppIcon::TermyDefault => "default",
                     termy_core::config_core::AppIcon::TermyOld => "old",
@@ -120,11 +121,28 @@ impl SettingsWindow {
                 crate::app_icon::apply(parsed);
                 Ok(())
             }
+            EditableField::Language => {
+                let parsed = termy_core::config_core::AppLanguage::from_str(value)
+                    .ok_or_else(|| t!("Language must be auto, en or zh").to_string())?;
+                let canonical = match parsed {
+                    termy_core::config_core::AppLanguage::Auto => "auto",
+                    termy_core::config_core::AppLanguage::English => "en",
+                    termy_core::config_core::AppLanguage::Chinese => "zh",
+                };
+                config::set_root_setting(
+                    termy_core::config_core::RootSettingId::Language,
+                    canonical,
+                )?;
+                self.config.language = parsed;
+                // 立即生效：设置窗口自己和其他窗口都会按新语言重画。
+                termy::i18n::set_language(parsed);
+                Ok(())
+            }
             EditableField::BackgroundOpacity => {
                 let parsed = value
                     .trim_end_matches('%')
                     .parse::<f32>()
-                    .map_err(|_| "Background opacity must be a number from 0 to 100".to_string())?;
+                    .map_err(|_| t!("Background opacity must be a number from 0 to 100").to_string())?;
                 let opacity = (parsed / 100.0).clamp(0.0, 1.0);
                 self.clear_background_opacity_preview();
                 self.persist_background_opacity(opacity)?;
@@ -132,13 +150,13 @@ impl SettingsWindow {
             }
             EditableField::FontFamily => {
                 if value.trim().is_empty() {
-                    return Err("Font family cannot be empty".to_string());
+                    return Err(t!("Font family cannot be empty").to_string());
                 }
                 let value = crate::font_families::canonical_available_font_family(
                     value,
                     &self.available_font_families,
                 )
-                .ok_or_else(|| "Font family is not installed".to_string())?;
+                .ok_or_else(|| t!("Font family is not installed").to_string())?;
                 config::set_root_setting(
                     termy_core::config_core::RootSettingId::FontFamily,
                     &value,
@@ -148,13 +166,13 @@ impl SettingsWindow {
             }
             EditableField::UiFontFamily => {
                 if value.trim().is_empty() {
-                    return Err("UI font family cannot be empty".to_string());
+                    return Err(t!("UI font family cannot be empty").to_string());
                 }
                 let value = crate::font_families::canonical_available_font_family(
                     value,
                     &self.available_font_families,
                 )
-                .ok_or_else(|| "UI font family is not installed".to_string())?;
+                .ok_or_else(|| t!("UI font family is not installed").to_string())?;
                 config::set_root_setting(
                     termy_core::config_core::RootSettingId::UiFontFamily,
                     &value,
@@ -165,9 +183,9 @@ impl SettingsWindow {
             EditableField::FontSize => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Font size must be a positive number".to_string())?;
+                    .map_err(|_| t!("Font size must be a positive number").to_string())?;
                 if parsed <= 0.0 {
-                    return Err("Font size must be greater than 0".to_string());
+                    return Err(t!("Font size must be greater than 0").to_string());
                 }
                 self.config.font_size = parsed;
                 config::set_root_setting(
@@ -178,18 +196,18 @@ impl SettingsWindow {
             EditableField::LineHeight => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Line height must be a number".to_string())?;
+                    .map_err(|_| t!("Line height must be a number").to_string())?;
                 if !parsed.is_finite() {
-                    return Err("Line height must be finite".to_string());
+                    return Err(t!("Line height must be finite").to_string());
                 }
                 if !(termy_core::config_core::MIN_LINE_HEIGHT
                     ..=termy_core::config_core::MAX_LINE_HEIGHT)
                     .contains(&parsed)
                 {
-                    return Err(format!(
-                        "Line height must be between {} and {}",
-                        termy_core::config_core::MIN_LINE_HEIGHT,
-                        termy_core::config_core::MAX_LINE_HEIGHT
+                    return Err(t!(
+                        "Line height must be between {min} and {max}",
+                        min = termy_core::config_core::MIN_LINE_HEIGHT,
+                        max = termy_core::config_core::MAX_LINE_HEIGHT
                     ));
                 }
                 config::set_root_setting(
@@ -202,9 +220,9 @@ impl SettingsWindow {
             EditableField::PaddingX => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Horizontal padding must be a number".to_string())?;
+                    .map_err(|_| t!("Horizontal padding must be a number").to_string())?;
                 if parsed < 0.0 {
-                    return Err("Horizontal padding cannot be negative".to_string());
+                    return Err(t!("Horizontal padding cannot be negative").to_string());
                 }
                 self.config.padding_x = parsed;
                 config::set_root_setting(
@@ -215,9 +233,9 @@ impl SettingsWindow {
             EditableField::PaddingY => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Vertical padding must be a number".to_string())?;
+                    .map_err(|_| t!("Vertical padding must be a number").to_string())?;
                 if parsed < 0.0 {
-                    return Err("Vertical padding cannot be negative".to_string());
+                    return Err(t!("Vertical padding cannot be negative").to_string());
                 }
                 self.config.padding_y = parsed;
                 config::set_root_setting(
@@ -252,7 +270,7 @@ impl SettingsWindow {
                     }
                     _ => {
                         return Err(
-                            "Windows shell must be cmd, powershell, pwsh, or git_bash".to_string()
+                            t!("Windows shell must be cmd, powershell, pwsh, or git_bash").to_string()
                         );
                     }
                 };
@@ -279,7 +297,7 @@ impl SettingsWindow {
             }
             EditableField::Term => {
                 if value.is_empty() {
-                    return Err("TERM cannot be empty".to_string());
+                    return Err(t!("TERM cannot be empty").to_string());
                 }
                 self.config.term = value.to_string();
                 config::set_root_setting(termy_core::config_core::RootSettingId::Term, value)
@@ -324,7 +342,7 @@ impl SettingsWindow {
             EditableField::ScrollbackHistory => {
                 let parsed = value
                     .parse::<usize>()
-                    .map_err(|_| "Scrollback history must be a positive integer".to_string())?
+                    .map_err(|_| t!("Scrollback history must be a positive integer").to_string())?
                     .min(100_000);
                 self.config.scrollback_history = parsed;
                 config::set_root_setting(
@@ -335,7 +353,7 @@ impl SettingsWindow {
             EditableField::InactiveTabScrollback => {
                 let parsed = value
                     .parse::<usize>()
-                    .map_err(|_| "Inactive tab scrollback must be a positive integer".to_string())?
+                    .map_err(|_| t!("Inactive tab scrollback must be a positive integer").to_string())?
                     .min(100_000);
                 self.config.inactive_tab_scrollback = Some(parsed);
                 config::set_root_setting(
@@ -346,9 +364,9 @@ impl SettingsWindow {
             EditableField::ScrollMultiplier => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Scroll multiplier must be a number".to_string())?;
+                    .map_err(|_| t!("Scroll multiplier must be a number").to_string())?;
                 if !parsed.is_finite() {
-                    return Err("Scroll multiplier must be finite".to_string());
+                    return Err(t!("Scroll multiplier must be finite").to_string());
                 }
                 let parsed = parsed.clamp(0.1, 1000.0);
                 self.config.mouse_scroll_multiplier = parsed;
@@ -361,7 +379,7 @@ impl SettingsWindow {
                 let parsed = match value.to_ascii_lowercase().as_str() {
                     "line" | "bar" | "beam" | "ibeam" => termy_core::config_core::CursorStyle::Line,
                     "block" | "box" => termy_core::config_core::CursorStyle::Block,
-                    _ => return Err("Cursor style must be line or block".to_string()),
+                    _ => return Err(t!("Cursor style must be line or block").to_string()),
                 };
                 self.config.cursor_style = parsed;
                 let canonical = match parsed {
@@ -382,7 +400,7 @@ impl SettingsWindow {
                     }
                     _ => {
                         return Err(
-                            "Scrollbar visibility must be off, always, or on_scroll".to_string()
+                            t!("Scrollbar visibility must be off, always, or on_scroll").to_string()
                         );
                     }
                 };
@@ -406,7 +424,7 @@ impl SettingsWindow {
                     "theme" => termy_core::config_core::TerminalScrollbarStyle::Theme,
                     _ => {
                         return Err(
-                            "Scrollbar style must be neutral, muted_theme, or theme".to_string()
+                            t!("Scrollbar style must be neutral, muted_theme, or theme").to_string()
                         );
                     }
                 };
@@ -431,7 +449,7 @@ impl SettingsWindow {
                         "cinematic" => termy_core::config_core::PaneFocusEffect::Cinematic,
                         "minimal" => termy_core::config_core::PaneFocusEffect::Minimal,
                         _ => return Err(
-                            "Pane focus effect must be off, soft_spotlight, cinematic, or minimal"
+                            t!("Pane focus effect must be off, soft_spotlight, cinematic, or minimal")
                                 .to_string(),
                         ),
                     };
@@ -449,15 +467,15 @@ impl SettingsWindow {
             }
             EditableField::PaneFocusStrength => {
                 if value.is_empty() {
-                    return Err("Pane focus strength cannot be empty".to_string());
+                    return Err(t!("Pane focus strength cannot be empty").to_string());
                 }
                 let has_percent_suffix = value.ends_with('%');
                 let normalized_input = value.trim_end_matches('%').trim();
                 let parsed = normalized_input
                     .parse::<f32>()
-                    .map_err(|_| "Pane focus strength must be a finite number".to_string())?;
+                    .map_err(|_| t!("Pane focus strength must be a finite number").to_string())?;
                 if !parsed.is_finite() {
-                    return Err("Pane focus strength must be a finite number".to_string());
+                    return Err(t!("Pane focus strength must be a finite number").to_string());
                 }
                 let normalized = if has_percent_suffix {
                     parsed / 100.0
@@ -483,7 +501,7 @@ impl SettingsWindow {
         match field {
             EditableField::TabFallbackTitle => {
                 if value.is_empty() {
-                    return Err("Fallback title cannot be empty".to_string());
+                    return Err(t!("Fallback title cannot be empty").to_string());
                 }
                 self.config.tab_title.fallback = value.to_string();
                 config::set_root_setting(
@@ -493,7 +511,7 @@ impl SettingsWindow {
             }
             EditableField::TabTitlePriority => {
                 if value.is_empty() {
-                    return Err("Title priority cannot be empty".to_string());
+                    return Err(t!("Title priority cannot be empty").to_string());
                 }
                 self.config.tab_title.priority = value
                     .split(',')
@@ -505,7 +523,7 @@ impl SettingsWindow {
                         acc
                     });
                 if self.config.tab_title.priority.is_empty() {
-                    return Err("Title priority must contain valid sources".to_string());
+                    return Err(t!("Title priority must contain valid sources").to_string());
                 }
                 config::set_root_setting(
                     termy_core::config_core::RootSettingId::TabTitlePriority,
@@ -520,7 +538,7 @@ impl SettingsWindow {
                     "static" => termy_core::config_core::TabTitleMode::Static,
                     _ => {
                         return Err(
-                            "Tab title mode must be smart, shell, explicit, or static".to_string()
+                            t!("Tab title mode must be smart, shell, explicit, or static").to_string()
                         );
                     }
                 };
@@ -538,7 +556,7 @@ impl SettingsWindow {
             }
             EditableField::TabTitleExplicitPrefix => {
                 if value.is_empty() {
-                    return Err("Explicit prefix cannot be empty".to_string());
+                    return Err(t!("Explicit prefix cannot be empty").to_string());
                 }
                 self.config.tab_title.explicit_prefix = value.to_string();
                 config::set_root_setting(
@@ -548,7 +566,7 @@ impl SettingsWindow {
             }
             EditableField::TabTitlePromptFormat => {
                 if value.is_empty() {
-                    return Err("Prompt format cannot be empty".to_string());
+                    return Err(t!("Prompt format cannot be empty").to_string());
                 }
                 self.config.tab_title.prompt_format = value.to_string();
                 config::set_root_setting(
@@ -558,7 +576,7 @@ impl SettingsWindow {
             }
             EditableField::TabTitleCommandFormat => {
                 if value.is_empty() {
-                    return Err("Command format cannot be empty".to_string());
+                    return Err(t!("Command format cannot be empty").to_string());
                 }
                 self.config.tab_title.command_format = value.to_string();
                 config::set_root_setting(
@@ -575,7 +593,7 @@ impl SettingsWindow {
                     "always" => termy_core::config_core::TabCloseVisibility::Always,
                     _ => {
                         return Err(
-                            "Tab close visibility must be active_hover, hover, or always"
+                            t!("Tab close visibility must be active_hover, hover, or always")
                                 .to_string(),
                         );
                     }
@@ -603,7 +621,7 @@ impl SettingsWindow {
                     "uniform" | "fixed" | "equal" => termy_core::config_core::TabWidthMode::Uniform,
                     _ => {
                         return Err(
-                            "Tab width mode must be uniform, stable, active_grow, or active_grow_sticky"
+                            t!("Tab width mode must be uniform, stable, active_grow, or active_grow_sticky")
                                 .to_string(),
                         );
                     }
@@ -625,7 +643,7 @@ impl SettingsWindow {
                     "top" => termy_core::config_core::TabBarPosition::Top,
                     "right" => termy_core::config_core::TabBarPosition::Right,
                     _ => {
-                        return Err("Tab bar position must be top or right".to_string());
+                        return Err(t!("Tab bar position must be top or right").to_string());
                     }
                 };
                 self.config.tab_bar_position = parsed;
@@ -641,9 +659,9 @@ impl SettingsWindow {
             EditableField::SidebarWidth => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Sidebar width must be a positive number".to_string())?;
+                    .map_err(|_| t!("Sidebar width must be a positive number").to_string())?;
                 if parsed <= 0.0 {
-                    return Err("Sidebar width must be greater than 0".to_string());
+                    return Err(t!("Sidebar width must be greater than 0").to_string());
                 }
                 let width = parsed.clamp(
                     termy_core::config_core::MIN_SIDEBAR_WIDTH,
@@ -684,7 +702,7 @@ impl SettingsWindow {
                 let parsed = match value.to_ascii_lowercase().as_str() {
                     "home" | "user" => termy_core::config_core::WorkingDirFallback::Home,
                     "process" | "cwd" => termy_core::config_core::WorkingDirFallback::Process,
-                    _ => return Err("Working dir fallback must be home or process".to_string()),
+                    _ => return Err(t!("Working dir fallback must be home or process").to_string()),
                 };
                 self.config.working_dir_fallback = parsed;
                 let canonical = match parsed {
@@ -699,9 +717,9 @@ impl SettingsWindow {
             EditableField::WindowWidth => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Default width must be a positive number".to_string())?;
+                    .map_err(|_| t!("Default width must be a positive number").to_string())?;
                 if parsed <= 0.0 {
-                    return Err("Default width must be greater than 0".to_string());
+                    return Err(t!("Default width must be greater than 0").to_string());
                 }
                 self.config.window_width = parsed;
                 config::set_root_setting(
@@ -712,9 +730,9 @@ impl SettingsWindow {
             EditableField::WindowHeight => {
                 let parsed = value
                     .parse::<f32>()
-                    .map_err(|_| "Default height must be a positive number".to_string())?;
+                    .map_err(|_| t!("Default height must be a positive number").to_string())?;
                 if parsed <= 0.0 {
-                    return Err("Default height must be greater than 0".to_string());
+                    return Err(t!("Default height must be greater than 0").to_string());
                 }
                 self.config.window_height = parsed;
                 config::set_root_setting(
@@ -736,7 +754,7 @@ impl SettingsWindow {
             self.set_custom_color_for_id(id, None);
         } else {
             let Some(parsed) = termy_core::config_core::Rgb8::from_hex(value) else {
-                return Err("Color must be #RRGGBB".to_string());
+                return Err(t!("Color must be #RRGGBB").to_string());
             };
             let canonical = format!("#{:02x}{:02x}{:02x}", parsed.r, parsed.g, parsed.b);
             config::set_color_setting(id, Some(&canonical))?;

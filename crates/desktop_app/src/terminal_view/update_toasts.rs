@@ -22,19 +22,20 @@ fn update_toast_effect(state: Option<&UpdateState>) -> UpdateToastEffect {
     match state {
         Some(UpdateState::Available { version, .. }) => UpdateToastEffect::Enqueue {
             kind: crate::ui::toast::ToastKind::Info,
-            message: format!("Update v{version} available"),
+            message: t!("Update v{version} available", version = version),
         },
         Some(UpdateState::Downloaded { version, .. }) => UpdateToastEffect::StartOrUpdateProgress {
-            message: format!("Installing v{version}"),
+            message: t!("Installing v{version}", version = version),
         },
         Some(UpdateState::Installing { version }) => UpdateToastEffect::StartOrUpdateProgress {
-            message: format!("Installing v{version}"),
+            message: t!("Installing v{version}", version = version),
         },
         Some(UpdateState::InstallerLaunched { version }) => {
             UpdateToastEffect::FinishProgressOrEnqueue {
                 kind: crate::ui::toast::ToastKind::Info,
-                message: format!(
-                    "Installer launched for v{version}; Termy will reopen when setup finishes"
+                message: t!(
+                    "Installer launched for v{version}; Termy will reopen when setup finishes",
+                    version = version
                 ),
             }
         }
@@ -44,7 +45,7 @@ fn update_toast_effect(state: Option<&UpdateState>) -> UpdateToastEffect {
         },
         Some(UpdateState::Error(message)) => UpdateToastEffect::FinishProgressOrEnqueue {
             kind: crate::ui::toast::ToastKind::Error,
-            message: format!("Update failed: {message}"),
+            message: t!("Update failed: {message}", message = message),
         },
         Some(UpdateState::UpToDate) => UpdateToastEffect::DismissProgressToast,
         _ => UpdateToastEffect::None,
@@ -54,22 +55,22 @@ fn update_toast_effect(state: Option<&UpdateState>) -> UpdateToastEffect {
 fn installed_update_toast_message(version: &str) -> String {
     #[cfg(target_os = "macos")]
     {
-        format!("v{version} installed \u{2014} reopen from /Applications")
+        t!("v{version} installed \u{2014} reopen from /Applications", version = version)
     }
     #[cfg(target_os = "windows")]
     {
-        format!("v{} installed \u{2014} restart to apply", version)
+        t!("v{version} installed \u{2014} restart to apply", version = version)
     }
     #[cfg(target_os = "linux")]
     {
-        format!(
-            "v{} installed to ~/.local/bin \u{2014} restart to apply",
-            version
+        t!(
+            "v{version} installed to ~/.local/bin \u{2014} restart to apply",
+            version = version
         )
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     {
-        format!("v{} installed \u{2014} restart to apply", version)
+        t!("v{version} installed \u{2014} restart to apply", version = version)
     }
 }
 

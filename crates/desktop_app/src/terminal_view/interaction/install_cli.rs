@@ -17,7 +17,7 @@ impl TerminalView {
 
     pub(in super::super) fn install_cli_action(&mut self, cx: &mut Context<Self>) {
         if !self.install_cli_available() {
-            crate::ui::toast::info("CLI is already installed");
+            crate::ui::toast::info(t!("CLI is already installed"));
             self.notify_overlay(cx);
             return;
         }
@@ -33,35 +33,34 @@ impl TerminalView {
                         cx,
                     );
                     if shell_setup.profile_updated {
-                        crate::ui::toast::success(format!(
-                            "CLI installed to {}. Updated {} and activated PATH in this shell.",
-                            path_str,
-                            shell_setup.profile_path.display()
+                        crate::ui::toast::success(t!(
+                            "CLI installed to {path}. Updated {profile} and activated PATH in this shell.",
+                            path = path_str,
+                            profile = shell_setup.profile_path.display()
                         ));
                     } else {
-                        crate::ui::toast::success(format!(
-                            "CLI installed to {}. {} already configures Termy PATH; activated PATH in this shell.",
-                            path_str,
-                            shell_setup.profile_path.display()
+                        crate::ui::toast::success(t!(
+                            "CLI installed to {path}. {profile} already configures Termy PATH; activated PATH in this shell.",
+                            path = path_str,
+                            profile = shell_setup.profile_path.display()
                         ));
                     }
                 } else {
                     #[cfg(target_os = "windows")]
                     {
                         if let Some(parent) = install_path.parent() {
-                            crate::ui::toast::success(format!(
-                                "CLI installed to {}. Add {} to PATH: setx PATH \"%PATH%;{}\"",
-                                path_str,
-                                parent.display(),
-                                parent.display()
+                            crate::ui::toast::success(t!(
+                                "CLI installed to {path}. Add {dir} to PATH: setx PATH \"%PATH%;{dir}\"",
+                                path = path_str,
+                                dir = parent.display()
                             ));
                         } else {
-                            crate::ui::toast::success(format!("CLI installed to {}", path_str));
+                            crate::ui::toast::success(t!("CLI installed to {path}", path = path_str));
                         }
                     }
                     #[cfg(not(target_os = "windows"))]
                     {
-                        crate::ui::toast::success(format!("CLI installed to {path_str}"));
+                        crate::ui::toast::success(t!("CLI installed to {path}", path = path_str));
                     }
                 }
 

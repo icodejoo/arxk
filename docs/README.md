@@ -26,6 +26,7 @@ scorecard, testing strategy, and decomposition plans.
 
 - [Configuration](configuration.md) — generated; do not edit directly.
 - [Keybindings](keybindings.md) — generated; do not edit directly.
+- [Internationalization](i18n.md) — interface languages, the `t!` macro, and how to add strings.
 - [libtermy](libtermy.md)
 - [Plugin runtime](plugins.md)
 

@@ -122,14 +122,14 @@ pub(crate) fn open_new_tab_in_main_window(
     dir: Option<String>,
 ) -> Result<(), String> {
     let Some(main_window) = preferred_window::<TerminalView>(cx) else {
-        return Err("No main window available for new tab deeplink".to_string());
+        return Err(t!("No main window available for new tab deeplink").to_string());
     };
 
     main_window
         .update(cx, |view, window, cx| {
             view.open_new_tab_from_deeplink(command.as_deref(), dir.as_deref(), window, cx);
         })
-        .map_err(|error| format!("Failed to open new tab from deeplink: {error}"))?;
+        .map_err(|error| t!("Failed to open new tab from deeplink: {error}", error = error))?;
 
     Ok(())
 }
@@ -166,7 +166,7 @@ fn open_settings_window_with_section(
                 view.set_active_section(section, window, cx);
                 window.activate_window();
             })
-            .map_err(|error| format!("Failed to focus settings window: {error}"));
+            .map_err(|error| t!("Failed to focus settings window: {error}", error = error));
     }
     // If a settings window still exists after a failed focus attempt (for example,
     // during a re-entrant update), do not open a duplicate.
@@ -186,19 +186,19 @@ fn open_settings_window_with_section(
 
     #[cfg(target_os = "macos")]
     let titlebar = Some(gpui_kit::TitlebarOptions {
-        title: Some("Settings".into()),
+        title: Some(t!("Settings").into()),
         appears_transparent: true,
         traffic_light_position: Some(gpui_kit::point(px(12.0), px(10.0))),
     });
     #[cfg(target_os = "windows")]
     let titlebar = Some(gpui_kit::TitlebarOptions {
-        title: Some("Settings".into()),
+        title: Some(t!("Settings").into()),
         appears_transparent: false,
         traffic_light_position: None,
     });
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     let titlebar = Some(gpui_kit::TitlebarOptions {
-        title: Some("Settings".into()),
+        title: Some(t!("Settings").into()),
         appears_transparent: false,
         traffic_light_position: None,
     });
@@ -219,7 +219,7 @@ fn open_settings_window_with_section(
         |window, cx| {
             #[cfg(target_os = "linux")]
             {
-                window.set_window_title("Settings");
+                window.set_window_title(t!("Settings"));
             }
             cx.new(|cx| {
                 let mut view = SettingsWindow::new(window, cx);
@@ -231,7 +231,7 @@ fn open_settings_window_with_section(
         },
     )
     .map(|_| ())
-    .map_err(|error| format!("Failed to open settings window: {error}"))
+    .map_err(|error| t!("Failed to open settings window: {error}", error = error))
 }
 
 #[cfg(test)]

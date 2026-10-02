@@ -237,6 +237,17 @@ impl TerminalView {
             tab_bg.a = (tab_bg.a + TAB_ACTIVE_BG_LIFT_HORIZONTAL).min(1.0);
         }
         tab_bg.a *= anim;
+        // 自定义标签背景色：覆盖默认底色，活动和悬停时更实。
+        let tab_tint = self.tab_color_at(input.index);
+        let tint_base_alpha = if input.is_active {
+            tab_colors::TAB_TINT_ACTIVE_ALPHA
+        } else {
+            tab_colors::TAB_TINT_IDLE_ALPHA
+        };
+        if let Some(tint) = tab_tint {
+            tab_bg = tint.with_alpha(tint_base_alpha + tab_colors::TAB_TINT_HOVER_BOOST * hover_progress);
+            tab_bg.a *= anim;
+        }
 
         let mut close_text_color = if input.is_active {
             palette.active_tab_text
@@ -261,6 +272,10 @@ impl TerminalView {
         };
         if input.is_drag_source {
             hover_tab_bg.a = (hover_tab_bg.a + self.scaled_chrome_surface_alpha(0.06)).min(1.0);
+        }
+        if let Some(tint) = tab_tint {
+            hover_tab_bg =
+                tint.with_alpha((tint_base_alpha + tab_colors::TAB_TINT_HOVER_BOOST).min(1.0));
         }
         let drag_offset_y = if input.is_drag_source { -1.0 } else { 0.0 };
         let visual_offset_y = if orientation == TabStripOrientation::Horizontal {

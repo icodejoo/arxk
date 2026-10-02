@@ -130,13 +130,13 @@ pub(crate) fn fetch_theme_store_themes_blocking(
                 }
                 return Ok((cache.themes, false));
             }
-            Err("Server returned 304 Not Modified but no matching local cache exists".to_string())
+            Err(t!("Server returned 304 Not Modified but no matching local cache exists").to_string())
         }
         Ok(response) => {
             let etag = response.header("etag").map(|s| s.to_string());
             let raw = response
                 .into_string()
-                .map_err(|error| format!("Invalid theme registry response: {error}"))?;
+                .map_err(|error| t!("Invalid theme registry response: {error}", error = error))?;
             let parsed = parse_theme_store_payload(&raw, registry_url)?;
 
             save_theme_store_cache(&parsed, registry_url, etag);
@@ -147,7 +147,7 @@ pub(crate) fn fetch_theme_store_themes_blocking(
             if let Some(cache) = cached.filter(|c| c.registry_url == registry_url) {
                 Ok((cache.themes, true))
             } else {
-                Err(format!("Failed to fetch store themes: {error}"))
+                Err(t!("Failed to fetch store themes: {error}", error = error))
             }
         }
     }
@@ -241,7 +241,7 @@ pub(crate) fn fetch_theme_for_deeplink_blocking(slug: &str) -> Result<ThemeStore
     themes
         .into_iter()
         .find(|theme| theme.slug.eq_ignore_ascii_case(&slug))
-        .ok_or_else(|| format!("Theme '{slug}' was not found in the theme registry"))
+        .ok_or_else(|| t!("Theme '{slug}' was not found in the theme registry", slug = slug))
 }
 
 pub(crate) fn logout_auth_session_blocking(
@@ -257,7 +257,7 @@ pub(crate) fn logout_auth_session_blocking(
     match response {
         Ok(_) => Ok(()),
         Err(ureq::Error::Status(401, _)) => Ok(()),
-        Err(error) => Err(format!("Failed to logout from theme store: {error}")),
+        Err(error) => Err(t!("Failed to logout from theme store: {error}", error = error)),
     }
 }
 
@@ -267,7 +267,7 @@ pub(crate) fn clear_auth_session() -> Result<(), String> {
     };
     if path.exists() {
         std::fs::remove_file(path)
-            .map_err(|error| format!("Failed to clear auth session: {error}"))?;
+            .map_err(|error| t!("Failed to clear auth session: {error}", error = error))?;
     }
     Ok(())
 }
@@ -342,13 +342,13 @@ pub(crate) fn persist_installed_theme_versions(
     versions: &HashMap<String, String>,
 ) -> Result<(), String> {
     let Some(path) = installed_theme_state_path() else {
-        return Err("Config path unavailable".to_string());
+        return Err(t!("Config path unavailable").to_string());
     };
     let Some(parent) = path.parent() else {
-        return Err("Invalid installed-theme metadata path".to_string());
+        return Err(t!("Invalid installed-theme metadata path").to_string());
     };
     std::fs::create_dir_all(parent)
-        .map_err(|error| format!("Failed to create metadata directory: {error}"))?;
+        .map_err(|error| t!("Failed to create metadata directory: {error}", error = error))?;
 
     let mut sorted_entries: Vec<(String, String)> = versions
         .iter()
@@ -357,9 +357,9 @@ pub(crate) fn persist_installed_theme_versions(
     sorted_entries.sort_unstable_by(|left, right| left.0.cmp(&right.0));
     let normalized: HashMap<String, String> = sorted_entries.into_iter().collect();
     let contents = serde_json::to_string_pretty(&normalized)
-        .map_err(|error| format!("Failed to serialize installed themes: {error}"))?;
+        .map_err(|error| t!("Failed to serialize installed themes: {error}", error = error))?;
     std::fs::write(&path, contents)
-        .map_err(|error| format!("Failed to write installed themes metadata: {error}"))?;
+        .map_err(|error| t!("Failed to write installed themes metadata: {error}", error = error))?;
     Ok(())
 }
 
@@ -369,31 +369,31 @@ pub(crate) fn install_theme_from_store_blocking(
     let file_url = theme
         .file_url
         .clone()
-        .ok_or_else(|| format!("Theme '{}' has no downloadable file URL", theme.slug))?;
+        .ok_or_else(|| t!("Theme '{slug}' has no downloadable file URL", slug = theme.slug))?;
 
     let response = ureq::get(&file_url)
         .set("Accept", "application/json")
         .call()
-        .map_err(|error| format!("Failed to download theme '{}': {error}", theme.slug))?;
+        .map_err(|error| t!("Failed to download theme '{slug}': {error}", slug = theme.slug, error = error))?;
     let contents = response
         .into_string()
-        .map_err(|error| format!("Failed to read theme '{}': {error}", theme.slug))?;
+        .map_err(|error| t!("Failed to read theme '{slug}': {error}", slug = theme.slug, error = error))?;
 
     parse_theme_colors_json(&contents)
-        .map_err(|error| format!("Failed to validate theme '{}': {error}", theme.name))?;
+        .map_err(|error| t!("Failed to validate theme '{name}': {error}", name = theme.name, error = error))?;
 
     let normalized_slug = theme.slug.trim().to_ascii_lowercase();
     let installed_version = theme.latest_version.clone().unwrap_or_default();
 
     let path = installed_theme_file_path(&normalized_slug)
-        .ok_or_else(|| "Config path unavailable".to_string())?;
+        .ok_or_else(|| t!("Config path unavailable").to_string())?;
     let Some(parent) = path.parent() else {
-        return Err("Invalid installed theme path".to_string());
+        return Err(t!("Invalid installed theme path").to_string());
     };
     std::fs::create_dir_all(parent)
-        .map_err(|error| format!("Failed to create installed theme directory: {error}"))?;
+        .map_err(|error| t!("Failed to create installed theme directory: {error}", error = error))?;
     std::fs::write(&path, contents)
-        .map_err(|error| format!("Failed to write installed theme file: {error}"))?;
+        .map_err(|error| t!("Failed to write installed theme file: {error}", error = error))?;
 
     let mut installed_versions = load_installed_theme_versions();
     installed_versions.insert(normalized_slug.clone(), installed_version.clone());
@@ -402,7 +402,7 @@ pub(crate) fn install_theme_from_store_blocking(
     Ok(InstalledTheme {
         slug: normalized_slug,
         version: installed_version,
-        message: format!("Installed theme '{}'", theme.name),
+        message: t!("Installed theme '{name}'", name = theme.name),
     })
 }
 
@@ -438,7 +438,7 @@ pub(crate) fn uninstall_installed_theme(slug: &str) -> Result<bool, String> {
         && path.exists()
     {
         std::fs::remove_file(&path)
-            .map_err(|error| format!("Failed to remove installed theme file: {error}"))?;
+            .map_err(|error| t!("Failed to remove installed theme file: {error}", error = error))?;
     }
 
     persist_installed_theme_versions(&installed_versions)?;
@@ -448,12 +448,12 @@ pub(crate) fn uninstall_installed_theme(slug: &str) -> Result<bool, String> {
 fn normalize_slug(slug: &str) -> Result<String, String> {
     let slug = slug.trim().to_ascii_lowercase();
     if slug.is_empty() {
-        return Err("Theme install deeplink is missing a slug".to_string());
+        return Err(t!("Theme install deeplink is missing a slug").to_string());
     }
     if !slug.chars().all(|character| {
         character.is_ascii_lowercase() || character.is_ascii_digit() || character == '-'
     }) {
-        return Err(format!("Invalid theme slug '{slug}'"));
+        return Err(t!("Invalid theme slug '{slug}'", slug = slug));
     }
     Ok(slug)
 }
@@ -463,7 +463,7 @@ fn parse_theme_store_payload(
     registry_url: &str,
 ) -> Result<Vec<ThemeStoreTheme>, String> {
     let payload: ThemeStorePayload = serde_json::from_str(raw_json)
-        .map_err(|error| format!("Invalid theme registry response: {error}"))?;
+        .map_err(|error| t!("Invalid theme registry response: {error}", error = error))?;
 
     let mut parsed: Vec<ThemeStoreTheme> = match payload {
         ThemeStorePayload::Legacy(themes) => themes

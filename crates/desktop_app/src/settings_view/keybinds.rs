@@ -1,7 +1,27 @@
 use super::*;
 use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
+
+/// 动作标题的 `&'static str` 缓存：标题由配置名动态拼出，翻译查表需要静态字符串，
+/// 命令数量有限，所以每个标题只泄漏一份。
+static ACTION_TITLE_CACHE: LazyLock<Mutex<HashMap<String, &'static str>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl SettingsWindow {
+    /// 把动作配置名转成界面标题，并按当前语言翻译（查不到译文时保持英文）。
+    fn translated_action_title(config_name: &str) -> String {
+        let title = Self::action_title_from_config_name(config_name);
+        let interned = {
+            let mut cache = ACTION_TITLE_CACHE
+                .lock()
+                .unwrap_or_else(|poison| poison.into_inner());
+            *cache
+                .entry(title)
+                .or_insert_with_key(|key| -> &'static str { Box::leak(key.clone().into_boxed_str()) })
+        };
+        termy::i18n::tr(interned).to_string()
+    }
+
     fn bindable_actions() -> Vec<CommandId> {
         termy_core::command_core::command_specs()
             .iter()
@@ -297,7 +317,7 @@ impl SettingsWindow {
         if displayed.is_empty() {
             trigger.to_string()
         } else {
-            displayed.join(" then ")
+            displayed.join(t!(" then "))
         }
     }
 
@@ -324,7 +344,7 @@ impl SettingsWindow {
         match Self::canonicalize_captured_trigger(key, event.keystroke.modifiers) {
             Ok(Some(trigger)) => self.assign_action_binding(action, &trigger, cx),
             Ok(None) => {}
-            Err(error) => crate::ui::toast::error(format!("Invalid key combo: {error}")),
+            Err(error) => crate::ui::toast::error(t!("Invalid key combo: {error}", error = error)),
         }
     }
 
@@ -353,16 +373,16 @@ impl SettingsWindow {
     ) -> AnyElement {
         let config_name = action.config_name();
         let action_title = if action == CommandId::CycleTabs {
-            "Switch tabs".to_string()
+            t!("Switch tabs").to_string()
         } else {
-            Self::action_title_from_config_name(config_name)
+            Self::translated_action_title(config_name)
         };
         let is_capturing = self.capturing_action == Some(action);
         let binding_display = if is_capturing {
-            "Press shortcut…".to_string()
+            t!("Press shortcut…").to_string()
         } else {
             action_bindings.get(&action).map_or_else(
-                || "Unbound".to_string(),
+                || t!("Unbound").to_string(),
                 |trigger| Self::display_trigger_for_os(trigger),
             )
         };
@@ -370,7 +390,7 @@ impl SettingsWindow {
         let accent = self.accent();
         let focus_ring = self.input_focus_ring();
         let description = (action == CommandId::CycleTabs)
-            .then_some("Move to the next tab, wrapping after the last");
+            .then_some(t!("Move to the next tab, wrapping after the last"));
         div()
             .id(SharedString::from(format!("keybind-row-{config_name}")))
             .debug_selector(move || format!("keybind-row-{config_name}"))
@@ -488,9 +508,9 @@ impl SettingsWindow {
                         .text_color(self.text_secondary()),
                 )
                 .child(if self.show_more_tab_shortcuts {
-                    "Hide extra tab shortcuts"
+                    t!("Hide extra tab shortcuts")
                 } else {
-                    "More tab shortcuts"
+                    t!("More tab shortcuts")
                 })
                 .on_click(cx.listener(|view, _, _, cx| {
                     view.show_more_tab_shortcuts = !view.show_more_tab_shortcuts;
@@ -527,9 +547,9 @@ impl SettingsWindow {
             ))
             .child(self.wrap_setting_with_scroll_anchor(
                 "keybind",
-                self.render_settings_group("Tab switching", tab_rows),
+                self.render_settings_group(t!("Tab switching"), tab_rows),
             ))
-            .child(self.render_settings_group("Other shortcuts", rows))
+            .child(self.render_settings_group(t!("Other shortcuts"), rows))
     }
 }
 

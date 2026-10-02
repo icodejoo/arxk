@@ -102,7 +102,7 @@ impl TmuxClient {
         let launch_plan = Self::launch_plan(&config);
         let enforce_managed_session_ui = matches!(&config.launch, TmuxLaunchTarget::Managed { .. });
         if launch_plan.session_name.trim().is_empty() {
-            return Err(anyhow!("tmux session name cannot be empty"));
+            return Err(anyhow!(t!("tmux session name cannot be empty")));
         }
 
         if !config.command_prefix.is_empty() {
@@ -247,7 +247,7 @@ impl TmuxClient {
         R: Read + Send + 'static,
     {
         if session_name.trim().is_empty() {
-            return Err(anyhow!("tmux session name cannot be empty"));
+            return Err(anyhow!(t!("tmux session name cannot be empty")));
         }
 
         let (request_tx, request_rx) = flume::bounded::<ControlRequest>(REQUEST_QUEUE_BOUND);
@@ -435,7 +435,7 @@ impl TmuxClient {
             ));
         }
         if self.session_name == source.session_name {
-            return Err(anyhow!("These windows already share the same tmux session"));
+            return Err(anyhow!(t!("These windows already share the same tmux session")));
         }
         let target = format!("{}:", self.session_name);
         self.run_control_status_args(&["move-window", "-d", "-s", window_id, "-t", &target])

@@ -405,7 +405,7 @@ impl TerminalView {
                             cx.quit();
                         }
                         Err(error) => {
-                            crate::ui::toast::error(format!("Restart failed: {error}"));
+                            crate::ui::toast::error(t!("Restart failed: {error}", error = error));
                             this.notify_overlay(cx);
                         }
                     },
@@ -462,7 +462,7 @@ impl TerminalView {
 
         let title = match &dialog.status {
             ReleaseNotesStatus::Ready { title, .. } => title.clone(),
-            _ => format!("Version {}", dialog.version),
+            _ => t!("Version {version}", version = dialog.version),
         };
         let body = match &dialog.status {
             ReleaseNotesStatus::Loading => div()
@@ -476,7 +476,7 @@ impl TerminalView {
                     div()
                         .text_size(px(13.0))
                         .text_color(muted_text)
-                        .child("Fetching release notes from GitHub…"),
+                        .child(t!("Fetching release notes from GitHub…")),
                 )
                 .child(render_update_progress(
                     &UpdateProgress::Indeterminate { caption: None },
@@ -518,7 +518,7 @@ impl TerminalView {
                                 cx.stop_propagation();
                             }),
                         )
-                        .child("Try again"),
+                        .child(t!("Try again")),
                 )
                 .into_any_element(),
             ReleaseNotesStatus::Ready { markdown, .. } if markdown.trim().is_empty() => div()
@@ -526,7 +526,7 @@ impl TerminalView {
                 .py(px(24.0))
                 .text_size(px(13.0))
                 .text_color(muted_text)
-                .child("This release has no written notes.")
+                .child(t!("This release has no written notes."))
                 .into_any_element(),
             ReleaseNotesStatus::Ready { markdown, .. } => self.render_markdown_document(
                 markdown,
@@ -589,7 +589,7 @@ impl TerminalView {
                                             .text_size(px(14.0))
                                             .font_weight(FontWeight::SEMIBOLD)
                                             .text_color(primary_text)
-                                            .child("Release notes"),
+                                            .child(t!("Release notes")),
                                     )
                                     .child(
                                         div()
@@ -950,7 +950,7 @@ impl TerminalView {
                 MouseButton::Left,
                 cx.listener(move |_this, _event, _window, cx| {
                     if webbrowser::open(&url).is_err() {
-                        crate::ui::toast::error("Could not open link");
+                        crate::ui::toast::error(t!("Could not open link"));
                     }
                     cx.stop_propagation();
                 }),
@@ -967,7 +967,7 @@ impl TerminalView {
         style: &MarkdownStyle,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let fallback = if alt.trim().is_empty() { "Image" } else { alt };
+        let fallback = if alt.trim().is_empty() { t!("Image") } else { alt };
         match self.release_notes_images.get(url) {
             Some(MarkdownImageState::Ready(source)) => gpui_kit::img(source.clone())
                 .id(gpui_kit::ElementId::from(gpui_kit::SharedString::from(
@@ -980,7 +980,7 @@ impl TerminalView {
             Some(MarkdownImageState::Loading) => div()
                 .text_size(px(12.0))
                 .text_color(style.muted_text)
-                .child(format!("Loading {fallback}…"))
+                .child(t!("Loading {name}…", name = fallback))
                 .into_any_element(),
             _ => self.render_markdown_link(index, fallback, url, style, cx),
         }
@@ -1085,7 +1085,7 @@ fn render_wrapping_markdown_text(inlines: &[Inline], style: &MarkdownStyle) -> A
             if let Some(url) = urls.get(index)
                 && webbrowser::open(url).is_err()
             {
-                crate::ui::toast::error("Could not open link");
+                crate::ui::toast::error(t!("Could not open link"));
             }
         })
         .into_any_element()

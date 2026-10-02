@@ -30,6 +30,11 @@ Platform note: the Agent Sidebar/Workspace is currently unavailable on Windows b
 - Theme applied when system appearance is dark
 - Group: `THEME`
 
+`language`
+- Default: `auto`
+- Interface language: follow the system, or force English or Chinese
+- Group: `LANGUAGE`
+
 `app_icon`
 - Default: `default`
 - macOS app icon shown in the Dock and app switcher

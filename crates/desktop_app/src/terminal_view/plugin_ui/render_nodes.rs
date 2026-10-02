@@ -403,7 +403,7 @@ impl PluginUiView {
                     .find(|option| option.value == selected)
                     .map(|option| option.label.clone())
                     .or_else(|| placeholder.clone())
-                    .unwrap_or_else(|| "Select…".to_string());
+                    .unwrap_or_else(|| t!("Select…").to_string());
                 let enabled = !*disabled && !self.busy;
                 let is_open = self.open_select.as_deref() == Some(id.as_str());
                 let focused = self.focused_control.as_deref() == Some(id.as_str());
@@ -569,7 +569,7 @@ impl PluginUiView {
                             .child(if query.is_empty() {
                                 search_placeholder
                                     .clone()
-                                    .unwrap_or_else(|| "Type to filter…".to_string())
+                                    .unwrap_or_else(|| t!("Type to filter…").to_string())
                             } else {
                                 query
                             }),
@@ -582,7 +582,7 @@ impl PluginUiView {
                             .py(px(12.0))
                             .text_size(px(12.0))
                             .text_color(style.muted_text)
-                            .child("Loading…"),
+                            .child(t!("Loading…")),
                     );
                 }
                 let rows = children.iter().filter_map(|child| {

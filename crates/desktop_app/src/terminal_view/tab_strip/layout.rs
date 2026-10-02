@@ -4,7 +4,7 @@ use crate::terminal_view::tab_strip::state::TabStripOrientation;
 pub(crate) const TAB_STRIP_RAIL_GUTTER_WIDTH: f32 = 0.0;
 const TAB_STRIP_LAYOUT_EPSILON: f32 = 0.001;
 #[cfg(target_os = "windows")]
-const WINDOWS_CAPTION_BUTTONS_RESERVED_WIDTH: f32 = 140.0;
+pub(crate) const WINDOWS_CAPTION_BUTTONS_RESERVED_WIDTH: f32 = 140.0;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) struct TabStripGeometry {

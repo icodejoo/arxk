@@ -10,6 +10,7 @@ appropriate package instead of creating a crate for each helper.
 - `src/terminal_ui/`: GPUI terminal grid, pixel snapping, input adapters, and tmux pane display.
 - `src/design_system/`: stateless GPUI controls, tokens, metrics, and icons.
 - `src/native_sdk/`: platform clipboard, permissions, and file-manager integration.
+- `src/i18n/`: interface language state, the `t!` macro, and translation tables ([Internationalization](../i18n.md)).
 - `src/auto_update/`: update checks and installation coordinated with GPUI.
 
 The library target exposes presentation helpers to the desktop binary, examples,

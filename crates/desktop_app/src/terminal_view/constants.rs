@@ -114,6 +114,24 @@ pub(super) const MAX_PANE_FOCUS_STRENGTH: f32 = 2.0;
 pub(super) const PANE_DRAG_HANDLE_WIDTH: f32 = 44.0;
 pub(super) const PANE_DRAG_HANDLE_HEIGHT: f32 = 12.0;
 pub(super) const PANE_DRAG_HANDLE_INSET_Y: f32 = 3.0;
+
+// 窗格左上角的标题小标签（覆盖绘制，不占布局）。
+/// 标签字号。
+pub(super) const PANE_TITLE_FONT_SIZE: f32 = 11.0;
+/// 标签距窗格左边的留白（高度固定为 1em，上下骑在边框上）。
+pub(super) const PANE_TITLE_INSET: f32 = 3.0;
+/// 标签左右内边距。
+pub(super) const PANE_TITLE_PADDING_X: f32 = 6.0;
+/// 标签可用宽度低于此值时不绘制。
+pub(super) const PANE_TITLE_MIN_WIDTH: f32 = 32.0;
+/// 标题文字颜色（黄色，RGB 分量）。
+pub(super) const PANE_TITLE_TITLE_RGB: (f32, f32, f32) = (0.98, 0.80, 0.20);
+/// 标题文字透明度（不随焦点变化）。
+pub(super) const PANE_TITLE_TITLE_ALPHA: f32 = 0.75;
+/// 路径文字透明度（颜色取前景反差色，不随焦点变化）。
+pub(super) const PANE_TITLE_PATH_ALPHA: f32 = 0.55;
+/// 估算文字宽度用：平均字符宽度 / 字号。
+pub(super) const PANE_TITLE_CHAR_WIDTH_RATIO: f32 = 0.6;
 #[cfg(debug_assertions)]
 pub(super) const RENDER_METRICS_LOG_INTERVAL: Duration = Duration::from_secs(1);
 
@@ -158,3 +176,7 @@ pub(super) const UPDATE_BANNER_PROGRESS_HEIGHT: f32 = 6.0;
 pub(super) const RELEASE_NOTES_PANEL_WIDTH: f32 = 560.0;
 pub(super) const RELEASE_NOTES_PANEL_MAX_HEIGHT: f32 = 560.0;
 pub(super) const RELEASE_NOTES_SCRIM_ALPHA: f32 = 0.28;
+/// 快捷键弹窗宽度。
+pub(super) const SHORTCUTS_PANEL_WIDTH: f32 = 520.0;
+/// 快捷键弹窗最大高度。
+pub(super) const SHORTCUTS_PANEL_MAX_HEIGHT: f32 = 560.0;

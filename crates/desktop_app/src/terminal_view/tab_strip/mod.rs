@@ -9,6 +9,8 @@ pub(super) mod render_shared;
 pub(super) mod render_tab_item;
 pub(super) mod render_text_measure;
 pub(super) mod render_vertical;
+#[cfg(target_os = "windows")]
+pub(super) mod render_window_controls;
 pub(super) mod render_workspace_sidebar;
 pub(super) mod state;
 pub(super) mod titlebar_drag;

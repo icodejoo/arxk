@@ -7,6 +7,8 @@ use super::state::{TabStripOrientation, TabStripOverflowState};
 use super::transitions::ClosingTabOverlaySlot;
 
 impl TerminalView {
+    // Windows 上右侧留白带改由 render_windows_caption_lane 渲染。
+    #[cfg_attr(target_os = "windows", allow(dead_code))]
     fn render_inset_lane(id: &'static str, width: f32, cx: &mut Context<Self>) -> AnyElement {
         div()
             .id(id)
@@ -20,13 +22,44 @@ impl TerminalView {
             .into_any_element()
     }
 
+    /// 顶栏 logo 图片（编进程序，解码结果全局缓存一份，避免每帧重复分配）。
+    #[cfg(target_os = "windows")]
+    fn termy_titlebar_icon() -> std::sync::Arc<gpui_kit::Image> {
+        static ICON: std::sync::OnceLock<std::sync::Arc<gpui_kit::Image>> =
+            std::sync::OnceLock::new();
+        ICON.get_or_init(|| {
+            std::sync::Arc::new(gpui_kit::Image::from_bytes(
+                gpui_kit::ImageFormat::Png,
+                include_bytes!("../../../../../assets/termy_icon.png").to_vec(),
+            ))
+        })
+        .clone()
+    }
+
     pub(super) fn render_termy_branding(
         font_family: &SharedString,
         termy_branding_slot_start_x: f32,
         termy_branding_slot_width: f32,
         termy_branding_text_color: gpui_kit::Rgba,
+        cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         (termy_branding_slot_width > f32::EPSILON).then(|| {
+            // Windows：显示 logo 图标（同原生标题栏图标）；其他平台显示文字。
+            #[cfg(target_os = "windows")]
+            let content = {
+                let _ = (font_family, termy_branding_text_color);
+                gpui_kit::img(Self::termy_titlebar_icon())
+                    .w(px(WINDOWS_TITLEBAR_ICON_SIZE))
+                    .h(px(WINDOWS_TITLEBAR_ICON_SIZE))
+                    .into_any_element()
+            };
+            #[cfg(not(target_os = "windows"))]
+            let content = div()
+                .font_family(font_family.clone())
+                .text_size(px(TOP_STRIP_TERMY_BRANDING_FONT_SIZE))
+                .text_color(termy_branding_text_color)
+                .child(TOP_STRIP_TERMY_BRANDING_TEXT)
+                .into_any_element();
             div()
                 .id("tabbar-termy-branding")
                 .absolute()
@@ -38,13 +71,17 @@ impl TerminalView {
                 .flex()
                 .items_center()
                 .justify_center()
-                .child(
-                    div()
-                        .font_family(font_family.clone())
-                        .text_size(px(TOP_STRIP_TERMY_BRANDING_FONT_SIZE))
-                        .text_color(termy_branding_text_color)
-                        .child(TOP_STRIP_TERMY_BRANDING_TEXT),
+                // 点击 logo 打开快捷键弹窗。
+                .cursor_pointer()
+                .on_mouse_down(
+                    MouseButton::Left,
+                    cx.listener(|this, _event: &MouseDownEvent, window, cx| {
+                        window.prevent_default();
+                        this.open_shortcuts_popup(cx);
+                        cx.stop_propagation();
+                    }),
                 )
+                .child(content)
                 .into_any_element()
         })
     }
@@ -56,7 +93,7 @@ impl TerminalView {
         font_family: &SharedString,
         tabbar_bg: gpui_kit::Rgba,
         _show_sidebar_chrome: bool,
-        _cx: &mut Context<Self>,
+        cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         let font_family_key = font_family.as_ref();
         let branding_width =
@@ -82,6 +119,7 @@ impl TerminalView {
                     leading_inset_width,
                     branding_width,
                     branding_text_color,
+                    cx,
                 ))
                 .into_any_element(),
         )
@@ -111,6 +149,7 @@ impl TerminalView {
                 termy_branding_slot_start_x,
                 termy_branding_slot_width,
                 termy_branding_text_color,
+                cx,
             ))
             .children(workspace_actions)
             .into_any_element()
@@ -426,6 +465,7 @@ impl TerminalView {
                 this.on_action_rail_mouse_move(event, window, cx);
             }))
             .child(
+                div().flex_none().w(px(TABBAR_ACTION_SLOT_WIDTH)).child(
                 div()
                     .id("tabbar-new-tab-button")
                     .w_full()
@@ -452,6 +492,7 @@ impl TerminalView {
                             .size(px(13.0))
                             .text_color(icon_color),
                     ),
+                ),
             )
             .into_any_element()
     }
@@ -573,7 +614,24 @@ impl TerminalView {
                     .then(|| self.render_action_rail(&state, &palette, cx)),
             )
             .children((state.geometry.right_inset_width > 0.0).then(|| {
-                Self::render_inset_lane("tabbar-right-inset", state.geometry.right_inset_width, cx)
+                // Windows：右侧留白带里放拖动区和窗口控制按钮。
+                #[cfg(target_os = "windows")]
+                {
+                    Self::render_windows_caption_lane(
+                        Some(state.geometry.right_inset_width),
+                        window,
+                        colors.foreground,
+                        cx,
+                    )
+                }
+                #[cfg(not(target_os = "windows"))]
+                {
+                    Self::render_inset_lane(
+                        "tabbar-right-inset",
+                        state.geometry.right_inset_width,
+                        cx,
+                    )
+                }
             }))
             .into_any_element()
     }

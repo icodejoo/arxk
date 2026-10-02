@@ -204,7 +204,7 @@ impl CommandPaletteItem {
             title: format!("{label}: {truncated}"),
             keywords,
             enabled: true,
-            status_hint: Some("Copy".to_string()),
+            status_hint: Some(t!("Copy").to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::AppInfoEntry { label, value },
         }
@@ -212,7 +212,7 @@ impl CommandPaletteItem {
 
     pub(super) fn ssh_host(host: &termy_core::ssh_core::SshHost, enabled: bool) -> Self {
         Self {
-            title: format!("Connect to {}", host.display_name),
+            title: t!("Connect to {name}", name = host.display_name),
             keywords: format!(
                 "ssh connect remote host server {} {} {} {}",
                 host.display_name, host.hostname, host.username, host.port
@@ -221,7 +221,7 @@ impl CommandPaletteItem {
             status_hint: if enabled {
                 Some(format!("{}@{}", host.username, host.hostname))
             } else {
-                Some("native runtime required".to_string())
+                Some(t!("native runtime required").to_string())
             },
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::SshHost {
@@ -232,7 +232,7 @@ impl CommandPaletteItem {
 
     pub(super) fn manage_ssh_hosts() -> Self {
         Self {
-            title: "Manage SSH Hosts…".to_string(),
+            title: t!("Manage SSH Hosts…").to_string(),
             keywords: "ssh manage hosts add edit remove settings remote server".to_string(),
             enabled: true,
             status_hint: None,
@@ -243,10 +243,10 @@ impl CommandPaletteItem {
 
     pub(super) fn app_info_copy_all(payload: String) -> Self {
         Self {
-            title: "Copy all to clipboard".to_string(),
+            title: t!("Copy all to clipboard").to_string(),
             keywords: "copy all info clipboard".to_string(),
             enabled: true,
-            status_hint: Some("Copy".to_string()),
+            status_hint: Some(t!("Copy").to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::AppInfoCopyAll { payload },
         }

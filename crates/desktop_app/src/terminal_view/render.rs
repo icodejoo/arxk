@@ -140,6 +140,20 @@ fn kitty_graphics_layers(
     (below_background, below_text, above_text)
 }
 
+/// 窗格标签的一段文字：纯色底、直角、高 1em，只负责文字块本身，位置由调用方决定。
+fn pane_label_chip(text: String, fg: gpui_kit::Hsla, bg: gpui_kit::Rgba) -> AnyElement {
+    div()
+        .h(px(PANE_TITLE_FONT_SIZE))
+        .px(px(PANE_TITLE_PADDING_X))
+        .whitespace_nowrap()
+        .text_size(px(PANE_TITLE_FONT_SIZE))
+        .line_height(px(PANE_TITLE_FONT_SIZE))
+        .text_color(fg)
+        .bg(bg)
+        .child(text)
+        .into_any_element()
+}
+
 fn blend_rgb_only(base: gpui_kit::Rgba, target: gpui_kit::Rgba, factor: f32) -> gpui_kit::Rgba {
     let factor = factor.clamp(0.0, 1.0);
     let inv = 1.0 - factor;
@@ -1683,7 +1697,7 @@ impl TerminalView {
                                                             toast_id,
                                                         );
                                                         crate::ui::toast::dismiss_toast(toast_id);
-                                                        crate::ui::toast::success("Config fixed");
+                                                        crate::ui::toast::success(t!("Config fixed"));
                                                     }
                                                     this.notify_overlay(cx);
                                                     cx.stop_propagation();
@@ -1701,7 +1715,7 @@ impl TerminalView {
                                             .text_size(px(11.0))
                                             .text_color(accent)
                                             .bg(copied_bg)
-                                            .child("Copied")
+                                            .child(t!("Copied"))
                                     }))
                                     .children((toast_action_label.is_none() && !is_copied && is_hovered).then(|| {
                                         let toast_message_for_copy = toast_message.clone();
@@ -1754,7 +1768,7 @@ impl TerminalView {
                                                     },
                                                 ),
                                             )
-                                            .child("Copy")
+                                            .child(t!("Copy"))
                                     })),
                             )
                             .on_mouse_move(cx.listener(move |this, _event, _window, cx| {
@@ -2050,7 +2064,7 @@ impl TerminalView {
                             cx.stop_propagation();
                         }),
                     )
-                    .child("Open Search")
+                    .child(t!("Open Search"))
                     .into_any_element()
             };
             let copy_image_item = || {
@@ -2074,7 +2088,7 @@ impl TerminalView {
                             cx.stop_propagation();
                         }),
                     )
-                    .child("Copy Image")
+                    .child(t!("Copy Image"))
                     .into_any_element()
             };
             let plugin_command_item = |command: termy_core::plugin_runtime::PluginCommand| {
@@ -2178,7 +2192,7 @@ impl TerminalView {
                             })
                             .child(command_item(
                                 "terminal-context-menu-copy",
-                                "Copy",
+                                t!("Copy"),
                                 state.can_copy,
                                 CommandAction::Copy,
                             ))
@@ -2187,7 +2201,7 @@ impl TerminalView {
                             })
                             .child(command_item(
                                 "terminal-context-menu-paste",
-                                "Paste",
+                                t!("Paste"),
                                 state.can_paste,
                                 CommandAction::Paste,
                             ))
@@ -2242,9 +2256,9 @@ impl TerminalView {
         };
 
         let default_terminal_label = if cfg!(target_os = "windows") {
-            "Default Shell"
+            t!("Default Shell")
         } else {
-            "New Terminal Tab"
+            t!("New Terminal Tab")
         };
 
         let mut panel = div()
@@ -2320,7 +2334,7 @@ impl TerminalView {
                         .text_size(px(10.0))
                         .font_weight(gpui_kit::FontWeight::MEDIUM)
                         .text_color(overlay_style.panel_foreground(0.58))
-                        .child("SSH HOSTS"),
+                        .child(t!("SSH HOSTS")),
                 );
             for host in self.saved_ssh_hosts.clone() {
                 let row_id = SharedString::from(format!("new-tab-menu-ssh-{}", host.id));
@@ -2396,6 +2410,7 @@ impl TerminalView {
             let row_height = 30.0;
             let content_height = (row_height * (3 + plugin_commands.len()) as f32)
                 + 8.0
+                + tab_colors::TAB_COLOR_MENU_HEIGHT
                 + if plugin_commands.is_empty() { 0.0 } else { 7.0 };
             let menu_height = context_menu_visible_height(
                 content_height,
@@ -2415,7 +2430,45 @@ impl TerminalView {
                 a: 1.0,
             };
             let hover_bg = overlay_style.chrome_panel_cursor(0.22);
-            let pin_label = if state.pinned { "Unpin Tab" } else { "Pin Tab" };
+            let pin_label = if state.pinned { t!("Unpin Tab") } else { t!("Pin Tab") };
+            // 标签颜色色块：第一个空心圈是“恢复默认”，其后是各预设色；当前色带高亮描边。
+            let current_tab_color = self.tab_colors.get(&state.tab_id).copied();
+            let mut tab_color_swatches = Vec::<AnyElement>::new();
+            for color in std::iter::once(None).chain(tab_colors::TabColor::ALL.map(Some)) {
+                let tab_id = state.tab_id;
+                let selected = current_tab_color == color;
+                let ring = if selected { text_active } else { text_disabled };
+                let swatch_id = format!("tab-context-menu-color-{}", color.map_or_else(
+                    || "none".to_string(),
+                    |color| format!("{color:?}"),
+                ));
+                tab_color_swatches.push(
+                    div()
+                        .id(SharedString::from(swatch_id))
+                        .w(px(tab_colors::TAB_COLOR_SWATCH_SIZE))
+                        .h(px(tab_colors::TAB_COLOR_SWATCH_SIZE))
+                        .flex_none()
+                        .rounded_full()
+                        .border_1()
+                        .border_color(if color.is_some() && !selected {
+                            gpui_kit::Rgba { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }
+                        } else {
+                            ring
+                        })
+                        .when_some(color, |swatch, color| swatch.bg(color.with_alpha(1.0)))
+                        .cursor_pointer()
+                        .hover(move |style| style.border_color(text_active))
+                        .on_mouse_down(
+                            MouseButton::Left,
+                            cx.listener(move |view, _event: &MouseDownEvent, _window, cx| {
+                                let _ = view.set_tab_color_by_id(tab_id, color, cx);
+                                let _ = view.close_tab_context_menu(cx);
+                                cx.stop_propagation();
+                            }),
+                        )
+                        .into_any_element(),
+                );
+            }
             let plugin_command_item = |command: termy_core::plugin_runtime::PluginCommand| {
                 let enabled = command.disabled_reason.is_none();
                 let text_color = if enabled { text_active } else { text_disabled };
@@ -2547,8 +2600,28 @@ impl TerminalView {
                                             },
                                         ),
                                     )
-                                    .child("Rename Tab")
+                                    .child(t!("Rename Tab"))
                             })
+                            // Tab Color
+                            .child(
+                                div()
+                                    .h(px(row_height))
+                                    .px(px(10.0))
+                                    .flex()
+                                    .items_center()
+                                    .text_size(px(13.0))
+                                    .text_color(text_active)
+                                    .child(t!("Tab Color")),
+                            )
+                            .child(
+                                div()
+                                    .h(px(tab_colors::TAB_COLOR_MENU_HEIGHT - row_height))
+                                    .px(px(10.0))
+                                    .flex()
+                                    .items_start()
+                                    .gap(px(tab_colors::TAB_COLOR_SWATCH_GAP))
+                                    .children(tab_color_swatches),
+                            )
                             // Pin/Unpin Tab
                             .child(
                                 div()
@@ -2602,7 +2675,7 @@ impl TerminalView {
                                             },
                                         ),
                                     )
-                                    .child("Close Tab")
+                                    .child(t!("Close Tab"))
                             }),
                         "tab-context-menu-enter",
                     ))
@@ -2696,6 +2769,7 @@ impl TerminalView {
         let toast_overlay = self.render_toast_overlay(&colors, cx);
         let link_preview_overlay = self.render_link_preview_overlay();
         let release_notes_overlay = self.render_release_notes_dialog(window, &colors, cx);
+        let shortcuts_overlay = self.render_shortcuts_popup(window, &colors, cx);
         let resize_overlay = self
             .resize_indicator_visible_until
             .zip(self.resize_indicator_dims)
@@ -2758,9 +2832,9 @@ impl TerminalView {
             #[cfg(debug_assertions)]
             let runtime_wakeups = self.debug_overlay_stats.runtime_wakeups;
             #[cfg(target_os = "macos")]
-            let display_hint = "up to 120Hz";
+            let display_hint = t!("up to 120Hz");
             #[cfg(not(target_os = "macos"))]
-            let display_hint = "system";
+            let display_hint = t!("system");
 
             let overlay = div()
                 .id("debug-metrics-overlay")
@@ -2779,9 +2853,10 @@ impl TerminalView {
                 .flex()
                 .flex_col()
                 .gap(px(2.0))
-                .child(format!("Display: {display_hint}"))
-                .child(format!(
-                    "Render callbacks: {render_callbacks_per_second:.1}/s"
+                .child(t!("Display: {hint}", hint = display_hint))
+                .child(t!(
+                    "Render callbacks: {value}/s",
+                    value = format!("{render_callbacks_per_second:.1}")
                 ))
                 .child(format!(
                     "Callback interval ms p50/p95/p99: {callback_interval_p50_ms:.2}/{callback_interval_p95_ms:.2}/{callback_interval_p99_ms:.2}"
@@ -2789,12 +2864,13 @@ impl TerminalView {
                 .child(format!(
                     "CPU view build ms p50/p95/p99: {view_build_p50_ms:.2}/{view_build_p95_ms:.2}/{view_build_p99_ms:.2}"
                 ))
-                .child(format!("CPU: {cpu_percent:.1}%"))
-                .child(format!("Process RSS: {memory}"))
-                .child(format!("Drain passes: {terminal_event_drain_passes}"))
-                .child(format!("Redraws: {terminal_redraws}"))
-                .child(format!(
-                    "Alt fallback redraws: {alt_screen_fallback_redraws}"
+                .child(t!("CPU: {value}%", value = format!("{cpu_percent:.1}")))
+                .child(t!("Process RSS: {memory}", memory = memory))
+                .child(t!("Drain passes: {count}", count = terminal_event_drain_passes))
+                .child(t!("Redraws: {count}", count = terminal_redraws))
+                .child(t!(
+                    "Alt fallback redraws: {count}",
+                    count = alt_screen_fallback_redraws
                 ))
                 .child(format!(
                     "Spans ms: dmg={span_damage_ms:.2} rebuild={span_rebuild_ms:.2} shape={span_shaping_ms:.2} paint={span_paint_ms:.2}"
@@ -2850,6 +2926,7 @@ impl TerminalView {
             .children(toast_overlay)
             .children(link_preview_overlay)
             .children(release_notes_overlay)
+            .children(shortcuts_overlay)
             .into_any_element()
     }
 }
@@ -2924,6 +3001,7 @@ impl Render for TerminalView {
         let mut pane_dividers = Vec::<AnyElement>::new();
         let mut pane_resize_handles = Vec::<AnyElement>::new();
         let mut pane_focus_accents = Vec::<AnyElement>::new();
+        let mut pane_title_labels = Vec::<AnyElement>::new();
         let mut pane_drag_handles = Vec::<AnyElement>::new();
         let mut pane_drop_overlays = Vec::<AnyElement>::new();
         #[cfg(debug_assertions)]
@@ -3401,6 +3479,85 @@ impl Render for TerminalView {
                     );
                 }
 
+                if multi_pane {
+                    // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 1em，不占布局。
+                    // 有自定义标题：左标题（半透明黄）、右路径（半透明反差色）；
+                    // 没有标题：路径就是标题，只有左段。中间留出拖拽手柄，放不下就不画。
+                    let label_texts = TerminalView::pane_label_texts(
+                        self.pane_titles.get(pane.id.as_str()).map(String::as_str),
+                        self.pane_cwds.get(pane.id.as_str()).map(String::as_str),
+                    );
+                    let side_max_width =
+                        (pane_frame_width - PANE_DRAG_HANDLE_WIDTH) * 0.5 - PANE_TITLE_INSET * 2.0;
+                    if let Some(label_texts) = label_texts
+                        && side_max_width >= PANE_TITLE_MIN_WIDTH
+                    {
+                        // 底色与面板背景一致且不透明，盖住边框线；透明度恒定，不随焦点变化。
+                        let mut label_bg = colors.background;
+                        label_bg.a = 1.0;
+                        let label_top = (pane_frame_top - PANE_TITLE_FONT_SIZE * 0.5).max(0.0);
+                        // 过长时压缩中段、保留开头和最后一层目录（同标签页标题的规则）。
+                        // 宽度按字符数估算，溢出部分不再处理。
+                        let fit_text = |text: &str| {
+                            TerminalView::format_tab_label_for_render_measured(
+                                text,
+                                side_max_width - PANE_TITLE_PADDING_X * 2.0,
+                                |text| {
+                                    text.chars().count() as f32
+                                        * PANE_TITLE_FONT_SIZE
+                                        * PANE_TITLE_CHAR_WIDTH_RATIO
+                                },
+                            )
+                        };
+
+                        let (red, green, blue) = PANE_TITLE_TITLE_RGB;
+                        let title_color: gpui_kit::Hsla = gpui_kit::Rgba {
+                            r: red,
+                            g: green,
+                            b: blue,
+                            a: self.scaled_chrome_alpha(PANE_TITLE_TITLE_ALPHA),
+                        }
+                        .into();
+                        let left_text = fit_text(&label_texts.left);
+                        if !left_text.is_empty() {
+                            pane_title_labels.push(
+                                div()
+                                    .absolute()
+                                    .left(px(pane_frame_left + PANE_TITLE_INSET))
+                                    .top(px(label_top))
+                                    .child(pane_label_chip(left_text, title_color, label_bg))
+                                    .into_any_element(),
+                            );
+                        }
+
+                        if let Some(path) = label_texts.right.as_deref() {
+                            let mut path_color = colors.foreground;
+                            path_color.a = self.scaled_chrome_alpha(PANE_TITLE_PATH_ALPHA);
+                            let path_text = fit_text(path);
+                            if !path_text.is_empty() {
+                                // 右段靠右对齐：容器占满右半区，文字块贴右端。
+                                pane_title_labels.push(
+                                    div()
+                                        .absolute()
+                                        .left(px(pane_frame_left + pane_frame_width
+                                            - PANE_TITLE_INSET
+                                            - side_max_width))
+                                        .top(px(label_top))
+                                        .w(px(side_max_width))
+                                        .flex()
+                                        .justify_end()
+                                        .child(pane_label_chip(
+                                            path_text,
+                                            path_color.into(),
+                                            label_bg,
+                                        ))
+                                        .into_any_element(),
+                                );
+                            }
+                        }
+                    }
+                }
+
                 if let Some(drag) = self.pane_move_drag.as_ref().filter(|drag| drag.active) {
                     if drag.pane_id == pane.id {
                         // Mark the pane being dragged so its origin stays
@@ -3616,7 +3773,7 @@ impl Render for TerminalView {
                     .text_size(px(13.0))
                     .font_weight(FontWeight::NORMAL)
                     .text_color(empty_text)
-                    .child("No tabs found in here")
+                    .child(t!("No tabs found in here"))
                     .into_any_element(),
             );
         }
@@ -3640,6 +3797,13 @@ impl Render for TerminalView {
         let show_horizontal_tabbar = show_tab_strip_chrome && !vertical_tabs;
         let tabs_row = show_horizontal_tabbar
             .then(|| self.render_tab_strip(window, &colors, &ui_font_family, tabbar_bg, cx));
+        // Windows：标签栏不显示时，顶栏仍需要拖动区和窗口控制按钮。
+        #[cfg(target_os = "windows")]
+        let caption_lane_without_tabs = tabs_row
+            .is_none()
+            .then(|| Self::render_windows_caption_lane(None, window, colors.foreground, cx));
+        #[cfg(not(target_os = "windows"))]
+        let caption_lane_without_tabs: Option<AnyElement> = None;
         let tab_sidebar = (vertical_tabs && show_tab_strip_chrome)
             .then(|| self.render_tab_sidebar(window, &colors, &ui_font_family, tabbar_bg, cx));
         let workspace_sidebar = self
@@ -3688,6 +3852,7 @@ impl Render for TerminalView {
             .children(pane_dividers)
             .children(pane_resize_handles)
             .children(pane_focus_accents)
+            .children(pane_title_labels)
             .children(pane_drag_handles)
             .children(pane_drop_overlays)
             .into_any_element();
@@ -3777,7 +3942,8 @@ impl Render for TerminalView {
                         .items_end()
                         .mt(px(TOP_STRIP_CONTENT_OFFSET_Y))
                         .children(tabs_row)
-                        .children(hidden_titlebar_branding),
+                        .children(hidden_titlebar_branding)
+                        .children(caption_lane_without_tabs),
                 )
                 .into_any()
         });

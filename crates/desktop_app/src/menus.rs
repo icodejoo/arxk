@@ -33,7 +33,7 @@ fn build_menu(root: MenuRoot, capabilities: CommandCapabilities, simple_mode: bo
 
     #[cfg(target_os = "macos")]
     if root == MenuRoot::App {
-        items.push(MenuItem::os_submenu("Services", SystemMenuType::Services));
+        items.push(MenuItem::os_submenu(termy::i18n::tr("Services"), SystemMenuType::Services));
         if !entries.is_empty() {
             items.push(MenuItem::separator());
         }
@@ -42,7 +42,7 @@ fn build_menu(root: MenuRoot, capabilities: CommandCapabilities, simple_mode: bo
     append_menu_entries(&mut items, &entries, capabilities, simple_mode);
 
     Menu {
-        name: root.title().into(),
+        name: termy::i18n::tr(root.title()).into(),
         disabled: false,
         items,
     }
@@ -83,15 +83,15 @@ fn menu_item_title(
 ) -> Option<&'static str> {
     if availability.enabled {
         if entry.action == CommandAction::InstallCli {
-            return Some(INSTALL_CLI_TITLE);
+            return Some(termy::i18n::tr(INSTALL_CLI_TITLE));
         }
-        return Some(entry.title);
+        return Some(termy::i18n::tr(entry.title));
     }
 
     match availability.reason {
         Some(CommandUnavailableReason::RequiresTmuxRuntime) => None,
         Some(CommandUnavailableReason::InstallCliAlreadyInstalled) => {
-            Some(INSTALL_CLI_INSTALLED_TITLE)
+            Some(termy::i18n::tr(INSTALL_CLI_INSTALLED_TITLE))
         }
         None => unreachable!("disabled command must include an unavailable reason"),
     }

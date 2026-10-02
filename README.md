@@ -47,7 +47,7 @@ Termy keeps its behavior in plain configuration rather than burying it in hidden
 
 | Surface | What you control |
 | --- | --- |
-| Appearance | Themes, colors, fonts, chrome contrast, and tab presentation |
+| Appearance | Themes, colors, fonts, chrome contrast, tab presentation, and interface language (English or Chinese) |
 | Input | Keybindings, terminal behavior, mouse reporting, and shortcuts |
 | Workspace | Tabs, split panes, tasks, reusable layouts, and working directories |
 | Sessions | Local shells and optional tmux-backed sessions |

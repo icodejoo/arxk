@@ -20,6 +20,37 @@ description: Split, focus, resize, and zoom panes.
 | `resize_pane_<dir>` | `secondary-alt-shift-<arrow>` |
 | `toggle_pane_zoom` | `secondary-enter` |
 
+## Pane labels
+
+When a tab has more than one pane, each pane shows a small label on its top
+border. It overlays the border and takes no layout space.
+
+- With a custom title, the title is on the left and the working directory on the
+  right.
+- Without one, the working directory is shown on the left as the title.
+
+Termy reads the working directory from the shell (OSC 7 or OSC 9;9) and the title
+from the terminal title (OSC 0/2). A title that is only the current directory
+counts as no title. Tabs with a single pane show no labels.
+
+PowerShell 7 example that reports the directory and supports a custom title:
+
+```powershell
+function prompt {
+    $loc = Get-Location
+    $esc = [char]27
+    $report = ""
+    if ($loc.Provider.Name -eq "FileSystem") {
+        $report = "$esc]9;9;`"$($loc.ProviderPath)`"$esc\"
+    }
+    $Host.UI.RawUI.WindowTitle = if ($global:PaneTitle) { "$global:PaneTitle" } else { "$loc" }
+    "${report}PS $loc> "
+}
+```
+
+Run `$global:PaneTitle = 'build'` to set a title and
+`Remove-Variable PaneTitle` to clear it.
+
 ## Inactive panes
 
 `pane_focus_effect`: `off` · `soft_spotlight` (default) · `cinematic` · `minimal`

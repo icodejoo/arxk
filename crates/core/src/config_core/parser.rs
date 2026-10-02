@@ -416,6 +416,19 @@ impl AppConfig {
                         );
                     }
                 }
+                RootSettingId::Language => {
+                    if let Some(parsed) = crate::config_core::types::AppLanguage::from_str(value) {
+                        config.language = parsed;
+                    } else {
+                        push_invalid_value(
+                            &mut diagnostics,
+                            line_number,
+                            key,
+                            value,
+                            "one of: auto, en, zh",
+                        );
+                    }
+                }
                 RootSettingId::WarnOnQuit => {
                     if let Some(parsed) =
                         parse_bool_field(&mut diagnostics, line_number, key, value)

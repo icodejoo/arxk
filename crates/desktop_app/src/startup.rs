@@ -9,34 +9,41 @@ pub(crate) enum StartupBlocker {
 impl StartupBlocker {
     fn tmux_reason_and_error(&self) -> (&'static str, &str) {
         match self {
-            Self::TmuxPreflight(error) => ("tmux preflight failed", error),
+            Self::TmuxPreflight(error) => (t!("tmux preflight failed"), error),
             Self::MainWindowOpen(_) => unreachable!("main-window failures are not tmux failures"),
         }
     }
 
     pub(crate) fn tmux_fallback_message(&self) -> String {
         let (reason, error) = self.tmux_reason_and_error();
-        format!("tmux is unavailable ({reason}: {error}); starting in native mode")
+        t!(
+            "tmux is unavailable ({reason}: {error}); starting in native mode",
+            reason = reason,
+            error = error
+        )
     }
 
     pub(crate) fn message(&self) -> String {
         if let Self::MainWindowOpen(error) = self {
-            return format!(
-                "Termy cannot continue because it failed to open the main window.\n\nError:\n{error}\n\nRecovery:\n- Restart Termy and try again.\n- If this was launched from a terminal, keep this stderr message for support.\n- If the problem repeats, include your OS, display/GPU setup, and recent Termy logs in the bug report."
+            return t!(
+                "Termy cannot continue because it failed to open the main window.\n\nError:\n{error}\n\nRecovery:\n- Restart Termy and try again.\n- If this was launched from a terminal, keep this stderr message for support.\n- If the problem repeats, include your OS, display/GPU setup, and recent Termy logs in the bug report.",
+                error = error
             );
         }
 
         let (reason, error) = self.tmux_reason_and_error();
 
-        format!(
-            "Termy cannot continue because {reason}.\n\nError:\n{error}\n\nRecovery:\n- Open your config and set tmux_enabled = false to start in native mode.\n- Finder/DMG launches use a minimal environment; set tmux_binary to an absolute path (for example /opt/homebrew/bin/tmux) if tmux is not on the default PATH.\n- If tmux integration is desired, ensure tmux 3.3 or newer is installed.\n- Save the config and restart Termy, then use tmux Sessions… when ready."
+        t!(
+            "Termy cannot continue because {reason}.\n\nError:\n{error}\n\nRecovery:\n- Open your config and set tmux_enabled = false to start in native mode.\n- Finder/DMG launches use a minimal environment; set tmux_binary to an absolute path (for example /opt/homebrew/bin/tmux) if tmux is not on the default PATH.\n- If tmux integration is desired, ensure tmux 3.3 or newer is installed.\n- Save the config and restart Termy, then use tmux Sessions… when ready.",
+            reason = reason,
+            error = error
         )
     }
 
     pub(crate) fn present_alert_and_exit(self) -> ! {
         let message = self.message();
         eprintln!("Termy startup blocked:\n{message}");
-        crate::native_sdk::show_alert("Termy Startup Error", &message);
+        crate::native_sdk::show_alert(t!("Termy Startup Error"), &message);
         std::process::exit(1);
     }
 }

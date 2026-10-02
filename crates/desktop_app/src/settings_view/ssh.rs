@@ -141,7 +141,7 @@ impl SettingsWindow {
             .find(|host| host.id == host_id)
             .cloned()
         else {
-            crate::ui::toast::error("That saved SSH host no longer exists");
+            crate::ui::toast::error(t!("That saved SSH host no longer exists"));
             return;
         };
         let secret_saved = match crate::ssh::manager(self.config_path.as_deref())
@@ -149,8 +149,9 @@ impl SettingsWindow {
         {
             Ok(saved) => saved,
             Err(error) => {
-                crate::ui::toast::warning(format!(
-                    "Could not inspect this host's Keychain credential; non-secret settings can still be edited: {error}"
+                crate::ui::toast::warning(t!(
+                    "Could not inspect this host's Keychain credential; non-secret settings can still be edited: {error}",
+                    error = error
                 ));
                 false
             }
@@ -207,7 +208,7 @@ impl SettingsWindow {
         let port = match form.port.trim().parse::<u16>() {
             Ok(port) if port > 0 => port,
             _ => {
-                crate::ui::toast::error("Port must be between 1 and 65535");
+                crate::ui::toast::error(t!("Port must be between 1 and 65535"));
                 return;
             }
         };
@@ -246,10 +247,10 @@ impl SettingsWindow {
         let result = match form.editing_id.as_deref() {
             Some(host_id) => manager
                 .update(host_id, input, secret_update)
-                .map(|_| "SSH host updated"),
+                .map(|_| t!("SSH host updated")),
             None => manager
                 .create(input, secret_update)
-                .map(|_| "SSH host saved"),
+                .map(|_| t!("SSH host saved")),
         };
         match result {
             Ok(message) => {
@@ -271,8 +272,11 @@ impl SettingsWindow {
         cx: &mut Context<Self>,
     ) {
         cx.spawn(async move |this, cx: &mut AsyncApp| {
-            let title = "Delete SSH Host";
-            let message = format!("Delete “{display_name}” and its saved Keychain credential?");
+            let title = t!("Delete SSH Host");
+            let message = t!(
+                "Delete “{name}” and its saved Keychain credential?",
+                name = display_name
+            );
             if !crate::native_sdk::confirm(title, &message) {
                 return;
             }
@@ -306,7 +310,7 @@ impl SettingsWindow {
                     self.ssh_form = None;
                     self.ssh_input = None;
                 }
-                crate::ui::toast::success("SSH host deleted");
+                crate::ui::toast::success(t!("SSH host deleted"));
                 cx.notify();
             }
             Err(error) => crate::ui::toast::error(error),
@@ -633,9 +637,9 @@ impl SettingsWindow {
                     .text_size(px(12.0))
                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                     .text_color(self.text_secondary())
-                    .child(label),
+                    .child(termy::i18n::tr(label)),
             )
-            .child(self.render_ssh_input(field, placeholder, secret, cx))
+            .child(self.render_ssh_input(field, termy::i18n::tr(placeholder), secret, cx))
             .into_any_element()
     }
 
@@ -681,7 +685,7 @@ impl SettingsWindow {
                 .on_click(cx.listener(move |view, _, _, cx| {
                     view.set_ssh_authentication_type(target, cx);
                 }))
-                .child(label)
+                .child(termy::i18n::tr(label))
         };
 
         let mut fields = div()
@@ -734,7 +738,7 @@ impl SettingsWindow {
                             .text_size(px(12.0))
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(self.text_secondary())
-                            .child("Authentication"),
+                            .child(t!("Authentication")),
                     )
                     .child(
                         div()
@@ -767,14 +771,14 @@ impl SettingsWindow {
             ));
         }
         let secret_label = if auth_type == SshAuthenticationType::Key {
-            "Private-key passphrase (optional)"
+            t!("Private-key passphrase (optional)")
         } else {
-            "Password (optional)"
+            t!("Password (optional)")
         };
         let secret_placeholder = if form.saved_secret {
-            "Saved in Keychain — leave blank to keep"
+            t!("Saved in Keychain — leave blank to keep")
         } else {
-            "Leave blank to enter interactively"
+            t!("Leave blank to enter interactively")
         };
         fields = fields.child(self.render_ssh_field(
             SshFormField::Secret,
@@ -795,7 +799,7 @@ impl SettingsWindow {
                     .on_click(cx.listener(|view, _, _, cx| {
                         view.clear_saved_ssh_secret(cx);
                     }))
-                    .child("Remove saved Keychain credential"),
+                    .child(t!("Remove saved Keychain credential")),
             );
         }
 
@@ -814,7 +818,7 @@ impl SettingsWindow {
             .on_click(cx.listener(|view, _, _, cx| {
                 view.cancel_ssh_host_form(cx);
             }))
-            .child("Cancel");
+            .child(t!("Cancel"));
         let save_button = div()
             .id("ssh-form-save")
             .h(px(30.0))
@@ -831,9 +835,9 @@ impl SettingsWindow {
                 view.save_ssh_host_form(cx);
             }))
             .child(if is_editing {
-                "Save changes"
+                t!("Save changes")
             } else {
-                "Add host"
+                t!("Add host")
             });
 
         div()
@@ -852,9 +856,9 @@ impl SettingsWindow {
                     .font_weight(gpui_kit::FontWeight::SEMIBOLD)
                     .text_color(self.text_primary())
                     .child(if is_editing {
-                        "Edit SSH host"
+                        t!("Edit SSH host")
                     } else {
-                        "Add SSH host"
+                        t!("Add SSH host")
                     }),
             )
             .child(fields)
@@ -864,7 +868,9 @@ impl SettingsWindow {
                     .text_size(px(11.0))
                     .text_color(self.text_muted())
                     .child(
-                        "Secrets are stored only in the system Keychain. Host keys continue to use OpenSSH known_hosts verification.",
+                        t!(
+                            "Secrets are stored only in the system Keychain. Host keys continue to use OpenSSH known_hosts verification."
+                        ),
                     ),
             )
             .child(
@@ -881,8 +887,8 @@ impl SettingsWindow {
 
     fn render_ssh_host_row(&self, host: SshHost, cx: &mut Context<Self>) -> AnyElement {
         let auth_label = match host.authentication {
-            SshAuthentication::Key { .. } => "SSH key",
-            SshAuthentication::Password => "Password",
+            SshAuthentication::Key { .. } => t!("SSH key"),
+            SshAuthentication::Password => t!("Password"),
         };
         let endpoint = format!("{}@{}:{}", host.username, host.hostname, host.port);
         let edit_id = host.id.clone();
@@ -947,7 +953,7 @@ impl SettingsWindow {
                             .on_click(cx.listener(move |view, _, window, cx| {
                                 view.begin_edit_ssh_host(&edit_id, window, cx);
                             }))
-                            .child("Edit"),
+                            .child(t!("Edit")),
                     )
                     .child(
                         div()
@@ -968,7 +974,7 @@ impl SettingsWindow {
                                     cx,
                                 );
                             }))
-                            .child("Delete"),
+                            .child(t!("Delete")),
                     ),
             )
             .into_any_element()
@@ -992,7 +998,7 @@ impl SettingsWindow {
             .on_click(cx.listener(|view, _, window, cx| {
                 view.begin_add_ssh_host(window, cx);
             }))
-            .child("Add host");
+            .child(t!("Add host"));
 
         let mut section = div()
             .flex()
@@ -1047,13 +1053,13 @@ impl SettingsWindow {
                             .text_size(px(13.0))
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(self.text_primary())
-                            .child("No saved SSH hosts"),
+                            .child(t!("No saved SSH hosts")),
                     )
                     .child(
                         div()
                             .text_size(px(12.0))
                             .text_color(self.text_muted())
-                            .child("Add a host, then connect from the new-tab menu."),
+                            .child(t!("Add a host, then connect from the new-tab menu.")),
                     ),
             );
         } else {
@@ -1063,7 +1069,7 @@ impl SettingsWindow {
                 .into_iter()
                 .map(|host| self.render_ssh_host_row(host, cx))
                 .collect();
-            section = section.child(self.render_settings_group("Saved hosts", rows));
+            section = section.child(self.render_settings_group(t!("Saved hosts"), rows));
         }
         section
     }

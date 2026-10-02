@@ -429,8 +429,9 @@ impl WorkspaceStore {
                     .await
                     .map_err(|error| store_error("Failed to check saved layout name", error))?;
             if conflict.is_some() {
-                return Err(format!(
-                    "A saved layout named \"{next_name}\" already exists"
+                return Err(t!(
+                    "A saved layout named \"{name}\" already exists",
+                    name = next_name
                 ));
             }
             let updated = sqlx::query("UPDATE named_layouts SET name = ?2 WHERE name = ?1")
@@ -441,7 +442,7 @@ impl WorkspaceStore {
                 .map_err(|error| store_error("Failed to rename saved layout", error))?
                 .rows_affected();
             if updated == 0 {
-                return Err(format!("Saved layout \"{current_name}\" was not found"));
+                return Err(t!("Saved layout \"{name}\" was not found", name = current_name));
             }
             Ok(())
         })

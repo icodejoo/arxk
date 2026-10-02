@@ -72,7 +72,7 @@ fn update_config_contents<R>(
 ) -> Result<R, String> {
     let _process_guard = CONFIG_UPDATE_LOCK
         .lock()
-        .map_err(|_| "Config update lock was poisoned by a previous failed update".to_string())?;
+        .map_err(|_| t!("Config update lock was poisoned by a previous failed update").to_string())?;
     let config_path = config_file_for_update().map_err(|error| error.to_string())?;
     let lock_path = config_path.with_extension("lock");
     let lock_path_display = lock_path.display().to_string();
@@ -83,10 +83,18 @@ fn update_config_contents<R>(
         .write(true)
         .open(&lock_path)
         .map_err(|source| {
-            format!("Failed to open config lock file '{lock_path_display}': {source}")
+            t!(
+                "Failed to open config lock file '{path}': {source}",
+                path = lock_path_display,
+                source = source
+            )
         })?;
     process_lock_file.lock_exclusive().map_err(|source| {
-        format!("Failed to lock config lock file '{lock_path_display}': {source}")
+        t!(
+            "Failed to lock config lock file '{path}': {source}",
+            path = lock_path_display,
+            source = source
+        )
     })?;
 
     let mut config_lock_file = fs::OpenOptions::new()
@@ -99,10 +107,10 @@ fn update_config_contents<R>(
         })
         .map_err(|error| error.to_string())?;
     config_lock_file.lock_exclusive().map_err(|source| {
-        format!(
-            "Failed to lock config file '{}': {}",
-            config_path.display(),
-            source
+        t!(
+            "Failed to lock config file '{path}': {source}",
+            path = config_path.display(),
+            source = source
         )
     })?;
 
@@ -115,10 +123,10 @@ fn update_config_contents<R>(
         })
         .map_err(|error| error.to_string())?;
     config_lock_file.unlock().map_err(|source| {
-        format!(
-            "Failed to unlock config file '{}': {}",
-            config_path.display(),
-            source
+        t!(
+            "Failed to unlock config file '{path}': {source}",
+            path = config_path.display(),
+            source = source
         )
     })?;
     drop(config_lock_file);
@@ -127,7 +135,11 @@ fn update_config_contents<R>(
     write_atomic(&config_path, &updated).map_err(|error| error.to_string())?;
     notify_config_changed();
     process_lock_file.unlock().map_err(|source| {
-        format!("Failed to unlock config lock file '{lock_path_display}': {source}")
+        t!(
+            "Failed to unlock config lock file '{path}': {source}",
+            path = lock_path_display,
+            source = source
+        )
     })?;
     Ok(result)
 }
@@ -146,13 +158,13 @@ pub fn remove_raw_root_key_from_config(key: &str) -> Result<(), String> {
 }
 
 pub fn set_theme_in_config(theme_id: &str) -> Result<String, String> {
-    let theme = parse_theme_id(theme_id).ok_or_else(|| "Invalid theme id".to_string())?;
+    let theme = parse_theme_id(theme_id).ok_or_else(|| t!("Invalid theme id").to_string())?;
     set_root_setting(RootSettingId::Theme, &theme)?;
-    Ok(format!("Theme set to {theme}"))
+    Ok(t!("Theme set to {theme}", theme = theme))
 }
 
 pub fn reset_theme_references_in_config(theme_id: &str) -> Result<ResetThemeReferences, String> {
-    let theme_id = parse_theme_id(theme_id).ok_or_else(|| "Invalid theme id".to_string())?;
+    let theme_id = parse_theme_id(theme_id).ok_or_else(|| t!("Invalid theme id").to_string())?;
     update_config_contents(move |existing| {
         let config = AppConfig::from_contents(existing);
         let reset = ResetThemeReferences {
@@ -178,10 +190,10 @@ pub fn set_color_setting(color: ColorSettingId, value: Option<&str>) -> Result<(
     if let Some(value) = value
         && Rgb8::from_hex(value).is_none()
     {
-        return Err(format!(
-            "Invalid hex color for '{}': {}",
-            color_setting_spec(color).key,
-            value
+        return Err(t!(
+            "Invalid hex color for '{key}': {hex}",
+            key = color_setting_spec(color).key,
+            hex = value
         ));
     }
 
@@ -207,10 +219,10 @@ pub fn upsert_task(task: TaskConfig) -> Result<(), String> {
     let task_name = task.name.trim().to_string();
     let command = task.command.trim().to_string();
     if task_name.is_empty() {
-        return Err("Task name is required".to_string());
+        return Err(t!("Task name is required").to_string());
     }
     if command.is_empty() {
-        return Err("Task command is required".to_string());
+        return Err(t!("Task command is required").to_string());
     }
 
     update_config_contents(|existing| Ok((upsert_task_lines(existing, &task), ())))
@@ -218,10 +230,10 @@ pub fn upsert_task(task: TaskConfig) -> Result<(), String> {
 
 pub fn import_colors_from_json(json_path: &Path) -> Result<String, String> {
     let contents =
-        fs::read_to_string(json_path).map_err(|e| format!("Failed to read file: {e}"))?;
+        fs::read_to_string(json_path).map_err(|e| t!("Failed to read file: {error}", error = e))?;
 
     let colors: BTreeMap<String, ImportedThemeJsonValue> =
-        serde_json::from_str(&contents).map_err(|e| format!("Invalid JSON: {e}"))?;
+        serde_json::from_str(&contents).map_err(|e| t!("Invalid JSON: {error}", error = e))?;
 
     let mut updates_by_id: HashMap<ColorSettingId, String> = HashMap::new();
     for (key, value) in colors {
@@ -234,11 +246,11 @@ pub fn import_colors_from_json(json_path: &Path) -> Result<String, String> {
         };
 
         let ImportedThemeJsonValue::String(hex) = value else {
-            return Err(format!("Color '{key}' must be a hex string"));
+            return Err(t!("Color '{key}' must be a hex string", key = key));
         };
 
         if Rgb8::from_hex(&hex).is_none() {
-            return Err(format!("Invalid hex color for '{key}': {hex}"));
+            return Err(t!("Invalid hex color for '{key}': {hex}", key = key, hex = hex));
         }
 
         let is_canonical_key = key.eq_ignore_ascii_case(color_setting_spec(id).key);
@@ -252,7 +264,7 @@ pub fn import_colors_from_json(json_path: &Path) -> Result<String, String> {
     }
 
     if updates_by_id.is_empty() {
-        return Err("No valid colors found in JSON".to_string());
+        return Err(t!("No valid colors found in JSON").to_string());
     }
 
     let color_count = updates_by_id.len();
@@ -264,7 +276,7 @@ pub fn import_colors_from_json(json_path: &Path) -> Result<String, String> {
         })
         .collect::<Vec<_>>();
     update_config_contents(|existing| Ok((apply_color_updates(existing, &updates), ())))?;
-    Ok(format!("Imported {color_count} colors"))
+    Ok(t!("Imported {count} colors", count = color_count))
 }
 
 fn upsert_task_lines(contents: &str, task: &TaskConfig) -> String {

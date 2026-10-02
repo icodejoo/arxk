@@ -48,11 +48,15 @@ pub(crate) enum NativeDropError {
 impl fmt::Display for NativeDropError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Install(message) => write!(f, "{message}"),
-            Self::UnsupportedDrag => write!(f, "Only Finder file drops are supported here."),
-            Self::InvalidUtf8 => write!(f, "Finder drop data was not valid UTF-8."),
+            Self::Install(message) => write!(f, "{}", termy::i18n::tr(message)),
+            Self::UnsupportedDrag => write!(f, "{}", t!("Only Finder file drops are supported here.")),
+            Self::InvalidUtf8 => write!(f, "{}", t!("Finder drop data was not valid UTF-8.")),
             Self::InvalidFileUrl(url) => {
-                write!(f, "Finder drop did not contain a valid file URL: {url}")
+                write!(
+                    f,
+                    "{}",
+                    t!("Finder drop did not contain a valid file URL: {url}", url = url)
+                )
             }
         }
     }

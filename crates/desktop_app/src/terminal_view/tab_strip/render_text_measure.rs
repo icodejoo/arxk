@@ -95,7 +95,14 @@ impl TerminalView {
         font_family: &SharedString,
         font_family_key: &str,
     ) -> f32 {
-        if !cfg!(target_os = "macos") || !self.show_termy_in_titlebar {
+        if !self.show_termy_in_titlebar {
+            return 0.0;
+        }
+        // Windows：左侧放 logo 图标（像原生标题栏图标），占位宽度固定。
+        if cfg!(target_os = "windows") {
+            return WINDOWS_TITLEBAR_ICON_SIZE + WINDOWS_TITLEBAR_ICON_SIDE_PADDING * 2.0;
+        }
+        if !cfg!(target_os = "macos") {
             return 0.0;
         }
 

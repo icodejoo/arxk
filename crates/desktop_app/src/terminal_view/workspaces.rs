@@ -521,7 +521,7 @@ impl TerminalView {
         }
         if let Err(error) = self.materialize_pending_workspace(index) {
             log::error!("Failed to start saved workspace: {error}");
-            crate::ui::toast::error("Failed to start saved workspace");
+            crate::ui::toast::error(t!("Failed to start saved workspace"));
             self.notify_overlay(cx);
             return;
         }
@@ -572,7 +572,7 @@ impl TerminalView {
             .expect("deletable workspace must have a replacement");
             if let Err(error) = self.materialize_pending_workspace(replacement_index) {
                 log::error!("Failed to start replacement workspace before deletion: {error}");
-                crate::ui::toast::error("Could not start the replacement workspace");
+                crate::ui::toast::error(t!("Could not start the replacement workspace"));
                 self.notify_overlay(cx);
                 return false;
             }
@@ -594,7 +594,7 @@ impl TerminalView {
                 .filter_map(|pane| pane.session_id.as_deref())
             {
                 if let Err(error) = client.close(id) {
-                    crate::ui::toast::error(format!("Could not close workspace session: {error}"));
+                    crate::ui::toast::error(t!("Could not close workspace session: {error}", error = error));
                     return false;
                 }
             }
@@ -732,7 +732,7 @@ impl TerminalView {
 
     pub(crate) fn add_workspace(&mut self, cx: &mut Context<Self>) {
         if self.runtime_kind() != RuntimeKind::Native {
-            crate::ui::toast::info("Workspaces are not available with the tmux runtime");
+            crate::ui::toast::info(t!("Workspaces are not available with the tmux runtime"));
             self.notify_overlay(cx);
             return;
         }
@@ -801,7 +801,7 @@ impl TerminalView {
             }
             if let Err(error) = self.materialize_pending_workspace(index) {
                 log::error!("Failed to start saved workspace before merging: {error}");
-                crate::ui::toast::error("Could not merge saved workspaces");
+                crate::ui::toast::error(t!("Could not merge saved workspaces"));
                 self.notify_overlay(cx);
                 return;
             }

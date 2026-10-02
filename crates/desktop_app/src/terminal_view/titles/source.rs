@@ -2,6 +2,15 @@ use super::super::*;
 use crate::terminal_ui::TmuxPaneState;
 use std::path::Path;
 
+/// 窗格标签的两段文字：左段用标题样式，右段（可选）用路径样式。
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct PaneLabelTexts {
+    /// 左段：自定义标题；没有自定义标题时就是路径。
+    pub(crate) left: String,
+    /// 右段：路径；仅在有自定义标题且目录已知时存在。
+    pub(crate) right: Option<String>,
+}
+
 impl TerminalView {
     pub(crate) fn fallback_title(&self) -> &str {
         let fallback = self.tab_title.fallback.trim();
@@ -229,6 +238,79 @@ impl TerminalView {
         }
 
         Some(ExplicitTitlePayload::Title(explicit.to_string()))
+    }
+
+    /// 把终端上报的原始标题转成窗格标签文字。
+    /// 带内部前缀（`termy:tab:`）的载荷会按标签标题同样的规则解析，其余原样清洗。
+    /// 清洗后为空返回 `None`。
+    pub(crate) fn pane_display_title(&self, raw: &str) -> Option<String> {
+        let raw = raw.trim();
+        let text = match self.parse_explicit_title(raw) {
+            Some(ExplicitTitlePayload::Prompt { title, .. })
+            | Some(ExplicitTitlePayload::Command { title, .. })
+            | Some(ExplicitTitlePayload::Title(title)) => title,
+            None => raw.to_string(),
+        };
+        let text = Self::truncate_tab_title(text.trim());
+        (!text.is_empty()).then_some(text)
+    }
+
+    /// 记录某个窗格的标题，返回显示内容是否发生变化（决定是否需要重绘）。
+    pub(crate) fn record_pane_title(&mut self, pane_id: &str, raw: &str) -> bool {
+        let Some(title) = self.pane_display_title(raw) else {
+            return false;
+        };
+        if self.pane_titles.get(pane_id) == Some(&title) {
+            return false;
+        }
+        self.pane_titles.insert(pane_id.to_string(), title);
+        true
+    }
+
+    /// 记录某个窗格的当前目录（来自 shell 上报的 OSC 7 / OSC 9;9），
+    /// 返回显示内容是否发生变化。
+    pub(crate) fn record_pane_cwd(&mut self, pane_id: &str, raw: &str) -> bool {
+        let cwd = Self::truncate_tab_title(raw.trim().trim_matches('"'));
+        if cwd.is_empty() || self.pane_cwds.get(pane_id) == Some(&cwd) {
+            return false;
+        }
+        self.pane_cwds.insert(pane_id.to_string(), cwd);
+        true
+    }
+
+    /// 比较两段文字是否指向同一路径：忽略首尾空白、末尾分隔符、`/` 与 `\` 的差别和大小写。
+    fn same_path_text(a: &str, b: &str) -> bool {
+        let normalize = |text: &str| {
+            text.trim()
+                .trim_end_matches(['/', '\\'])
+                .replace('\\', "/")
+                .to_lowercase()
+        };
+        normalize(a) == normalize(b)
+    }
+
+    /// 计算窗格标签的两段文字。
+    ///
+    /// - 标题与当前目录不同 → 有自定义标题：左标题、右路径（目录未知时只有左标题）；
+    /// - 否则（没有标题，或标题只是路径本身）→ 路径就是标题：只有左段。
+    ///
+    /// 标题和目录都没有时返回 `None`。
+    pub(crate) fn pane_label_texts(
+        title: Option<&str>,
+        cwd: Option<&str>,
+    ) -> Option<PaneLabelTexts> {
+        let title = title.map(str::trim).filter(|text| !text.is_empty());
+        let cwd = cwd.map(str::trim).filter(|text| !text.is_empty());
+        match (title, cwd) {
+            (Some(title), Some(cwd)) if !Self::same_path_text(title, cwd) => Some(PaneLabelTexts {
+                left: title.to_string(),
+                right: Some(cwd.to_string()),
+            }),
+            (title, cwd) => cwd.or(title).map(|text| PaneLabelTexts {
+                left: text.to_string(),
+                right: None,
+            }),
+        }
     }
 
     pub(crate) fn resolved_tab_title(&self, index: usize) -> String {
@@ -604,5 +686,55 @@ mod tests {
 
         let title = TerminalView::derive_tmux_shell_title(&tab_title, &pane);
         assert!(title.is_none());
+    }
+
+    fn texts(left: &str, right: Option<&str>) -> Option<PaneLabelTexts> {
+        Some(PaneLabelTexts {
+            left: left.to_string(),
+            right: right.map(str::to_string),
+        })
+    }
+
+    #[test]
+    fn pane_label_custom_title_goes_left_and_path_right() {
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("build"), Some(r"C:\work\app")),
+            texts("build", Some(r"C:\work\app"))
+        );
+    }
+
+    #[test]
+    fn pane_label_title_equal_to_path_counts_as_no_title() {
+        // 大小写、分隔符、末尾分隔符不同，仍视为同一路径。
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("c:/work/app/"), Some(r"C:\work\app")),
+            texts(r"C:\work\app", None)
+        );
+    }
+
+    #[test]
+    fn pane_label_without_title_uses_path_as_title() {
+        assert_eq!(
+            TerminalView::pane_label_texts(None, Some(r"C:\work")),
+            texts(r"C:\work", None)
+        );
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("  "), Some(r"C:\work")),
+            texts(r"C:\work", None)
+        );
+    }
+
+    #[test]
+    fn pane_label_without_known_cwd_shows_title_only() {
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("vim main.rs"), None),
+            texts("vim main.rs", None)
+        );
+    }
+
+    #[test]
+    fn pane_label_is_none_without_any_text() {
+        assert_eq!(TerminalView::pane_label_texts(None, None), None);
+        assert_eq!(TerminalView::pane_label_texts(Some(""), Some(" ")), None);
     }
 }

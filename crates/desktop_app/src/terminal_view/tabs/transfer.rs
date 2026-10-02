@@ -185,7 +185,7 @@ impl TerminalView {
         let source = drag
             .source
             .upgrade()
-            .ok_or("The source window was closed")?;
+            .ok_or(t!("The source window was closed"))?;
         let native = source.read(cx).runtime_kind() == RuntimeKind::Native;
         if source.read(cx).tab_index_by_id(drag.tab_id).is_none() {
             return Ok(());
@@ -194,14 +194,14 @@ impl TerminalView {
         let target: WindowHandle<Self> = if let Some(destination) = destination {
             let handle = destination
                 .downcast::<Self>()
-                .ok_or("Drop onto a terminal window")?;
+                .ok_or(t!("Drop onto a terminal window"))?;
             let compatible = handle
                 .update(cx, |view, _, _| {
                     (view.runtime_kind() == RuntimeKind::Native) == native
                 })
                 .map_err(|error| error.to_string())?;
             if !compatible {
-                return Err("Move this tab into a window using the same terminal runtime".into());
+                return Err(t!("Move this tab into a window using the same terminal runtime").into());
             }
             handle
         } else {
@@ -217,12 +217,12 @@ impl TerminalView {
             let result = target
                 .update(cx, |view, _, cx| {
                     if !view.runtime_uses_tmux() {
-                        return Err("The new window could not start tmux".to_string());
+                        return Err(t!("The new window could not start tmux").to_string());
                     }
                     let source = source.read(cx);
                     let index = source
                         .tab_index_by_id(drag.tab_id)
-                        .ok_or("The source tab was closed")?;
+                        .ok_or(t!("The source tab was closed"))?;
                     view.tmux_runtime()
                         .client
                         .move_window_from(

@@ -217,13 +217,13 @@ fn keystroke_keycaps(keystroke: &str) -> Vec<String> {
 pub(super) fn palette_item_category(item: &CommandPaletteItem) -> Option<String> {
     match &item.kind {
         CommandPaletteItemKind::Command(action) => {
-            Some(command_category(action.to_command_id()).to_string())
+            Some(termy::i18n::tr(command_category(action.to_command_id())).to_string())
         }
         CommandPaletteItemKind::PluginCommand { plugin_id, .. } => Some(plugin_id.clone()),
         CommandPaletteItemKind::SshHost { .. } | CommandPaletteItemKind::ManageSshHosts => {
             Some("SSH".to_string())
         }
-        CommandPaletteItemKind::Task { .. } => Some("Tasks".to_string()),
+        CommandPaletteItemKind::Task { .. } => Some(t!("Tasks").to_string()),
         _ => None,
     }
 }

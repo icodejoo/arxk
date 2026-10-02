@@ -135,8 +135,15 @@ impl TerminalView {
                     log::warn!("Failed to start native titlebar drag: {error}");
                 }
             }
-            window.prevent_default();
-            cx.stop_propagation();
+            // Windows：拖动由系统按 HTCAPTION 接管（见 render_window_controls.rs 的拖动区）。
+            // 这里不能拦截事件，否则 GPUI 视为“已处理”，系统就不会启动拖动。
+            #[cfg(target_os = "windows")]
+            self.disarm_titlebar_window_move();
+            #[cfg(not(target_os = "windows"))]
+            {
+                window.prevent_default();
+                cx.stop_propagation();
+            }
         }
     }
 

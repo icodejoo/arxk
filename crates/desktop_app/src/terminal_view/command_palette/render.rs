@@ -310,7 +310,7 @@ impl TerminalView {
             let status_hint = item
                 .status_hint
                 .clone()
-                .or_else(|| (!is_enabled).then(|| COMMAND_PALETTE_UNAVAILABLE_HINT.to_string()));
+                .or_else(|| (!is_enabled).then(|| termy::i18n::tr(COMMAND_PALETTE_UNAVAILABLE_HINT).to_string()));
             let text_color = if is_enabled {
                 style.primary_text
             } else {
@@ -464,36 +464,36 @@ impl TerminalView {
             title.clone()
         } else {
             match self.command_palette.mode() {
-                CommandPaletteMode::Commands => "Commands".to_string(),
-                CommandPaletteMode::Themes => format!("Theme: {}", self.theme_id),
+                CommandPaletteMode::Commands => t!("Commands").to_string(),
+                CommandPaletteMode::Themes => t!("Theme: {name}", name = self.theme_id),
                 CommandPaletteMode::TmuxSessions => {
                     match self.command_palette.tmux_session_intent() {
-                        TmuxSessionIntent::AttachOrSwitch => "tmux Sessions".to_string(),
-                        TmuxSessionIntent::RenameSelect => "tmux Sessions: Rename".to_string(),
-                        TmuxSessionIntent::RenameInput => "tmux Sessions: Rename".to_string(),
-                        TmuxSessionIntent::Kill => "tmux Sessions: Kill".to_string(),
+                        TmuxSessionIntent::AttachOrSwitch => t!("tmux Sessions").to_string(),
+                        TmuxSessionIntent::RenameSelect => t!("tmux Sessions: Rename").to_string(),
+                        TmuxSessionIntent::RenameInput => t!("tmux Sessions: Rename").to_string(),
+                        TmuxSessionIntent::Kill => t!("tmux Sessions: Kill").to_string(),
                     }
                 }
                 CommandPaletteMode::Layouts => match self.command_palette.saved_layout_intent() {
-                    SavedLayoutIntent::Browse => "Saved Layouts".to_string(),
-                    SavedLayoutIntent::SaveInput => "Saved Layouts: Save".to_string(),
-                    SavedLayoutIntent::RenameSelect => "Saved Layouts: Rename".to_string(),
-                    SavedLayoutIntent::RenameInput => "Saved Layouts: Rename".to_string(),
-                    SavedLayoutIntent::Delete => "Saved Layouts: Delete".to_string(),
+                    SavedLayoutIntent::Browse => t!("Saved Layouts").to_string(),
+                    SavedLayoutIntent::SaveInput => t!("Saved Layouts: Save").to_string(),
+                    SavedLayoutIntent::RenameSelect => t!("Saved Layouts: Rename").to_string(),
+                    SavedLayoutIntent::RenameInput => t!("Saved Layouts: Rename").to_string(),
+                    SavedLayoutIntent::Delete => t!("Saved Layouts: Delete").to_string(),
                 },
                 CommandPaletteMode::Tasks => match self.current_named_layout.as_deref() {
                     Some(layout_name)
                         if self.command_palette.task_intent() == TaskIntent::Browse =>
                     {
-                        format!("Tasks: {layout_name}")
+                        t!("Tasks: {name}", name = layout_name)
                     }
                     _ => match self.command_palette.task_intent() {
-                        TaskIntent::Browse => "Tasks".to_string(),
-                        TaskIntent::CreateGlobalInput => "Tasks: New".to_string(),
+                        TaskIntent::Browse => t!("Tasks").to_string(),
+                        TaskIntent::CreateGlobalInput => t!("Tasks: New").to_string(),
                         TaskIntent::CreateLayoutInput => match self.current_named_layout.as_deref()
                         {
-                            Some(layout_name) => format!("Tasks: New for {layout_name}"),
-                            None => "Tasks: New".to_string(),
+                            Some(layout_name) => t!("Tasks: New for {name}", name = layout_name),
+                            None => t!("Tasks: New").to_string(),
                         },
                     },
                 },
@@ -505,8 +505,8 @@ impl TerminalView {
                         format!("{} · {progress}", self.plugin_input_mode_title())
                     }
                 }
-                CommandPaletteMode::AppInfo => "App Info".to_string(),
-                CommandPaletteMode::Releases => "Release Notes".to_string(),
+                CommandPaletteMode::AppInfo => t!("App Info").to_string(),
+                CommandPaletteMode::Releases => t!("Release Notes").to_string(),
             }
         };
         // (keycap, action) pairs for the footer bar. An empty keycap renders the
@@ -595,37 +595,37 @@ impl TerminalView {
                     == TmuxSessionIntent::AttachOrSwitch
                     && self.command_palette.input().text().trim().is_empty() =>
             {
-                "No tmux sessions found. Type a name and press Enter to create one.".to_string()
+                t!("No tmux sessions found. Type a name and press Enter to create one.").to_string()
             }
             CommandPaletteMode::Layouts
                 if self.command_palette.saved_layout_intent() == SavedLayoutIntent::Browse
                     && self.command_palette.input().text().trim().is_empty() =>
             {
-                "No saved layouts yet. Save the current split setup from here.".to_string()
+                t!("No saved layouts yet. Save the current split setup from here.").to_string()
             }
             CommandPaletteMode::Tasks => match self.command_palette.task_intent() {
                 TaskIntent::Browse if self.command_palette.input().text().trim().is_empty() => {
-                    "No tasks configured. Create one here or add task.<name>.command entries to config.txt.".to_string()
+                    t!("No tasks configured. Create one here or add task.<name>.command entries to config.txt.").to_string()
                 }
                 TaskIntent::CreateGlobalInput | TaskIntent::CreateLayoutInput => {
-                    "Enter a task as name: command".to_string()
+                    t!("Enter a task as name: command").to_string()
                 }
-                _ => "No matching items".to_string(),
+                _ => t!("No matching items").to_string(),
             },
-            CommandPaletteMode::PluginInputs => "No matching options".to_string(),
+            CommandPaletteMode::PluginInputs => t!("No matching options").to_string(),
             CommandPaletteMode::Releases => match &self.command_palette.release_list {
                 ReleaseListState::Loading | ReleaseListState::Idle => {
-                    "Loading releases…".to_string()
+                    t!("Loading releases…").to_string()
                 }
                 ReleaseListState::Failed(message) => message.clone(),
                 ReleaseListState::Ready(_)
                     if self.command_palette.input().text().trim().is_empty() =>
                 {
-                    "No GitHub releases found".to_string()
+                    t!("No GitHub releases found").to_string()
                 }
-                ReleaseListState::Ready(_) => "No matching items".to_string(),
+                ReleaseListState::Ready(_) => t!("No matching items").to_string(),
             },
-            _ => "No matching items".to_string(),
+            _ => t!("No matching items").to_string(),
         };
 
         let list = if let Some(plugin_ui) = plugin_ui.clone() {
@@ -780,7 +780,7 @@ impl TerminalView {
 
         let input_placeholder =
             if plugin_ui.is_some() && self.command_palette.input().text().is_empty() {
-                Some("Search commands…".to_string())
+                Some(t!("Search commands…").to_string())
             } else {
                 (self.command_palette.mode() == CommandPaletteMode::PluginInputs
                     && self.command_palette.input().text().is_empty())
@@ -833,12 +833,13 @@ impl TerminalView {
             );
 
         let result_counter = if plugin_ui.is_some() {
-            "Plugin UI".to_string()
+            t!("Plugin UI").to_string()
         } else {
-            format!(
-                "{item_count} {}",
-                if item_count == 1 { "item" } else { "items" }
-            )
+            if item_count == 1 {
+                t!("{count} item", count = item_count)
+            } else {
+                t!("{count} items", count = item_count)
+            }
         };
         let footer = div()
             .w_full()
@@ -880,7 +881,7 @@ impl TerminalView {
                                     .text_size(px(11.0))
                                     .text_color(style.muted_text)
                                     .whitespace_nowrap()
-                                    .child(*action),
+                                    .child(termy::i18n::tr(*action)),
                             )
                     })),
             )

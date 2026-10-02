@@ -31,19 +31,19 @@ fn search_counter_label(
         return None;
     }
     if invalid_pattern {
-        return Some("Invalid pattern".to_string());
+        return Some(t!("Invalid pattern").to_string());
     }
     if total == 0 {
         return Some(if scan_incomplete {
-            "Searching…".to_string()
+            t!("Searching…").to_string()
         } else {
-            "No matches".to_string()
+            t!("No matches").to_string()
         });
     }
     if scan_incomplete {
-        Some(format!("{current} of {total}+"))
+        Some(t!("{current} of {total}+", current = current, total = total))
     } else {
-        Some(format!("{current} of {total}"))
+        Some(t!("{current} of {total}", current = current, total = total))
     }
 }
 
@@ -638,7 +638,7 @@ impl TerminalView {
                                                             .items_center()
                                                             .text_size(px(13.0))
                                                             .text_color(muted_text)
-                                                            .child("Find in terminal"),
+                                                            .child(t!("Find in terminal")),
                                                     )
                                                 })
                                                 .child(
@@ -798,14 +798,14 @@ impl TerminalView {
                                     .gap(px(4.0))
                                     .child(mode_chip(
                                         "search-case-sensitive",
-                                        "Case",
+                                        t!("Case"),
                                         case_sensitive,
                                         CommandAction::ToggleSearchCaseSensitive,
                                         cx,
                                     ))
                                     .child(mode_chip(
                                         "search-regex",
-                                        "Regex",
+                                        t!("Regex"),
                                         regex_mode,
                                         CommandAction::ToggleSearchRegex,
                                         cx,
@@ -820,7 +820,7 @@ impl TerminalView {
                                             .pr(px(4.0))
                                             .text_size(px(10.0))
                                             .text_color(muted_text)
-                                            .child("↵ next  ·  ⇧↵ prev  ·  esc"),
+                                            .child(t!("↵ next  ·  ⇧↵ prev  ·  esc")),
                                     ),
                             )
                         }),

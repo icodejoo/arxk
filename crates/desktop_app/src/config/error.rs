@@ -39,76 +39,56 @@ pub enum ConfigIoError {
 impl fmt::Display for ConfigIoError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ConfigPathUnavailable => write!(f, "Unable to determine config file path"),
-            Self::InvalidConfigPath(path) => {
-                write!(f, "Invalid config file path: {}", path.display())
-            }
-            Self::CreateDir { path, source } => {
-                write!(
-                    f,
-                    "Failed to create config directory '{}': {}",
-                    path.display(),
-                    source
-                )
-            }
-            Self::ReadConfig { path, source } => {
-                write!(
-                    f,
-                    "Failed to read config file '{}': {}",
-                    path.display(),
-                    source
-                )
-            }
-            Self::WriteConfig { path, source } => {
-                write!(
-                    f,
-                    "Failed to write config file '{}': {}",
-                    path.display(),
-                    source
-                )
-            }
-            Self::CreateTempFile { path, source } => {
-                write!(
-                    f,
-                    "Failed to create temp config file near '{}': {}",
-                    path.display(),
-                    source
-                )
-            }
-            Self::PersistTempFile { path, source } => {
-                write!(
-                    f,
-                    "Failed to persist config file '{}': {}",
-                    path.display(),
-                    source
-                )
-            }
+            Self::ConfigPathUnavailable => f.write_str(t!("Unable to determine config file path")),
+            Self::InvalidConfigPath(path) => f.write_str(&t!(
+                "Invalid config file path: {path}",
+                path = path.display()
+            )),
+            Self::CreateDir { path, source } => f.write_str(&t!(
+                "Failed to create config directory '{path}': {source}",
+                path = path.display(),
+                source = source
+            )),
+            Self::ReadConfig { path, source } => f.write_str(&t!(
+                "Failed to read config file '{path}': {source}",
+                path = path.display(),
+                source = source
+            )),
+            Self::WriteConfig { path, source } => f.write_str(&t!(
+                "Failed to write config file '{path}': {source}",
+                path = path.display(),
+                source = source
+            )),
+            Self::CreateTempFile { path, source } => f.write_str(&t!(
+                "Failed to create temp config file near '{path}': {source}",
+                path = path.display(),
+                source = source
+            )),
+            Self::PersistTempFile { path, source } => f.write_str(&t!(
+                "Failed to persist config file '{path}': {source}",
+                path = path.display(),
+                source = source
+            )),
             Self::LaunchOpenCommand {
                 command,
                 path,
                 source,
-            } => {
-                write!(
-                    f,
-                    "Failed to launch '{}' for '{}': {}",
-                    command,
-                    path.display(),
-                    source
-                )
-            }
+            } => f.write_str(&t!(
+                "Failed to launch '{command}' for '{path}': {source}",
+                command = command,
+                path = path.display(),
+                source = source
+            )),
             Self::OpenCommandFailed {
                 command,
                 path,
                 status,
-            } => {
-                write!(
-                    f,
-                    "'{}' failed for '{}' with status {}",
-                    command,
-                    path.display(),
-                    status
-                )
-            }
+            } => f.write_str(&t!(
+                "'{command}' failed for '{path}' with status {status}",
+                command = command,
+                path = path.display(),
+                status = status
+            )),
         }
     }
 }

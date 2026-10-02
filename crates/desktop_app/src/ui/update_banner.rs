@@ -57,25 +57,25 @@ impl UpdateBannerModel {
     pub fn from_state(state: &UpdateState) -> Option<Self> {
         match state {
             UpdateState::Available { version, .. } => Some(Self {
-                badge: "Update",
-                message: format!("Version {version} is ready"),
-                detail: Some("Install now to get the latest Termy.".to_string()),
+                badge: t!("Update"),
+                message: t!("Version {version} is ready", version = version),
+                detail: Some(t!("Install now to get the latest Termy.").to_string()),
                 version: Some(version.clone()),
                 progress: None,
                 tone: UpdateBannerTone::Info,
                 buttons: vec![
                     UpdateBannerButton {
-                        label: "Install",
+                        label: t!("Install"),
                         action: UpdateBannerAction::Install,
                         style: UpdateButtonStyle::Primary,
                     },
                     UpdateBannerButton {
-                        label: "View release notes",
+                        label: t!("View release notes"),
                         action: UpdateBannerAction::ViewReleaseNotes,
                         style: UpdateButtonStyle::Secondary,
                     },
                     UpdateBannerButton {
-                        label: "Later",
+                        label: t!("Later"),
                         action: UpdateBannerAction::Dismiss,
                         style: UpdateButtonStyle::Ghost,
                     },
@@ -91,22 +91,22 @@ impl UpdateBannerModel {
                         ((*downloaded as f64 / *total as f64) * 100.0).clamp(0.0, 100.0) as u8;
                     UpdateProgress::Determinate {
                         percent,
-                        caption: Some(format!(
-                            "{} of {}",
-                            format_bytes(*downloaded),
-                            format_bytes(*total)
+                        caption: Some(t!(
+                            "{done} of {total}",
+                            done = format_bytes(*downloaded),
+                            total = format_bytes(*total)
                         )),
                     }
                 } else {
                     UpdateProgress::Indeterminate {
-                        caption: Some(format!("{} so far", format_bytes(*downloaded))),
+                        caption: Some(t!("{size} so far", size = format_bytes(*downloaded))),
                     }
                 };
 
                 Some(Self {
-                    badge: "Downloading",
-                    message: format!("Fetching version {version}"),
-                    detail: Some("Keeping Termy current.".to_string()),
+                    badge: t!("Downloading"),
+                    message: t!("Fetching version {version}", version = version),
+                    detail: Some(t!("Keeping Termy current.").to_string()),
                     version: Some(version.clone()),
                     progress: Some(progress),
                     tone: UpdateBannerTone::Info,
@@ -114,71 +114,71 @@ impl UpdateBannerModel {
                 })
             }
             UpdateState::Downloaded { version, .. } => Some(Self {
-                badge: "Downloaded",
-                message: format!("Version {version} is ready to install"),
-                detail: Some("Starting the installer…".to_string()),
+                badge: t!("Downloaded"),
+                message: t!("Version {version} is ready to install", version = version),
+                detail: Some(t!("Starting the installer…").to_string()),
                 version: Some(version.clone()),
                 progress: Some(UpdateProgress::Determinate {
                     percent: 100,
-                    caption: Some("Download complete".to_string()),
+                    caption: Some(t!("Download complete").to_string()),
                 }),
                 tone: UpdateBannerTone::Success,
                 buttons: vec![],
             }),
             UpdateState::Installing { version } => Some(Self {
-                badge: "Installing",
-                message: format!("Installing version {version}"),
-                detail: Some("Finishing the last update steps…".to_string()),
+                badge: t!("Installing"),
+                message: t!("Installing version {version}", version = version),
+                detail: Some(t!("Finishing the last update steps…").to_string()),
                 version: Some(version.clone()),
                 progress: Some(UpdateProgress::Indeterminate {
-                    caption: Some("This usually takes a moment".to_string()),
+                    caption: Some(t!("This usually takes a moment").to_string()),
                 }),
                 tone: UpdateBannerTone::Info,
                 buttons: vec![],
             }),
             UpdateState::InstallerLaunched { version } => Some(Self {
-                badge: "Installer",
-                message: format!("Version {version} installer launched"),
-                detail: Some("Termy will quit and reopen when setup finishes.".to_string()),
+                badge: t!("Installer"),
+                message: t!("Version {version} installer launched", version = version),
+                detail: Some(t!("Termy will quit and reopen when setup finishes.").to_string()),
                 version: Some(version.clone()),
                 progress: None,
                 tone: UpdateBannerTone::Info,
                 buttons: vec![],
             }),
             UpdateState::Installed { version } => Some(Self {
-                badge: "Installed",
-                message: format!("Version {version} is installed"),
-                detail: Some("Restart Termy to start using it.".to_string()),
+                badge: t!("Installed"),
+                message: t!("Version {version} is installed", version = version),
+                detail: Some(t!("Restart Termy to start using it.").to_string()),
                 version: Some(version.clone()),
                 progress: None,
                 tone: UpdateBannerTone::Success,
                 buttons: vec![
                     UpdateBannerButton {
-                        label: "Restart",
+                        label: t!("Restart"),
                         action: UpdateBannerAction::Restart,
                         style: UpdateButtonStyle::Primary,
                     },
                     UpdateBannerButton {
-                        label: "View release notes",
+                        label: t!("View release notes"),
                         action: UpdateBannerAction::ViewReleaseNotes,
                         style: UpdateButtonStyle::Secondary,
                     },
                     UpdateBannerButton {
-                        label: "Dismiss",
+                        label: t!("Dismiss"),
                         action: UpdateBannerAction::Dismiss,
                         style: UpdateButtonStyle::Ghost,
                     },
                 ],
             }),
             UpdateState::Error(message) => Some(Self {
-                badge: "Failed",
-                message: "Update failed".to_string(),
+                badge: t!("Failed"),
+                message: t!("Update failed").to_string(),
                 detail: Some(message.clone()),
                 version: None,
                 progress: None,
                 tone: UpdateBannerTone::Error,
                 buttons: vec![UpdateBannerButton {
-                    label: "Dismiss",
+                    label: t!("Dismiss"),
                     action: UpdateBannerAction::Dismiss,
                     style: UpdateButtonStyle::Ghost,
                 }],

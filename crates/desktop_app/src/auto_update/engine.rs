@@ -96,7 +96,7 @@ pub fn download_installer(
     let response = ureq::get(url)
         .set("User-Agent", "Termy-Updater/1.0")
         .call()
-        .context("Failed to download installer")?;
+        .context(t!("Failed to download installer"))?;
 
     let total: u64 = response
         .header("Content-Length")
@@ -104,14 +104,14 @@ pub fn download_installer(
         .unwrap_or(0);
 
     let mut reader = response.into_reader();
-    let mut file = std::fs::File::create(dest).context("Failed to create installer file")?;
+    let mut file = std::fs::File::create(dest).context(t!("Failed to create installer file"))?;
     let mut downloaded: u64 = 0;
     let mut buf = [0u8; 65536]; // 64KiB chunks
 
     loop {
         let n = reader
             .read(&mut buf)
-            .context("Failed to read download stream")?;
+            .context(t!("Failed to read download stream"))?;
         if n == 0 {
             break;
         }
@@ -131,7 +131,10 @@ pub fn verify_installer_checksum(
 ) -> Result<()> {
     let Some(checksum_url) = checksum_url else {
         if checksum_required_for_current_platform() {
-            anyhow::bail!("Release is missing a checksum asset for {asset_name}");
+            anyhow::bail!(t!(
+                "Release is missing a checksum asset for {asset_name}",
+                asset_name = asset_name
+            ));
         }
 
         log::warn!("Release has no checksum asset for {asset_name}; skipping verification");
@@ -143,11 +146,21 @@ pub fn verify_installer_checksum(
         checksum_asset_name.eq_ignore_ascii_case(&format!("{asset_name}.sha256"))
     });
     let expected = expected_sha256_for_asset(&checksum_text, asset_name, allow_hash_only)
-        .with_context(|| format!("Checksum file did not contain an entry for {asset_name}"))?;
+        .with_context(|| {
+            t!(
+                "Checksum file did not contain an entry for {asset_name}",
+                asset_name = asset_name
+            )
+        })?;
     let actual = file_sha256_hex(installer_path)?;
 
     if !actual.eq_ignore_ascii_case(&expected) {
-        anyhow::bail!("Checksum mismatch for {asset_name}: expected {expected}, got {actual}");
+        anyhow::bail!(t!(
+            "Checksum mismatch for {asset_name}: expected {expected}, got {actual}",
+            asset_name = asset_name,
+            expected = expected,
+            actual = actual
+        ));
     }
 
     Ok(())
@@ -161,9 +174,9 @@ fn download_checksum_text(url: &str) -> Result<String> {
     ureq::get(url)
         .set("User-Agent", "Termy-Updater/1.0")
         .call()
-        .context("Failed to download checksum file")?
+        .context(t!("Failed to download checksum file"))?
         .into_string()
-        .context("Failed to read checksum file")
+        .context(t!("Failed to read checksum file"))
 }
 
 fn expected_sha256_for_asset(
@@ -219,14 +232,14 @@ fn is_sha256_hex(value: &str) -> bool {
 }
 
 fn file_sha256_hex(path: &Path) -> Result<String> {
-    let mut file = std::fs::File::open(path).context("Failed to open downloaded installer")?;
+    let mut file = std::fs::File::open(path).context(t!("Failed to open downloaded installer"))?;
     let mut hasher = Sha256::new();
     let mut buf = [0u8; 65536];
 
     loop {
         let n = file
             .read(&mut buf)
-            .context("Failed to read downloaded installer for checksum")?;
+            .context(t!("Failed to read downloaded installer for checksum"))?;
         if n == 0 {
             break;
         }
@@ -245,13 +258,13 @@ pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
         .args(["attach", "-nobrowse", "-readonly"])
         .arg(dmg_path)
         .output()
-        .context("Failed to mount DMG")?;
+        .context(t!("Failed to mount DMG"))?;
 
     if !mount.status.success() {
-        anyhow::bail!(
-            "hdiutil attach failed: {}",
-            String::from_utf8_lossy(&mount.stderr)
-        );
+        anyhow::bail!(t!(
+            "hdiutil attach failed: {error}",
+            error = String::from_utf8_lossy(&mount.stderr)
+        ));
     }
 
     let mount_stdout = String::from_utf8_lossy(&mount.stdout);
@@ -261,14 +274,16 @@ pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
             line.find("/Volumes/")
                 .map(|start| PathBuf::from(line[start..].trim()))
         })
-        .context(format!(
-            "Could not determine mounted volume from hdiutil output: {}",
-            mount_stdout.trim()
-        ))?;
+        .with_context(|| {
+            t!(
+                "Could not determine mounted volume from hdiutil output: {output}",
+                output = mount_stdout.trim()
+            )
+        })?;
 
     let install_result: Result<()> = (|| {
         let mut app_path = None;
-        for entry in std::fs::read_dir(&mount_point).context("Failed to read mounted volume")? {
+        for entry in std::fs::read_dir(&mount_point).context(t!("Failed to read mounted volume"))? {
             let entry = entry?;
             let path = entry.path();
             let is_app = path
@@ -287,11 +302,11 @@ pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
             }
         }
 
-        let app_path = app_path.context("No .app bundle found inside mounted DMG")?;
+        let app_path = app_path.context(t!("No .app bundle found inside mounted DMG"))?;
         let target_app = PathBuf::from("/Applications").join(
             app_path
                 .file_name()
-                .context("Mounted app bundle is missing file name")?,
+                .context(t!("Mounted app bundle is missing file name"))?,
         );
 
         if target_app.exists() {
@@ -299,12 +314,12 @@ pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
                 .arg("-rf")
                 .arg(&target_app)
                 .output()
-                .context("Failed to remove old app bundle in /Applications")?;
+                .context(t!("Failed to remove old app bundle in /Applications"))?;
             if !rm_result.status.success() {
-                anyhow::bail!(
-                    "failed removing existing app: {}",
-                    String::from_utf8_lossy(&rm_result.stderr)
-                );
+                anyhow::bail!(t!(
+                    "failed removing existing app: {error}",
+                    error = String::from_utf8_lossy(&rm_result.stderr)
+                ));
             }
         }
 
@@ -313,13 +328,13 @@ pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
             .arg(&app_path)
             .arg(&target_app)
             .output()
-            .context("Failed to copy app bundle to /Applications")?;
+            .context(t!("Failed to copy app bundle to /Applications"))?;
 
         if !copy_result.status.success() {
-            anyhow::bail!(
-                "ditto failed: {}",
-                String::from_utf8_lossy(&copy_result.stderr)
-            );
+            anyhow::bail!(t!(
+                "ditto failed: {error}",
+                error = String::from_utf8_lossy(&copy_result.stderr)
+            ));
         }
 
         Ok(())
@@ -349,17 +364,20 @@ pub fn do_install(installer_path: &PathBuf) -> Result<InstallOutcome> {
                 "msiexec.exe",
                 &windows_msi_installer_parameters(installer_path),
             )
-            .context("Failed to launch MSI installer")?;
+            .context(t!("Failed to launch MSI installer"))?;
         }
         "exe" => {
             shell_execute_elevated(
                 &installer_path.to_string_lossy(),
                 &windows_exe_installer_parameters(),
             )
-            .context("Failed to launch EXE installer")?;
+            .context(t!("Failed to launch EXE installer"))?;
         }
         _ => {
-            anyhow::bail!("Unsupported installer format: {}", extension);
+            anyhow::bail!(t!(
+                "Unsupported installer format: {extension}",
+                extension = extension
+            ));
         }
     }
 
@@ -388,7 +406,7 @@ fn shell_execute_elevated(file: &str, parameters: &str) -> Result<()> {
     };
     let code = result.0 as isize;
     if code <= 32 {
-        anyhow::bail!("ShellExecuteW failed with code {code}");
+        anyhow::bail!(t!("ShellExecuteW failed with code {code}", code = code));
     }
 
     Ok(())
@@ -461,20 +479,20 @@ fn quote_windows_arg(arg: &str) -> String {
 pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
     use std::process::Command;
 
-    let home = std::env::var("HOME").context("HOME environment variable not set")?;
+    let home = std::env::var("HOME").context(t!("HOME environment variable not set"))?;
     let home_path = PathBuf::from(&home);
 
     let install_dir = if home_path.join(".local/bin").exists() {
         home_path.join(".local/bin")
     } else {
         let local_bin = home_path.join(".local/bin");
-        std::fs::create_dir_all(&local_bin).context("Failed to create ~/.local/bin")?;
+        std::fs::create_dir_all(&local_bin).context(t!("Failed to create ~/.local/bin"))?;
         local_bin
     };
 
     let temp_dir = std::env::temp_dir().join("termy-update-extract");
     let _ = std::fs::remove_dir_all(&temp_dir);
-    std::fs::create_dir_all(&temp_dir).context("Failed to create temp extraction directory")?;
+    std::fs::create_dir_all(&temp_dir).context(t!("Failed to create temp extraction directory"))?;
 
     let tar_result = Command::new("tar")
         .args([
@@ -484,13 +502,13 @@ pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
             &temp_dir.to_string_lossy(),
         ])
         .output()
-        .context("Failed to extract tarball")?;
+        .context(t!("Failed to extract tarball"))?;
 
     if !tar_result.status.success() {
-        anyhow::bail!(
-            "tar extraction failed: {}",
-            String::from_utf8_lossy(&tar_result.stderr)
-        );
+        anyhow::bail!(t!(
+            "tar extraction failed: {error}",
+            error = String::from_utf8_lossy(&tar_result.stderr)
+        ));
     }
 
     // Find the termy binary in the extracted contents
@@ -504,7 +522,7 @@ pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
     } else {
         // Search for the binary
         let mut found = None;
-        for entry in std::fs::read_dir(&temp_dir).context("Failed to read temp directory")? {
+        for entry in std::fs::read_dir(&temp_dir).context(t!("Failed to read temp directory"))? {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
@@ -515,12 +533,12 @@ pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
                 }
             }
         }
-        found.context("Could not find termy binary in extracted tarball")?
+        found.context(t!("Could not find termy binary in extracted tarball"))?
     };
 
     let target_binary = install_dir.join("termy");
     std::fs::copy(&source_binary, &target_binary)
-        .context("Failed to copy binary to install directory")?;
+        .context(t!("Failed to copy binary to install directory"))?;
 
     #[cfg(unix)]
     {
@@ -538,7 +556,7 @@ pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
 
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 pub fn do_install(_installer_path: &PathBuf) -> Result<InstallOutcome> {
-    anyhow::bail!("Auto-install is only supported on macOS, Windows, and Linux")
+    anyhow::bail!(t!("Auto-install is only supported on macOS, Windows, and Linux"))
 }
 
 #[cfg(test)]

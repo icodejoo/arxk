@@ -1216,7 +1216,7 @@ impl TerminalView {
 
     fn require_workspace_store(&self) -> Result<Arc<WorkspaceStore>, String> {
         self.workspace_store()
-            .ok_or_else(|| "The workspace store is unavailable".to_string())
+            .ok_or_else(|| t!("The workspace store is unavailable").to_string())
     }
 
     pub(in super::super) fn clear_persisted_native_workspace(&self) -> Result<(), String> {
@@ -1254,15 +1254,15 @@ impl TerminalView {
         layout_name: &str,
     ) -> Result<(), String> {
         if self.runtime_kind() != RuntimeKind::Native {
-            return Err("Saved layouts are only available in the native runtime".to_string());
+            return Err(t!("Saved layouts are only available in the native runtime").to_string());
         }
         let layout_name = layout_name.trim();
         if layout_name.is_empty() {
-            return Err("Layout name is required".to_string());
+            return Err(t!("Layout name is required").to_string());
         }
         let workspace = self
             .collect_persisted_native_workspace()
-            .ok_or_else(|| "There is no native layout to save".to_string())?;
+            .ok_or_else(|| t!("There is no native layout to save").to_string())?;
         let snapshot = Self::persisted_workspace_to_value(workspace).to_string();
         self.require_workspace_store()?
             .upsert_named_layout(layout_name, &snapshot)?;
@@ -1276,12 +1276,12 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> Result<(), String> {
         if self.runtime_kind() != RuntimeKind::Native {
-            return Err("Saved layouts are only available in the native runtime".to_string());
+            return Err(t!("Saved layouts are only available in the native runtime").to_string());
         }
         let (canonical_name, snapshot) = self
             .require_workspace_store()?
             .named_layout(layout_name)?
-            .ok_or_else(|| format!("Saved layout \"{layout_name}\" was not found"))?;
+            .ok_or_else(|| t!("Saved layout \"{layout_name}\" was not found", layout_name = layout_name))?;
         let value = serde_json::from_str::<Value>(&snapshot)
             .map_err(|error| format!("Invalid saved layout '{canonical_name}': {error}"))?;
         let workspace = Self::parse_persisted_native_workspace_value(&value)?;
@@ -1299,7 +1299,7 @@ impl TerminalView {
         let current_layout_name = current_layout_name.trim();
         let next_layout_name = next_layout_name.trim();
         if current_layout_name.is_empty() || next_layout_name.is_empty() {
-            return Err("Layout name is required".to_string());
+            return Err(t!("Layout name is required").to_string());
         }
 
         self.require_workspace_store()?
@@ -1320,13 +1320,13 @@ impl TerminalView {
     ) -> Result<(), String> {
         let layout_name = layout_name.trim();
         if layout_name.is_empty() {
-            return Err("Layout name is required".to_string());
+            return Err(t!("Layout name is required").to_string());
         }
         if !self
             .require_workspace_store()?
             .delete_named_layout(layout_name)?
         {
-            return Err(format!("Saved layout \"{layout_name}\" was not found"));
+            return Err(t!("Saved layout \"{layout_name}\" was not found", layout_name = layout_name));
         }
         let clear_current_named_layout = self
             .current_named_layout

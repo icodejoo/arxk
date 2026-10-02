@@ -92,7 +92,7 @@ impl SidebarSearch {
     pub fn new() -> Self {
         Self {
             query: None,
-            placeholder: SharedString::from("Search settings"),
+            placeholder: SharedString::from(t!("Search settings")),
             active: false,
             trailing_label: None,
         }

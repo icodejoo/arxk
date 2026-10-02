@@ -714,7 +714,7 @@ impl SettingsWindow {
                             .text_size(px(19.0))
                             .font_weight(gpui_kit::FontWeight::BOLD)
                             .text_color(self.text_primary())
-                            .child("Settings"),
+                            .child(t!("Settings")),
                     )
                     .child(self.render_sidebar_search(cx)),
             )
@@ -774,7 +774,7 @@ impl SettingsWindow {
                     .text_size(px(SIDEBAR_GROUP_LABEL_SIZE))
                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                     .text_color(self.text_muted())
-                    .child(label),
+                    .child(termy::i18n::tr(label)),
             )
             .child(items)
             .into_any_element()
@@ -863,9 +863,9 @@ impl SettingsWindow {
                             .text_xs()
                             .text_color(text_primary)
                             .child(if self.theme_store_auth_loading {
-                                "Signing out..."
+                                t!("Signing out...")
                             } else {
-                                "Logout"
+                                t!("Logout")
                             })
                             .on_click(cx.listener(|view, _, _, cx| {
                                 view.logout_theme_store_user(cx);
@@ -935,7 +935,7 @@ impl SettingsWindow {
             div()
                 .text_size(px(SETTINGS_INPUT_TEXT_SIZE))
                 .text_color(text_muted)
-                .child("Search settings...")
+                .child(t!("Search settings..."))
                 .into_any_element()
         }
     }
@@ -1040,9 +1040,9 @@ impl SettingsWindow {
     ) -> AnyElement {
         let total_results = all_results.len();
         let summary = if total_results == 1 {
-            "1 match".to_string()
+            t!("1 match").to_string()
         } else {
-            format!("{total_results} matches")
+            t!("{count} matches", count = total_results)
         };
 
         let mut container =
@@ -1068,9 +1068,14 @@ impl SettingsWindow {
                         div()
                             .text_xs()
                             .text_color(text_secondary)
-                            .child(setting.metadata.title),
+                            .child(termy::i18n::tr(setting.metadata.title)),
                     )
-                    .child(div().text_xs().text_color(text_muted).child(section_label))
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(text_muted)
+                            .child(termy::i18n::tr(section_label)),
+                    )
                     .on_click(cx.listener(move |view, _, window, cx| {
                         view.jump_to_setting(key, window, cx);
                     })),
@@ -1180,7 +1185,7 @@ impl SettingsWindow {
                     } else {
                         text_secondary
                     })
-                    .child(label),
+                    .child(termy::i18n::tr(label)),
             )
             .on_mouse_down(
                 MouseButton::Left,

@@ -129,7 +129,7 @@ impl PluginUiView {
         let mut context = self
             .parent
             .update(cx, |view, cx| view.plugin_context(cx))
-            .map_err(|_| "Plugin view lost its terminal window".to_string())?;
+            .map_err(|_| t!("Plugin view lost its terminal window").to_string())?;
         if let Some(origin) = &self.origin {
             context.origin = origin.clone();
         }
@@ -238,17 +238,17 @@ impl PluginUiView {
 
     fn validate_render_origin(&self, render: &PluginViewRender) -> Result<(), String> {
         if render.plugin_id != self.descriptor.plugin_id || render.revision != self.revision {
-            return Err("Plugin view returned a response from the wrong revision".to_string());
+            return Err(t!("Plugin view returned a response from the wrong revision").to_string());
         }
         if render.params != self.params {
-            return Err("Plugin view returned a response for the wrong params".to_string());
+            return Err(t!("Plugin view returned a response for the wrong params").to_string());
         }
         let (_, current_revision) = self
             .runtime
             .view_with_revision(&self.descriptor.plugin_id, &self.descriptor.id)
-            .ok_or_else(|| "Plugin view is no longer available".to_string())?;
+            .ok_or_else(|| t!("Plugin view is no longer available").to_string())?;
         if current_revision != self.revision {
-            return Err("Plugin changed while its view was running; reopen the view".to_string());
+            return Err(t!("Plugin changed while its view was running; reopen the view").to_string());
         }
         Ok(())
     }
@@ -516,7 +516,7 @@ impl PluginUiView {
                 continue;
             };
             if value.chars().count() > limit {
-                return Err(format!("Input `{id}` must be at most {limit} characters"));
+                return Err(t!("Input `{id}` must be at most {limit} characters", id = id, limit = limit));
             }
         }
         Ok(())
@@ -1301,7 +1301,7 @@ impl Render for PluginUiView {
                 .text_center()
                 .text_size(px(13.0))
                 .text_color(style.muted_text)
-                .child("Loading view…")
+                .child(t!("Loading view…"))
                 .into_any_element()
         } else {
             div()
@@ -1352,7 +1352,7 @@ impl Render for PluginUiView {
                             div()
                                 .text_size(px(11.0))
                                 .text_color(style.muted_text)
-                                .child("Working…")
+                                .child(t!("Working…"))
                         })),
                 )
                 .into_any_element();
@@ -1450,7 +1450,7 @@ impl Render for PluginUiView {
                         div()
                             .text_size(px(11.0))
                             .text_color(style.muted_text)
-                            .child("Working…")
+                            .child(t!("Working…"))
                     })),
             );
 

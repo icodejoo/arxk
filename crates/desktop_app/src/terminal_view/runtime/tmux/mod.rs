@@ -87,9 +87,11 @@ fn tmux_hydration_warning_message(failures: &[String]) -> Option<String> {
         .collect::<Vec<_>>()
         .join(", ");
     let suffix = if failures.len() > 3 { ", ..." } else { "" };
-    Some(format!(
-        "tmux pane restore degraded for {} pane(s): {preview}{suffix}",
-        failures.len()
+    Some(t!(
+        "tmux pane restore degraded for {count} pane(s): {preview}{suffix}",
+        count = failures.len(),
+        preview = preview,
+        suffix = suffix
     ))
 }
 

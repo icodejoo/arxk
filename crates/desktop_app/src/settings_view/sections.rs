@@ -122,9 +122,19 @@ impl SettingsWindow {
                 cx,
             ));
         }
-        let theme_group = self.render_settings_group("Theme", theme_rows);
+        let theme_group = self.render_settings_group(t!("Theme"), theme_rows);
 
         let mut window_rows = Vec::new();
+        // 界面语言：放在外观分组最前面，所有平台都显示。
+        let language_meta = Self::setting_metadata_or_fallback("language");
+        window_rows.push(self.render_editable_row(
+            "language",
+            EditableField::Language,
+            termy::i18n::tr(language_meta.title),
+            termy::i18n::tr(language_meta.description),
+            self.editable_field_value(EditableField::Language),
+            cx,
+        ));
         #[cfg(target_os = "macos")]
         window_rows.push(
             self.render_editable_row(
@@ -169,7 +179,7 @@ impl SettingsWindow {
                 cx,
             ),
         ]);
-        let window_group = self.render_settings_group("Window", window_rows);
+        let window_group = self.render_settings_group(t!("Window"), window_rows);
 
         let font_rows = vec![
             self.render_editable_row(
@@ -221,7 +231,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        let typography_group = self.render_settings_group("Typography & spacing", font_rows);
+        let typography_group = self.render_settings_group(t!("Typography & spacing"), font_rows);
 
         div()
             .flex()
@@ -275,7 +285,7 @@ impl SettingsWindow {
             self.config.multiplexer_enabled,
             cx,
         );
-        let section = section.child(self.render_settings_group("Sessions", vec![row]));
+        let section = section.child(self.render_settings_group(t!("Sessions"), vec![row]));
         let section = section.child(self.render_terminal_tmux_group(cx));
 
         section
@@ -305,7 +315,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        self.render_settings_group("Cursor", rows)
+        self.render_settings_group(t!("Cursor"), rows)
     }
 
     #[cfg(target_os = "macos")]
@@ -318,7 +328,7 @@ impl SettingsWindow {
             macos_option_as_alt,
             cx,
         )];
-        self.render_settings_group("Keyboard", rows)
+        self.render_settings_group(t!("Keyboard"), rows)
     }
 
     pub(super) fn render_terminal_shell_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -332,19 +342,19 @@ impl SettingsWindow {
             .config
             .shell
             .clone()
-            .unwrap_or_else(|| "Uses Windows Shell".to_string());
+            .unwrap_or_else(|| t!("Uses Windows Shell").to_string());
         #[cfg(not(target_os = "windows"))]
         let shell = self
             .config
             .shell
             .clone()
-            .unwrap_or_else(|| "System default".to_string());
+            .unwrap_or_else(|| t!("System default").to_string());
         let term = self.config.term.clone();
         let colorterm = self
             .config
             .colorterm
             .clone()
-            .unwrap_or_else(|| "Disabled".to_string());
+            .unwrap_or_else(|| t!("Disabled").to_string());
 
         let mut rows = Vec::new();
         #[cfg(target_os = "windows")]
@@ -383,7 +393,7 @@ impl SettingsWindow {
                 cx,
             ),
         ]);
-        self.render_settings_group("Shell environment", rows)
+        self.render_settings_group(t!("Shell environment"), rows)
     }
 
     pub(super) fn render_terminal_tmux_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -464,7 +474,7 @@ impl SettingsWindow {
                 EditableField::ScrollbackHistory,
                 scrollback_meta.title,
                 scrollback_meta.description,
-                format!("{scrollback} lines"),
+                t!("{count} lines", count = scrollback),
                 cx,
             ),
             self.render_editable_row(
@@ -472,7 +482,7 @@ impl SettingsWindow {
                 EditableField::InactiveTabScrollback,
                 inactive_scrollback_meta.title,
                 inactive_scrollback_meta.description,
-                format!("{inactive_scrollback} lines"),
+                t!("{count} lines", count = inactive_scrollback),
                 cx,
             ),
             self.render_editable_row(
@@ -500,7 +510,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        self.render_settings_group("Scrolling", rows)
+        self.render_settings_group(t!("Scrolling"), rows)
     }
 
     pub(super) fn render_terminal_clipboard_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -523,7 +533,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        self.render_settings_group("Clipboard", rows)
+        self.render_settings_group(t!("Clipboard"), rows)
     }
 
     pub(super) fn render_terminal_ui_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -557,7 +567,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        self.render_settings_group("Terminal interface", rows)
+        self.render_settings_group(t!("Terminal interface"), rows)
     }
 
     pub(super) fn render_tabs_section(&mut self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -674,7 +684,7 @@ impl SettingsWindow {
             ),
         ];
 
-        self.render_settings_group("Tab titles", rows)
+        self.render_settings_group(t!("Tab titles"), rows)
     }
 
     pub(super) fn render_tabs_strip_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -728,7 +738,7 @@ impl SettingsWindow {
             cx,
         ));
 
-        self.render_settings_group("Tab strip", rows)
+        self.render_settings_group(t!("Tab strip"), rows)
     }
 
     pub(super) fn render_tabs_sidebar_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -753,7 +763,7 @@ impl SettingsWindow {
             ),
         ];
 
-        self.render_settings_group("Workspace sidebar", rows)
+        self.render_settings_group(t!("Workspace sidebar"), rows)
     }
 
     pub(super) fn render_tabs_titlebar_group(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -766,7 +776,7 @@ impl SettingsWindow {
             cx,
         )];
 
-        self.render_settings_group("Title bar", rows)
+        self.render_settings_group(t!("Title bar"), rows)
     }
 
     pub(super) fn render_theme_store_toolbar(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -810,7 +820,7 @@ impl SettingsWindow {
             div()
                 .text_size(px(SETTINGS_INPUT_TEXT_SIZE))
                 .text_color(text_muted)
-                .child("Search themes...")
+                .child(t!("Search themes..."))
                 .into_any_element()
         };
 
@@ -909,16 +919,17 @@ impl SettingsWindow {
             total_theme_count
         };
         let availability_label = if self.theme_store_loading {
-            "Syncing".to_string()
+            t!("Syncing").to_string()
         } else if self.theme_store_error.is_some() {
-            "Unavailable".to_string()
+            t!("Unavailable").to_string()
         } else if has_query {
-            format!(
-                "{filtered_count} result{}",
-                if filtered_count == 1 { "" } else { "s" }
-            )
+            if filtered_count == 1 {
+                t!("1 result").to_string()
+            } else {
+                t!("{count} results", count = filtered_count)
+            }
         } else {
-            format!("{total_theme_count} available")
+            t!("{count} available", count = total_theme_count)
         };
 
         let installed_chip: Option<AnyElement> = if installed_theme_count > 0 {
@@ -932,7 +943,7 @@ impl SettingsWindow {
                     .whitespace_nowrap()
                     .flex()
                     .items_center()
-                    .child(format!("· {installed_theme_count} installed"))
+                    .child(t!("· {count} installed", count = installed_theme_count))
                     .into_any_element(),
             )
         } else {
@@ -971,7 +982,7 @@ impl SettingsWindow {
                     .items_center()
                     .justify_center()
                     .hover(move |s| s.bg(hover_bg).text_color(text_primary))
-                    .child("Open repo ↗")
+                    .child(t!("Open repo ↗"))
                     .on_click(cx.listener(move |_view, _, _, cx| {
                         if let Err(error) = SettingsWindow::open_url(store_url) {
                             crate::ui::toast::error(error);
@@ -1020,13 +1031,13 @@ impl SettingsWindow {
                                     .text_sm()
                                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                                     .text_color(text_primary)
-                                    .child("Syncing theme registry"),
+                                    .child(t!("Syncing theme registry")),
                             )
                             .child(
                                 div()
                                     .text_xs()
                                     .text_color(text_muted)
-                                    .child("Fetching the latest themes from GitHub."),
+                                    .child(t!("Fetching the latest themes from GitHub.")),
                             ),
                     )
                     .child(div().w(px(8.0)).h(px(8.0)).rounded_full().bg(accent))
@@ -1056,7 +1067,7 @@ impl SettingsWindow {
                                     .text_sm()
                                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                                     .text_color(text_primary)
-                                    .child("Registry did not respond"),
+                                    .child(t!("Registry did not respond")),
                             )
                             .child(div().text_xs().text_color(text_muted).child(error)),
                     )
@@ -1075,7 +1086,7 @@ impl SettingsWindow {
                             .items_center()
                             .justify_center()
                             .hover(move |s| s.bg(accent_hover).text_color(button_hover_text))
-                            .child("Retry")
+                            .child(t!("Retry"))
                             .on_click(cx.listener(|view, _, _, cx| {
                                 view.theme_store_loaded = false;
                                 view.refresh_theme_store_themes(cx);
@@ -1093,7 +1104,7 @@ impl SettingsWindow {
                     .bg(self.accent_with_alpha(0.08))
                     .text_xs()
                     .text_color(text_muted)
-                    .child("Showing cached themes — registry unreachable.")
+                    .child(t!("Showing cached themes — registry unreachable."))
                     .into_any_element(),
             );
         }
@@ -1132,13 +1143,13 @@ impl SettingsWindow {
                         .text_sm()
                         .font_weight(gpui_kit::FontWeight::MEDIUM)
                         .text_color(text_primary)
-                        .child("No themes yet"),
+                        .child(t!("No themes yet")),
                 )
                 .child(
                     div()
                         .text_xs()
                         .text_color(text_muted)
-                        .child("Registry is reachable but has no published themes."),
+                        .child(t!("Registry is reachable but has no published themes.")),
                 )
                 .into_any_element();
         }
@@ -1179,13 +1190,13 @@ impl SettingsWindow {
                         .text_sm()
                         .font_weight(gpui_kit::FontWeight::MEDIUM)
                         .text_color(text_primary)
-                        .child("No matching themes"),
+                        .child(t!("No matching themes")),
                 )
                 .child(
                     div()
                         .text_xs()
                         .text_color(text_muted)
-                        .child("Try a different name, slug, or style keyword."),
+                        .child(t!("Try a different name, slug, or style keyword.")),
                 )
                 .into_any_element();
         }
@@ -1226,7 +1237,7 @@ impl SettingsWindow {
         let version_label = theme
             .latest_version
             .clone()
-            .unwrap_or_else(|| "n/a".to_string());
+            .unwrap_or_else(|| t!("n/a").to_string());
         let slug_key = theme.slug.to_ascii_lowercase();
         let installed_version = self.theme_store_installed_versions.get(&slug_key).cloned();
         let installed_any = installed_version.is_some();
@@ -1238,7 +1249,7 @@ impl SettingsWindow {
         });
         let has_update = installed_any && !is_installed;
         let description = if theme.description.trim().is_empty() {
-            "No description provided.".to_string()
+            t!("No description provided.").to_string()
         } else {
             theme.description.clone()
         };
@@ -1267,14 +1278,18 @@ impl SettingsWindow {
                 .items_center()
                 .justify_center()
                 .hover(move |s| s.bg(hover_bg).text_color(text_primary))
-                .child("Uninstall")
+                .child(t!("Uninstall"))
                 .on_click(cx.listener(move |view, _, _, cx| {
                     view.uninstall_theme_store_theme(&uninstall_slug, cx);
                     cx.notify();
                 }))
                 .into_any_element()
         } else {
-            let label = if has_update { "Update" } else { "Install" };
+            let label = if has_update {
+                t!("Update")
+            } else {
+                t!("Install")
+            };
             div()
                 .id(SharedString::from(format!(
                     "theme-store-install-{}",
@@ -1421,7 +1436,7 @@ impl SettingsWindow {
             .config
             .working_dir
             .clone()
-            .unwrap_or_else(|| "Not set".to_string());
+            .unwrap_or_else(|| t!("Not set").to_string());
         let working_dir_fallback = self.editable_field_value(EditableField::WorkingDirFallback);
         let always_warn_on_quit = self.config.warn_on_quit;
         let warn_on_quit_with_running_process = self.config.warn_on_quit_with_running_process;
@@ -1449,7 +1464,7 @@ impl SettingsWindow {
             .as_ref()
             .map(|path| path.display().to_string())
             .filter(|path| !path.trim().is_empty())
-            .unwrap_or_else(|| "config path not set".to_string());
+            .unwrap_or_else(|| t!("config path not set").to_string());
 
         let startup_rows = vec![
             self.render_editable_row(
@@ -1490,7 +1505,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        let startup_group = self.render_settings_group("Startup", startup_rows);
+        let startup_group = self.render_settings_group(t!("Startup"), startup_rows);
 
         let safety_rows = vec![
             self.render_root_bool_setting_row(
@@ -1508,7 +1523,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        let safety_group = self.render_settings_group("Safety", safety_rows);
+        let safety_group = self.render_settings_group(t!("Safety"), safety_rows);
 
         let window_rows = vec![
             self.render_editable_row(
@@ -1528,7 +1543,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        let window_group = self.render_settings_group("Window defaults", window_rows);
+        let window_group = self.render_settings_group(t!("Window defaults"), window_rows);
 
         let auto_update = self.config.auto_update;
         let behavior_rows = vec![
@@ -1554,7 +1569,7 @@ impl SettingsWindow {
                 cx,
             ),
         ];
-        let behavior_group = self.render_settings_group("App behavior", behavior_rows);
+        let behavior_group = self.render_settings_group(t!("App behavior"), behavior_rows);
 
         let config_file_card = div()
             .py_4()
@@ -1570,7 +1585,7 @@ impl SettingsWindow {
                 div()
                     .text_sm()
                     .text_color(text_muted)
-                    .child("Edit the config file directly for settings not shown here:"),
+                    .child(t!("Edit the config file directly for settings not shown here:")),
             )
             .child(
                 div()
@@ -1591,7 +1606,7 @@ impl SettingsWindow {
                     .text_color(button_text)
                     .cursor_pointer()
                     .hover(move |s| s.bg(accent_hover).text_color(button_hover_text))
-                    .child("Open config file")
+                    .child(t!("Open config file"))
                     .on_click(cx.listener(|_view, _, _, cx| {
                         if let Err(error) = crate::config::open_config_file() {
                             log::error!("Failed to open config file from settings: {error}");
@@ -1602,7 +1617,7 @@ impl SettingsWindow {
             )
             .into_any_element();
 
-        let config_group = self.render_settings_group("Config file", vec![config_file_card]);
+        let config_group = self.render_settings_group(t!("Config file"), vec![config_file_card]);
 
         div()
             .flex()

@@ -12,6 +12,7 @@ pub(super) enum EditableField {
     ThemeDark,
     #[cfg_attr(target_os = "windows", allow(dead_code))]
     AppIcon,
+    Language,
     BackgroundOpacity,
     FontFamily,
     UiFontFamily,
@@ -321,17 +322,18 @@ impl SettingsWindow {
         cx: &mut Context<Self>,
     ) {
         let section_name = match section {
-            SettingsSection::Appearance => "Appearance",
-            SettingsSection::Terminal => "Terminal",
-            SettingsSection::Tabs => "Tabs",
-            SettingsSection::Advanced => "General",
-            SettingsSection::Colors => "Colors",
-            SettingsSection::Keybindings => "Keyboard shortcuts",
+            SettingsSection::Appearance => t!("Appearance"),
+            SettingsSection::Terminal => t!("Terminal"),
+            SettingsSection::Tabs => t!("Tabs"),
+            SettingsSection::Advanced => t!("General"),
+            SettingsSection::Colors => t!("Colors"),
+            SettingsSection::Keybindings => t!("Keyboard shortcuts"),
             SettingsSection::ThemeStore | SettingsSection::Plugins | SettingsSection::Ssh => return,
         };
-        let title = "Reset Section";
-        let message = format!(
-            "Are you sure you want to reset all {section_name} settings to their default values?"
+        let title = t!("Reset Section");
+        let message = t!(
+            "Are you sure you want to reset all {section_name} settings to their default values?",
+            section_name = section_name
         );
 
         cx.spawn(async move |this, cx: &mut AsyncApp| {
@@ -354,8 +356,8 @@ impl SettingsWindow {
         setting_key: &'static str,
         cx: &mut Context<Self>,
     ) {
-        let title = "Reset Setting";
-        let message = "Are you sure you want to reset this setting to its default value?";
+        let title = t!("Reset Setting");
+        let message = t!("Are you sure you want to reset this setting to its default value?");
 
         cx.spawn(async move |this, cx: &mut AsyncApp| {
             let confirmed = crate::native_sdk::confirm(title, message);
@@ -413,6 +415,7 @@ impl SettingsWindow {
             | EditableField::ThemeLight
             | EditableField::ThemeDark
             | EditableField::AppIcon
+            | EditableField::Language
             | EditableField::BackgroundOpacity
             | EditableField::FontFamily
             | EditableField::UiFontFamily
@@ -479,6 +482,7 @@ impl SettingsWindow {
                 numeric_step: None,
             },
             EditableField::AppIcon => Self::enum_field_spec(RootSettingId::AppIcon),
+            EditableField::Language => Self::enum_field_spec(RootSettingId::Language),
             EditableField::BackgroundOpacity => FieldSpec {
                 root_setting: Some(RootSettingId::BackgroundOpacity),
                 codec: FieldCodec::Numeric,
@@ -743,7 +747,11 @@ impl SettingsWindow {
         let mut options = choices
             .iter()
             .map(|choice| {
-                Self::dropdown_option_for_enum_choice(setting, choice.value, choice.label)
+                Self::dropdown_option_for_enum_choice(
+                    setting,
+                    choice.value,
+                    termy::i18n::tr(choice.label),
+                )
             })
             .collect::<Vec<_>>();
 
@@ -832,7 +840,12 @@ impl SettingsWindow {
         else {
             return raw_value.to_string();
         };
-        Self::dropdown_option_for_enum_choice(setting, choice.value, choice.label).display_text()
+        Self::dropdown_option_for_enum_choice(
+            setting,
+            choice.value,
+            termy::i18n::tr(choice.label),
+        )
+        .display_text()
     }
 
     pub(super) fn apply_dropdown_selection(
@@ -890,6 +903,12 @@ impl SettingsWindow {
             EditableField::AppIcon => match self.config.app_icon {
                 termy_core::config_core::AppIcon::TermyDefault => "default",
                 termy_core::config_core::AppIcon::TermyOld => "old",
+            }
+            .to_string(),
+            EditableField::Language => match self.config.language {
+                termy_core::config_core::AppLanguage::Auto => "auto",
+                termy_core::config_core::AppLanguage::English => "en",
+                termy_core::config_core::AppLanguage::Chinese => "zh",
             }
             .to_string(),
             EditableField::BackgroundOpacity => format!(
@@ -1050,7 +1069,7 @@ impl SettingsWindow {
         cx: &mut Context<Self>,
     ) {
         let Some(step) = Self::field_spec(field).numeric_step else {
-            crate::ui::toast::error("Invalid numeric setting");
+            crate::ui::toast::error(t!("Invalid numeric setting"));
             return;
         };
         let result = match field {
@@ -1272,6 +1291,7 @@ mod tests {
             EditableField::ThemeLight,
             EditableField::ThemeDark,
             EditableField::AppIcon,
+            EditableField::Language,
             EditableField::BackgroundOpacity,
             EditableField::FontFamily,
             EditableField::FontSize,
@@ -1329,6 +1349,7 @@ mod tests {
             EditableField::ScrollbarStyle,
             EditableField::PaneFocusEffect,
             EditableField::AppIcon,
+            EditableField::Language,
             EditableField::TabTitleMode,
             EditableField::TabCloseVisibility,
             EditableField::TabWidthMode,

@@ -4,7 +4,7 @@ use gpui_kit::AnimationExt as _;
 impl SettingsWindow {
     fn masked_secret_value(text: &str) -> String {
         if text.is_empty() || text.eq_ignore_ascii_case("not configured") {
-            "Not configured".to_string()
+            t!("Not configured").to_string()
         } else {
             "••••••••".to_string()
         }
@@ -66,7 +66,7 @@ impl SettingsWindow {
                     }
                     cx.notify();
                 }))
-                .child("Reset section")
+                .child(t!("Reset section"))
                 .on_click(cx.listener(move |view, _, _, cx| {
                     view.confirm_reset_section_to_defaults(section, cx);
                 }))
@@ -87,7 +87,7 @@ impl SettingsWindow {
                                 .text_size(px(11.0))
                                 .text_color(tooltip_fg)
                                 .whitespace_nowrap()
-                                .child("Reset all settings in this section"),
+                                .child(t!("Reset all settings in this section")),
                         )
                         .with_priority(20),
                     )
@@ -97,8 +97,8 @@ impl SettingsWindow {
         // Title and subtitle come from the design system; the reset affordance
         // keeps its hover, tooltip, and confirmation flow here because that is
         // app behavior, not presentation.
-        let mut header = crate::design_system::SectionHeader::new(title)
-            .subtitle(subtitle)
+        let mut header = crate::design_system::SectionHeader::new(termy::i18n::tr(title))
+            .subtitle(termy::i18n::tr(subtitle))
             .leading(self.render_section_tile(
                 section,
                 SECTION_ICON_TILE_SIZE,
@@ -120,7 +120,7 @@ impl SettingsWindow {
         self.render_setting_action_button(
             SharedString::from(format!("reset-setting-{setting_key}")),
             "icons/settings/reset.svg",
-            "Reset to default",
+            t!("Reset to default"),
             !self.is_setting_at_default(setting_key),
             cx,
             move |view, _, cx| view.confirm_reset_setting_to_default(setting_key, cx),
@@ -194,7 +194,7 @@ impl SettingsWindow {
                             .text_size(px(11.0))
                             .text_color(tooltip_fg)
                             .whitespace_nowrap()
-                            .child(label),
+                            .child(termy::i18n::tr(label)),
                     )
                     .with_priority(20),
                 )
@@ -243,13 +243,18 @@ impl SettingsWindow {
                     .min_w(px(0.0))
                     .flex_col()
                     .gap(px(1.0))
-                    .child(div().text_sm().text_color(self.text_primary()).child(title))
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(self.text_primary())
+                            .child(termy::i18n::tr(title)),
+                    )
                     .child(
                         div()
                             .text_xs()
                             .text_color(self.text_muted())
                             .line_height(px(16.0))
-                            .child(description),
+                            .child(termy::i18n::tr(description)),
                     ),
             )
             .child(
@@ -872,14 +877,14 @@ impl SettingsWindow {
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(text_primary)
-                            .child(title),
+                            .child(termy::i18n::tr(title)),
                     )
                     .child(
                         div()
                             .text_xs()
                             .text_color(text_muted)
                             .line_height(px(17.0))
-                            .child(description),
+                            .child(termy::i18n::tr(description)),
                     ),
             )
             .child(
@@ -1311,14 +1316,14 @@ impl SettingsWindow {
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(text_primary)
-                            .child(title),
+                            .child(termy::i18n::tr(title)),
                     )
                     .child(
                         div()
                             .text_xs()
                             .text_color(text_muted)
                             .line_height(px(17.0))
-                            .child(description),
+                            .child(termy::i18n::tr(description)),
                     ),
             )
             .child(

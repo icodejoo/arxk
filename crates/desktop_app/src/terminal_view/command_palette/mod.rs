@@ -190,8 +190,8 @@ impl TerminalView {
         reason: CommandUnavailableReason,
     ) -> &'static str {
         match reason {
-            CommandUnavailableReason::RequiresTmuxRuntime => "tmux required",
-            CommandUnavailableReason::InstallCliAlreadyInstalled => "Installed",
+            CommandUnavailableReason::RequiresTmuxRuntime => termy::i18n::tr("tmux required"),
+            CommandUnavailableReason::InstallCliAlreadyInstalled => termy::i18n::tr("Installed"),
         }
     }
 
@@ -224,7 +224,7 @@ impl TerminalView {
             .map(|entry| {
                 Self::command_palette_command_item_for_state(
                     entry.action,
-                    entry.title,
+                    termy::i18n::tr(entry.title),
                     entry.keywords,
                     capabilities,
                 )
@@ -312,7 +312,7 @@ impl TerminalView {
 
     fn collect_app_info_entries(&self) -> Vec<(&'static str, String)> {
         let config_path = self.config_path.as_ref().map_or_else(
-            || "unknown".to_string(),
+            || t!("unknown").to_string(),
             |path| path.to_string_lossy().into_owned(),
         );
         let mut system = sysinfo::System::new_all();
@@ -324,26 +324,29 @@ impl TerminalView {
             .first()
             .map(|c| c.brand().trim().to_string())
             .filter(|s| !s.is_empty())
-            .unwrap_or_else(|| "unknown".to_string());
+            .unwrap_or_else(|| t!("unknown").to_string());
         let cpu_count = system.cpus().len();
-        let host_name = sysinfo::System::host_name().unwrap_or_else(|| "unknown".to_string());
+        let host_name = sysinfo::System::host_name().unwrap_or_else(|| t!("unknown").to_string());
         let os_version =
             sysinfo::System::long_os_version().unwrap_or_else(|| std::env::consts::OS.to_string());
 
         vec![
-            ("Version", crate::APP_VERSION.to_string()),
+            (t!("Version"), crate::APP_VERSION.to_string()),
             (
-                "Platform",
+                t!("Platform"),
                 format!("{}-{}", std::env::consts::OS, std::env::consts::ARCH),
             ),
-            ("OS", os_version),
-            ("Host", host_name),
-            ("CPU", format!("{cpu_brand} ({cpu_count} cores)")),
+            (t!("OS"), os_version),
+            (t!("Host"), host_name),
             (
-                "Memory",
+                t!("CPU"),
+                t!("{cpu_brand} ({cpu_count} cores)", cpu_brand = cpu_brand, cpu_count = cpu_count),
+            ),
+            (
+                t!("Memory"),
                 format!("{used_memory_mb} MB / {total_memory_mb} MB"),
             ),
-            ("Config", config_path),
+            (t!("Config"), config_path),
         ]
     }
 
@@ -362,7 +365,7 @@ impl TerminalView {
 
         let layout_name = current_named_layout?;
         Some(CommandPaletteItem {
-            title: format!("Run Tasks for \"{layout_name}\""),
+            title: t!("Run Tasks for \"{layout_name}\"", layout_name = layout_name),
             keywords: format!("saved layout tasks run {}", layout_name.replace('-', " ")),
             enabled: true,
             status_hint: None,
@@ -479,7 +482,7 @@ impl TerminalView {
                     items.insert(
                         0,
                         CommandPaletteItem {
-                            title: "New Task…".to_string(),
+                            title: t!("New Task…").to_string(),
                             keywords: "task new create add".to_string(),
                             enabled: true,
                             status_hint: None,
@@ -492,12 +495,12 @@ impl TerminalView {
                     items.insert(
                         1.min(items.len()),
                         CommandPaletteItem {
-                            title: "Save Current Command as Task…".to_string(),
+                            title: t!("Save Current Command as Task…").to_string(),
                             keywords: "task save current command active".to_string(),
                             enabled: active_command.is_some(),
                             status_hint: active_command
                                 .is_none()
-                                .then(|| "no active command".to_string()),
+                                .then(|| t!("no active command").to_string()),
                             tmux_status_hint: None,
                             kind: CommandPaletteItemKind::TaskOpenSaveCurrentCommandGlobalMode,
                         },
@@ -507,7 +510,7 @@ impl TerminalView {
                         items.insert(
                             2.min(items.len()),
                             CommandPaletteItem {
-                                title: format!("New Task for \"{layout_name}\"…"),
+                                title: t!("New Task for \"{layout_name}\"…", layout_name = layout_name),
                                 keywords: format!(
                                     "task new create add layout {}",
                                     layout_name.replace('-', " ")
@@ -523,7 +526,7 @@ impl TerminalView {
                         items.insert(
                             3.min(items.len()),
                             CommandPaletteItem {
-                                title: format!("Save Current Command for \"{layout_name}\"…"),
+                                title: t!("Save Current Command for \"{layout_name}\"…", layout_name = layout_name),
                                 keywords: format!(
                                     "task save current command active layout {}",
                                     layout_name.replace('-', " ")
@@ -531,7 +534,7 @@ impl TerminalView {
                                 enabled: active_command.is_some(),
                                 status_hint: active_command
                                     .is_none()
-                                    .then(|| "no active command".to_string()),
+                                    .then(|| t!("no active command").to_string()),
                                 tmux_status_hint: None,
                                 kind:
                                     CommandPaletteItemKind::TaskOpenSaveCurrentCommandLayoutMode {
@@ -562,10 +565,10 @@ impl TerminalView {
     ) -> CommandPaletteItem {
         let Some((task_name, command)) = Self::parse_task_definition_input(query) else {
             return CommandPaletteItem {
-                title: "Create Task".to_string(),
+                title: t!("Create Task").to_string(),
                 keywords: "task new create add".to_string(),
                 enabled: false,
-                status_hint: Some("use name: command".to_string()),
+                status_hint: Some(t!("use name: command").to_string()),
                 tmux_status_hint: None,
                 kind: CommandPaletteItemKind::TaskCreate {
                     task_name: String::new(),
@@ -582,8 +585,8 @@ impl TerminalView {
 
         CommandPaletteItem {
             title: match layout_name.as_deref() {
-                Some(layout_name) => format!("Save Task \"{task_name}\" for \"{layout_name}\""),
-                None => format!("Save Task \"{task_name}\""),
+                Some(layout_name) => t!("Save Task \"{task_name}\" for \"{layout_name}\"", task_name = task_name, layout_name = layout_name),
+                None => t!("Save Task \"{task_name}\"", task_name = task_name),
             },
             keywords: format!(
                 "task save create {} {}",
@@ -591,7 +594,7 @@ impl TerminalView {
                 command
             ),
             enabled: !already_exists,
-            status_hint: already_exists.then(|| "task exists".to_string()),
+            status_hint: already_exists.then(|| t!("task exists").to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::TaskCreate {
                 task_name: task_name.to_string(),
@@ -640,12 +643,12 @@ impl TerminalView {
                 Vec::new(),
                 self.tmux_primary_socket_target_for_session_palette(),
             );
-            crate::ui::toast::error(format!("Failed to list tmux sessions: {error}"));
+            crate::ui::toast::error(t!("Failed to list tmux sessions: {error}", error = error));
         }
         if mode == CommandPaletteMode::Layouts
             && let Err(error) = self.reload_saved_layout_palette_items()
         {
-            crate::ui::toast::error(format!("Failed to load saved layouts: {error}"));
+            crate::ui::toast::error(t!("Failed to load saved layouts: {error}", error = error));
         }
         if mode == CommandPaletteMode::Commands {
             self.reload_saved_ssh_hosts();
@@ -760,7 +763,7 @@ impl TerminalView {
 
     pub(super) fn open_saved_layouts_palette(&mut self, cx: &mut Context<Self>) {
         if self.runtime_kind() != RuntimeKind::Native {
-            crate::ui::toast::info("Switch to the native runtime to use saved layouts");
+            crate::ui::toast::info(t!("Switch to the native runtime to use saved layouts"));
             self.notify_overlay(cx);
             return;
         }
@@ -1211,7 +1214,7 @@ impl TerminalView {
                 if !item.enabled {
                     crate::ui::toast::info(
                         item.status_hint
-                            .unwrap_or_else(|| "Plugin command is unavailable".to_string()),
+                            .unwrap_or_else(|| t!("Plugin command is unavailable").to_string()),
                     );
                     self.notify_overlay(cx);
                     return;
@@ -1222,7 +1225,7 @@ impl TerminalView {
                 if !item.enabled {
                     crate::ui::toast::info(
                         item.status_hint
-                            .unwrap_or_else(|| "Plugin input is invalid".to_string()),
+                            .unwrap_or_else(|| t!("Plugin input is invalid").to_string()),
                     );
                     self.notify_overlay(cx);
                     return;
@@ -1236,7 +1239,7 @@ impl TerminalView {
                 if !item.enabled {
                     crate::ui::toast::info(
                         item.status_hint
-                            .unwrap_or_else(|| "SSH host is unavailable".to_string()),
+                            .unwrap_or_else(|| t!("SSH host is unavailable").to_string()),
                     );
                     self.notify_overlay(cx);
                     return;
@@ -1382,12 +1385,12 @@ impl TerminalView {
             ),
             CommandPaletteItemKind::AppInfoEntry { label, value } => {
                 cx.write_to_clipboard(gpui_kit::ClipboardItem::new_string(value));
-                crate::ui::toast::success(format!("Copied {label}"));
+                crate::ui::toast::success(t!("Copied {label}", label = label));
                 self.notify_overlay(cx);
             }
             CommandPaletteItemKind::AppInfoCopyAll { payload } => {
                 cx.write_to_clipboard(gpui_kit::ClipboardItem::new_string(payload));
-                crate::ui::toast::success("Copied app info to clipboard");
+                crate::ui::toast::success(t!("Copied app info to clipboard"));
                 self.close_command_palette(cx);
                 self.notify_overlay(cx);
             }
@@ -1408,7 +1411,7 @@ impl TerminalView {
     ) {
         let command = command.trim();
         if command.is_empty() {
-            crate::ui::toast::error(format!("Task \"{task_name}\" has no command"));
+            crate::ui::toast::error(t!("Task \"{task_name}\" has no command", task_name = task_name));
             self.notify_overlay(cx);
             return;
         }
@@ -1430,8 +1433,9 @@ impl TerminalView {
             .get(self.session.active_tab)
             .and_then(TerminalTab::active_terminal)
         else {
-            crate::ui::toast::error(format!(
-                "Failed to start task \"{task_name}\": new terminal is unavailable"
+            crate::ui::toast::error(t!(
+                "Failed to start task \"{task_name}\": new terminal is unavailable",
+                task_name = task_name
             ));
             self.notify_overlay(cx);
             return;
@@ -1467,7 +1471,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         let Some(command) = self.active_current_command().map(ToOwned::to_owned) else {
-            crate::ui::toast::info("No active command to save");
+            crate::ui::toast::info(t!("No active command to save"));
             self.notify_overlay(cx);
             return;
         };
@@ -1489,14 +1493,14 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         if !enabled {
-            crate::ui::toast::info("Use format name: command and pick a unique task name");
+            crate::ui::toast::info(t!("Use format name: command and pick a unique task name"));
             self.notify_overlay(cx);
             return;
         }
 
         let task_name = task_name.trim();
         if !Self::palette_task_name_is_valid(task_name) {
-            crate::ui::toast::error("Task names cannot contain '.'");
+            crate::ui::toast::error(t!("Task names cannot contain '.'"));
             self.notify_overlay(cx);
             return;
         }
@@ -1548,12 +1552,12 @@ impl TerminalView {
 
     fn open_tasks_palette_from_saved_layout(&mut self, layout_name: &str, cx: &mut Context<Self>) {
         let Some(current_layout) = self.current_named_layout.as_deref() else {
-            crate::ui::toast::info("Load a saved layout before running layout tasks");
+            crate::ui::toast::info(t!("Load a saved layout before running layout tasks"));
             self.notify_overlay(cx);
             return;
         };
         if !current_layout.eq_ignore_ascii_case(layout_name) {
-            crate::ui::toast::info("Load that saved layout first to run its tasks");
+            crate::ui::toast::info(t!("Load that saved layout first to run its tasks"));
             self.notify_overlay(cx);
             return;
         }
@@ -1567,7 +1571,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         if !enabled {
-            crate::ui::toast::info("Enter a layout name first");
+            crate::ui::toast::info(t!("Enter a layout name first"));
             self.notify_overlay(cx);
             return;
         }
@@ -1629,7 +1633,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         if !enabled {
-            crate::ui::toast::info("Enter a different layout name");
+            crate::ui::toast::info(t!("Enter a different layout name"));
             self.notify_overlay(cx);
             return;
         }
@@ -1678,12 +1682,12 @@ impl TerminalView {
 
         match availability.reason {
             Some(CommandUnavailableReason::RequiresTmuxRuntime) => {
-                "Attach a tmux session to use this command"
+                t!("Attach a tmux session to use this command")
             }
             Some(CommandUnavailableReason::InstallCliAlreadyInstalled) => {
-                "CLI is already installed"
+                t!("CLI is already installed")
             }
-            None => "Command is currently unavailable",
+            None => t!("Command is currently unavailable"),
         }
     }
 

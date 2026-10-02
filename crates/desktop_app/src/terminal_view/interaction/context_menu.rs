@@ -29,9 +29,10 @@ impl TerminalView {
     }
 
     pub(in super::super) fn format_terminal_buffer_position(position: SelectionPos) -> String {
-        format!(
-            "Buffer Position: Line {}, Column {}",
-            position.line, position.col
+        t!(
+            "Buffer Position: Line {line}, Column {column}",
+            line = position.line,
+            column = position.col
         )
     }
 
@@ -175,7 +176,7 @@ impl TerminalView {
 
         let _ = self.close_terminal_context_menu(cx);
         cx.write_to_clipboard(super::input::kitty_png_clipboard_item(png.as_ref()));
-        crate::ui::toast::success("Copied image");
+        crate::ui::toast::success(t!("Copied image"));
         self.notify_overlay(cx);
     }
 
@@ -194,7 +195,7 @@ impl TerminalView {
         cx.write_to_clipboard(ClipboardItem::new_string(
             Self::copyable_terminal_buffer_position(position),
         ));
-        crate::ui::toast::success("Copied buffer position");
+        crate::ui::toast::success(t!("Copied buffer position"));
         self.notify_overlay(cx);
     }
 
