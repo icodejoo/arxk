@@ -68,4 +68,13 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Auto", "自动"),
     ("English", "English"),
     ("中文", "中文"),
+    // 重命名窗格
+    ("Rename Pane", "重命名窗格"),
+    ("Clear pane name", "清除窗格名称"),
+    ("Rename pane to \"{name}\"", "将窗格重命名为“{name}”"),
+    ("Leave empty to clear", "留空则清除名称"),
+    (
+        "Pane names are not supported in tmux yet",
+        "tmux 模式暂不支持窗格命名",
+    ),
 ];

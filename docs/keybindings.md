@@ -285,6 +285,7 @@ Related UI option:
 - `toggle_pane_zoom`
 - `minimize_window`
 - `rename_tab`
+- `rename_pane`
 - `app_info`
 - `restart_app`
 - `open_config`

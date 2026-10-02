@@ -206,6 +206,7 @@ impl TerminalView {
                 self.execute_quit_command_action(action, window, cx);
             }
             CommandAction::RenameTab
+            | CommandAction::RenamePane
             | CommandAction::NewTab
             | CommandAction::CloseTab
             | CommandAction::ClosePaneOrTab
@@ -339,6 +340,16 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         self.execute_command_action(CommandAction::RenameTab, true, window, cx);
+    }
+
+    /// 处理「重命名窗格」动作，转交统一命令分发。
+    pub(in super::super) fn handle_rename_pane_action(
+        &mut self,
+        _: &commands::RenamePane,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.execute_command_action(CommandAction::RenamePane, true, window, cx);
     }
 
     pub(in super::super) fn handle_check_for_updates_action(

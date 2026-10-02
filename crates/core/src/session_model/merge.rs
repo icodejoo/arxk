@@ -183,6 +183,9 @@ mod tests {
                     active_pane: 0,
                     layout_tree_json: None,
                     panes: vec![StoredPane {
+                        manual_title: None,
+                        cwd: None,
+                        reported_title: None,
                         session_id: Some("one".into()),
                         left: 0,
                         top: 0,

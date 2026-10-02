@@ -388,6 +388,9 @@ fn reconcile(saved: &mut SavedState, live: &[termy_core::multiplexer::PaneInfo])
             active_pane: 0,
             layout_tree_json: None,
             panes: vec![StoredPane {
+                manual_title: None,
+                cwd: None,
+                reported_title: None,
                 session_id: Some(pane.id.clone()),
                 left: 0,
                 top: 0,

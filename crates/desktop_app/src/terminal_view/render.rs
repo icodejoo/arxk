@@ -1984,7 +1984,7 @@ impl TerminalView {
             };
             let row_height = 30.0;
             let row_count =
-                3.0 + if state.buffer_position.is_some() {
+                4.0 + if state.buffer_position.is_some() {
                     1.0
                 } else {
                     0.0
@@ -2065,6 +2065,32 @@ impl TerminalView {
                         }),
                     )
                     .child(t!("Open Search"))
+                    .into_any_element()
+            };
+            // 重命名窗格：先关菜单，再打开命令面板的窗格名输入。
+            let rename_pane_item = || {
+                div()
+                    .id("terminal-context-menu-rename-pane")
+                    .h(px(row_height))
+                    .px(px(10.0))
+                    .flex()
+                    .items_center()
+                    .overflow_hidden()
+                    .whitespace_nowrap()
+                    .text_ellipsis()
+                    .text_size(px(13.0))
+                    .text_color(text_active)
+                    .cursor_pointer()
+                    .hover(|style| style.bg(hover_bg))
+                    .on_mouse_down(
+                        MouseButton::Left,
+                        cx.listener(move |view, _event: &MouseDownEvent, _window, cx| {
+                            let _ = view.close_terminal_context_menu(cx);
+                            view.begin_rename_pane(cx);
+                            cx.stop_propagation();
+                        }),
+                    )
+                    .child(t!("Rename Pane"))
                     .into_any_element()
             };
             let copy_image_item = || {
@@ -2206,6 +2232,7 @@ impl TerminalView {
                                 CommandAction::Paste,
                             ))
                             .child(open_search_item())
+                            .child(rename_pane_item())
                             .when(!plugin_commands.is_empty(), |panel| {
                                 panel.child(
                                     div().h(px(1.0)).my(px(3.0)).mx(px(8.0)).bg(panel_border),
@@ -3484,7 +3511,11 @@ impl Render for TerminalView {
                     // 有自定义标题：左标题（半透明黄）、右路径（半透明反差色）；
                     // 没有标题：路径就是标题，只有左段。中间留出拖拽手柄，放不下就不画。
                     let label_texts = TerminalView::pane_label_texts(
-                        self.pane_titles.get(pane.id.as_str()).map(String::as_str),
+                        TerminalView::resolve_pane_title(
+                            &self.pane_manual_titles,
+                            &self.pane_titles,
+                            pane.id.as_str(),
+                        ),
                         self.pane_cwds.get(pane.id.as_str()).map(String::as_str),
                     );
                     let side_max_width =
@@ -4010,6 +4041,7 @@ impl Render for TerminalView {
                     .on_action(cx.listener(Self::handle_app_info_action))
                     .on_action(cx.listener(Self::handle_restart_app_action))
                     .on_action(cx.listener(Self::handle_rename_tab_action))
+                    .on_action(cx.listener(Self::handle_rename_pane_action))
                     .on_action(cx.listener(Self::handle_check_for_updates_action))
                     .on_action(cx.listener(Self::handle_view_release_notes_action))
                     .on_action(cx.listener(Self::handle_browse_release_notes_action))

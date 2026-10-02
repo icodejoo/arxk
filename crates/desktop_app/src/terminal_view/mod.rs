@@ -1500,6 +1500,8 @@ pub struct TerminalView {
     pane_move_drag: Option<PaneMoveDragState>,
     /// 窗格 id -> 终端上报的标题，用于窗格左上角的标题标签。
     pane_titles: HashMap<String, String>,
+    /// 窗格 id -> 用户自定义的手动标题，优先级高于终端上报标题。
+    pane_manual_titles: HashMap<String, String>,
     /// 窗格 id -> shell 上报的当前目录（OSC 7 / OSC 9;9），用于窗格标签的路径文字。
     pane_cwds: HashMap<String, String>,
     /// 快捷键弹窗（点击顶栏左侧 logo 打开）是否显示。
@@ -3450,6 +3452,7 @@ impl TerminalView {
             native_split_generation: 0,
             pane_move_drag: None,
             pane_titles: HashMap::new(),
+            pane_manual_titles: HashMap::new(),
             pane_cwds: HashMap::new(),
             shortcuts_popup_open: false,
             shortcuts_scroll: ScrollHandle::new(),
@@ -4259,20 +4262,23 @@ impl TerminalView {
                         }
                         TerminalEvent::Title(title) => {
                             // 窗格标题标签：每个窗格都记，不限于活动窗格。
-                            if self.record_pane_title(pane_id.as_str(), &title)
-                                && tab_index == active_tab
-                            {
-                                should_redraw = true;
+                            if self.record_pane_title(pane_id.as_str(), &title) {
+                                // 标题变了就刷新持久化缓存（长防抖合并写入）。
+                                self.schedule_persist_native_pane_meta(cx);
+                                if tab_index == active_tab {
+                                    should_redraw = true;
+                                }
                             }
                             if pane_is_active && self.apply_terminal_title(tab_index, &title, cx) {
                                 should_redraw = true;
                             }
                         }
                         TerminalEvent::ResetTitle => {
-                            if self.pane_titles.remove(pane_id.as_str()).is_some()
-                                && tab_index == active_tab
-                            {
-                                should_redraw = true;
+                            if self.pane_titles.remove(pane_id.as_str()).is_some() {
+                                self.schedule_persist_native_pane_meta(cx);
+                                if tab_index == active_tab {
+                                    should_redraw = true;
+                                }
                             }
                             if pane_is_active && self.clear_terminal_titles(tab_index) {
                                 should_redraw = true;
@@ -4342,10 +4348,12 @@ impl TerminalView {
                         // Working directory (OSC 7)
                         TerminalEvent::WorkingDirectory(path) => {
                             // 窗格标签的路径文字：每个窗格都记，不限于活动窗格。
-                            if self.record_pane_cwd(pane_id.as_str(), &path)
-                                && tab_index == active_tab
-                            {
-                                should_redraw = true;
+                            if self.record_pane_cwd(pane_id.as_str(), &path) {
+                                // 路径变了就刷新持久化缓存（长防抖合并写入）。
+                                self.schedule_persist_native_pane_meta(cx);
+                                if tab_index == active_tab {
+                                    should_redraw = true;
+                                }
                             }
                             if pane_is_active {
                                 self.session.tabs[tab_index].last_prompt_cwd = Some(path);

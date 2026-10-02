@@ -293,6 +293,7 @@ impl TerminalView {
                 | CommandPaletteItemKind::SavedLayoutRenameApply { .. }
                 | CommandPaletteItemKind::SavedLayoutOpenDeleteMode
                 | CommandPaletteItemKind::SavedLayoutDelete { .. }
+                | CommandPaletteItemKind::PaneRenameApply { .. }
                 | CommandPaletteItemKind::TaskOpenCreateGlobalMode
                 | CommandPaletteItemKind::TaskOpenCreateLayoutMode { .. }
                 | CommandPaletteItemKind::TaskOpenSaveCurrentCommandGlobalMode
@@ -507,6 +508,7 @@ impl TerminalView {
                 }
                 CommandPaletteMode::AppInfo => t!("App Info").to_string(),
                 CommandPaletteMode::Releases => t!("Release Notes").to_string(),
+                CommandPaletteMode::PaneRename => t!("Rename Pane").to_string(),
             }
         };
         // (keycap, action) pairs for the footer bar. An empty keycap renders the
@@ -581,6 +583,9 @@ impl TerminalView {
                 }
                 CommandPaletteMode::Releases => {
                     &[("↵", "View Notes"), ("esc", "Back"), ("↑↓", "Navigate")]
+                }
+                CommandPaletteMode::PaneRename => {
+                    &[("↵", "Rename Pane"), ("esc", "Close"), ("", "Leave empty to clear")]
                 }
             }
         };

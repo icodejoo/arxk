@@ -68,6 +68,7 @@ impl TerminalView {
                 self.begin_rename_tab(self.session.active_tab, cx);
                 true
             }
+            CommandAction::RenamePane => self.begin_rename_pane(cx),
             CommandAction::NewTab => {
                 self.add_tab(cx);
                 true
@@ -646,7 +647,7 @@ impl TerminalView {
                 self.sync_plugin_lifecycle_state(true, cx);
                 return;
             }
-            RuntimeKind::Native => {}
+            RuntimeKind::Native => self.forget_pane_manual_titles(&removed_pane_ids),
         };
 
         self.push_closing_tab_overlay(
@@ -940,11 +941,33 @@ impl TerminalView {
         }
         match self.runtime_kind() {
             RuntimeKind::Tmux => self.tmux_close_active_pane(cx),
-            RuntimeKind::Native => self.native_close_active_pane(cx),
+            RuntimeKind::Native => {
+                let closed_pane_id = self.active_pane_id().map(str::to_string);
+                let closed = self.native_close_active_pane(cx);
+                if closed && let Some(pane_id) = closed_pane_id {
+                    self.forget_pane_manual_titles(&[pane_id]);
+                }
+                closed
+            }
         }
     }
 
+    /// 按 id 关闭原生窗格；成功关闭后同步清理其手动窗格名。
     pub(crate) fn close_native_pane_by_id(
+        &mut self,
+        tab_id: TabId,
+        pane_id: &str,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let closed = self.close_native_pane_by_id_inner(tab_id, pane_id, cx);
+        if closed {
+            self.forget_pane_manual_titles(&[pane_id.to_string()]);
+        }
+        closed
+    }
+
+    /// `close_native_pane_by_id` 的实际关闭逻辑。
+    fn close_native_pane_by_id_inner(
         &mut self,
         tab_id: TabId,
         pane_id: &str,

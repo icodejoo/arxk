@@ -52,7 +52,10 @@ CREATE TABLE IF NOT EXISTS panes (
     pane_top INTEGER NOT NULL,
     pane_width INTEGER NOT NULL,
     pane_height INTEGER NOT NULL,
-    buffer TEXT
+    buffer TEXT,
+    manual_title TEXT,
+    cwd TEXT,
+    reported_title TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_tabs_workspace ON tabs(workspace_id, position);
 CREATE INDEX IF NOT EXISTS idx_panes_tab ON panes(tab_id, position);
@@ -84,6 +87,15 @@ async fn ensure_workspace_columns(pool: &SqlitePool) -> Result<(), String> {
             .execute(pool)
             .await
             .map_err(|error| store_error("Failed to migrate workspace pinned state", error))?;
+    }
+    // 窗格名、路径、上报标题三列，补上以兼容老数据。
+    for column in ["manual_title", "cwd", "reported_title"] {
+        if !table_has_column(pool, "panes", column).await? {
+            sqlx::query(&format!("ALTER TABLE panes ADD COLUMN {column} TEXT"))
+                .execute(pool)
+                .await
+                .map_err(|error| store_error("Failed to migrate pane columns", error))?;
+        }
     }
     Ok(())
 }
@@ -184,8 +196,8 @@ impl WorkspaceStore {
                     for (pane_position, pane) in tab.panes.iter().enumerate() {
                         sqlx::query(
                             "INSERT INTO panes(tab_id, position, pane_left, pane_top, \
-                             pane_width, pane_height, buffer) \
-                             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                             pane_width, pane_height, buffer, manual_title, cwd, reported_title) \
+                             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
                         )
                         .bind(tab_id)
                         .bind(pane_position as i64)
@@ -194,6 +206,9 @@ impl WorkspaceStore {
                         .bind(i64::from(pane.width))
                         .bind(i64::from(pane.height))
                         .bind(pane.buffer.as_deref())
+                        .bind(pane.manual_title.as_deref())
+                        .bind(pane.cwd.as_deref())
+                        .bind(pane.reported_title.as_deref())
                         .execute(&mut *tx)
                         .await
                         .map_err(|error| store_error("Failed to write pane", error))?;
@@ -238,7 +253,7 @@ impl WorkspaceStore {
             .await
             .map_err(|error| store_error("Failed to read tabs", error))?;
             let pane_rows = sqlx::query(
-                "SELECT tab_id, pane_left, pane_top, pane_width, pane_height, buffer \
+                "SELECT tab_id, pane_left, pane_top, pane_width, pane_height, buffer, manual_title, cwd, reported_title \
                  FROM panes ORDER BY tab_id, position",
             )
             .fetch_all(&self.pool)
@@ -249,6 +264,9 @@ impl WorkspaceStore {
             for row in pane_rows {
                 let tab_id: i64 = row.get("tab_id");
                 panes_by_tab.entry(tab_id).or_default().push(StoredPane {
+                    manual_title: row.get("manual_title"),
+                    cwd: row.get("cwd"),
+                    reported_title: row.get("reported_title"),
                     session_id: None,
                     left: clamp_cell(row.get::<i64, _>("pane_left")),
                     top: clamp_cell(row.get::<i64, _>("pane_top")),
@@ -491,6 +509,9 @@ mod tests {
                             active_pane: 0,
                             layout_tree_json: None,
                             panes: vec![StoredPane {
+                                manual_title: None,
+                                cwd: None,
+                                reported_title: None,
                                 session_id: None,
                                 left: 0,
                                 top: 0,
@@ -508,6 +529,9 @@ mod tests {
                             layout_tree_json: Some("{\"kind\":\"leaf\",\"pane\":0}".to_string()),
                             panes: vec![
                                 StoredPane {
+                                    manual_title: None,
+                                    cwd: None,
+                                    reported_title: None,
                                     session_id: None,
                                     left: 0,
                                     top: 0,
@@ -516,6 +540,9 @@ mod tests {
                                     buffer: None,
                                 },
                                 StoredPane {
+                                    manual_title: Some("api".to_string()),
+                                    cwd: Some("/work/api".to_string()),
+                                    reported_title: Some("npm run dev".to_string()),
                                     session_id: None,
                                     left: 40,
                                     top: 0,
@@ -539,6 +566,9 @@ mod tests {
                         active_pane: 0,
                         layout_tree_json: None,
                         panes: vec![StoredPane {
+                            manual_title: None,
+                            cwd: None,
+                            reported_title: None,
                             session_id: None,
                             left: 0,
                             top: 0,

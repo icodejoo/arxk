@@ -11,6 +11,23 @@ use termy_core::session_model::PersistedNativeLayoutNode;
 /// Legacy JSON state file; read once to seed a fresh SQLite store.
 const NATIVE_WORKSPACE_STATE_FILE: &str = "native-tabs.json";
 
+/// 元数据（路径、标题）变化后的保存防抖：比结构变化长，避免高频标题刷新反复重写整库。
+const NATIVE_PERSIST_META_DEBOUNCE: Duration = Duration::from_millis(1500);
+/// 结构变化（拆分、关闭、改名等）后的保存防抖。
+const NATIVE_PERSIST_DEBOUNCE: Duration = Duration::from_millis(80);
+
+/// 读取 JSON 对象里的字符串字段，缺失、非字符串或全空白时返回 `None`。
+///
+/// - `value`：JSON 对象。
+/// - `key`：字段名。
+fn non_blank_str(value: &Value, key: &str) -> Option<String> {
+    value
+        .get(key)
+        .and_then(Value::as_str)
+        .filter(|text| !text.trim().is_empty())
+        .map(str::to_string)
+}
+
 fn inclusive_terminal_line_count(range: TerminalLineRange) -> usize {
     usize::try_from(i64::from(range.last_line) - i64::from(range.first_line) + 1).unwrap_or(0)
 }
@@ -23,6 +40,11 @@ struct PersistedNativePane {
     width: u16,
     height: u16,
     buffer: Option<String>,
+    manual_title: Option<String>,
+    /// 窗格最后一次上报的当前目录。
+    cwd: Option<String>,
+    /// 终端最后一次上报的窗格标题。
+    reported_title: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -281,6 +303,9 @@ impl TerminalView {
                         .panes
                         .into_iter()
                         .map(|pane| StoredPane {
+                            manual_title: pane.manual_title,
+                            cwd: pane.cwd,
+                            reported_title: pane.reported_title,
                             session_id: pane.session_id,
                             left: pane.left,
                             top: pane.top,
@@ -322,6 +347,9 @@ impl TerminalView {
                         width: pane.width,
                         height: pane.height,
                         buffer: pane.buffer,
+                        manual_title: pane.manual_title,
+                        cwd: pane.cwd,
+                        reported_title: pane.reported_title,
                     })
                     .collect(),
             })
@@ -442,6 +470,9 @@ impl TerminalView {
                             width: width.max(1),
                             height: height.max(1),
                             buffer: self.extract_persisted_buffer_text(&pane.terminal),
+                            manual_title: self.pane_manual_titles.get(&pane.id).cloned(),
+                            cwd: self.pane_cwds.get(&pane.id).cloned(),
+                            reported_title: self.pane_titles.get(&pane.id).cloned(),
                         }
                     })
                     .collect::<Vec<_>>();
@@ -504,6 +535,9 @@ impl TerminalView {
                             "width": pane.width,
                             "height": pane.height,
                             "buffer": pane.buffer,
+                            "manual_title": pane.manual_title,
+                            "cwd": pane.cwd,
+                            "reported_title": pane.reported_title,
                         })
                     }).collect::<Vec<_>>(),
                 })
@@ -574,6 +608,9 @@ impl TerminalView {
                         .and_then(Value::as_str)
                         .map(str::to_string)
                         .filter(|buffer| !buffer.is_empty()),
+                    manual_title: non_blank_str(pane_value, "manual_title"),
+                    cwd: non_blank_str(pane_value, "cwd"),
+                    reported_title: non_blank_str(pane_value, "reported_title"),
                 });
             }
 
@@ -692,6 +729,12 @@ impl TerminalView {
         let pane_id = Self::restored_pane_id(tab_id, pane_index);
         let width = pane.width.max(1);
         let height = pane.height.max(1);
+        // 优先用该窗格自己保存的目录启动；目录已不存在时退回统一的启动目录。
+        let working_dir = pane
+            .cwd
+            .as_deref()
+            .filter(|dir| std::path::Path::new(dir).is_dir())
+            .or(working_dir);
         let terminal = if let (Some(client), Some(id)) =
             (self.multiplexer_client(), pane.session_id.as_deref())
         {
@@ -823,6 +866,18 @@ impl TerminalView {
                 .ok_or_else(|| "restored tab has no panes".to_string())?;
             tab.pinned = persisted_tab.pinned;
             tab.manual_title = manual_title;
+            // 手动窗格名、路径、上报标题按新建窗格的 id 重新映射回来。
+            for (pane, persisted_pane) in tab.panes.iter().zip(persisted_tab.panes.iter()) {
+                if let Some(title) = persisted_pane.manual_title.as_deref() {
+                    self.set_pane_manual_title(pane.id.as_str(), title);
+                }
+                if let Some(cwd) = persisted_pane.cwd.as_deref() {
+                    self.record_pane_cwd(pane.id.as_str(), cwd);
+                }
+                if let Some(title) = persisted_pane.reported_title.as_deref() {
+                    self.record_pane_title(pane.id.as_str(), title);
+                }
+            }
             if let Some(presentation) = persisted_tab.presentation {
                 tab.title = presentation.title;
                 tab.explicit_title = presentation.explicit_title;
@@ -1156,6 +1211,16 @@ impl TerminalView {
     }
 
     pub(in super::super) fn schedule_persist_native_workspace(&self, cx: &mut Context<Self>) {
+        self.schedule_persist_native_workspace_after(NATIVE_PERSIST_DEBOUNCE, cx);
+    }
+
+    /// 窗格路径或上报标题变化后的保存：用更长的防抖合并高频刷新。
+    pub(in super::super) fn schedule_persist_native_pane_meta(&self, cx: &mut Context<Self>) {
+        self.schedule_persist_native_workspace_after(NATIVE_PERSIST_META_DEBOUNCE, cx);
+    }
+
+    /// 按给定防抖时长延迟合并保存，后到的请求会顶掉先到的。
+    fn schedule_persist_native_workspace_after(&self, debounce: Duration, cx: &mut Context<Self>) {
         let next_revision = self
             .native_persist_revision
             .fetch_add(1, std::sync::atomic::Ordering::AcqRel)
@@ -1167,9 +1232,7 @@ impl TerminalView {
         let latest_revision = self.native_persist_revision.clone();
         let write_gate = self.native_persist_write_gate.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            cx.background_executor()
-                .timer(Duration::from_millis(80))
-                .await;
+            cx.background_executor().timer(debounce).await;
             if latest_revision.load(std::sync::atomic::Ordering::Acquire) != next_revision {
                 return;
             }
@@ -1375,6 +1438,9 @@ mod tests {
                 active_pane: 0,
                 layout_tree_json: None,
                 panes: vec![StoredPane {
+                    manual_title: None,
+                    cwd: None,
+                    reported_title: None,
                     session_id: None,
                     left: 0,
                     top: 0,
@@ -1444,6 +1510,54 @@ mod tests {
         assert_eq!(workspace.tabs[0].manual_title.as_deref(), Some("Work"));
         assert_eq!(workspace.tabs[1].active_pane, 1);
         assert_eq!(workspace.tabs[1].panes[1].left, 40);
+    }
+
+    #[test]
+    fn persisted_native_workspace_parser_reads_pane_manual_title() {
+        let state = TerminalView::parse_persisted_native_workspace_state(
+            r#"{
+  "version": 1,
+  "active_tab": 0,
+  "tabs": [
+    {
+      "active_pane": 0,
+      "manual_title": null,
+      "panes": [
+        { "left": 0, "top": 0, "width": 40, "height": 20, "manual_title": "build", "cwd": "/work/api", "reported_title": "npm run dev" },
+        { "left": 40, "top": 0, "width": 40, "height": 20, "manual_title": "  " },
+        { "left": 80, "top": 0, "width": 40, "height": 20 }
+      ]
+    }
+  ]
+}"#,
+        )
+        .expect("workspace should parse");
+
+        let panes = &state.last_session.expect("last session").tabs[0].panes;
+        assert_eq!(panes[0].manual_title.as_deref(), Some("build"));
+        // 空白名字与缺字段（旧数据）都视为没有手动名。
+        assert_eq!(panes[1].manual_title, None);
+        assert_eq!(panes[2].manual_title, None);
+        // 路径和上报标题随窗格读回；缺字段（旧数据）为 None。
+        assert_eq!(panes[0].cwd.as_deref(), Some("/work/api"));
+        assert_eq!(panes[0].reported_title.as_deref(), Some("npm run dev"));
+        assert_eq!(panes[2].cwd, None);
+        assert_eq!(panes[2].reported_title, None);
+    }
+
+    #[test]
+    fn stored_pane_without_manual_title_field_deserializes_for_old_data() {
+        let pane: StoredPane = serde_json::from_str(
+            r#"{ "left": 0, "top": 0, "width": 80, "height": 24, "buffer": null }"#,
+        )
+        .expect("old stored pane should deserialize");
+        assert_eq!(pane.manual_title, None);
+
+        let roundtrip: StoredPane = serde_json::from_str(
+            r#"{ "left": 0, "top": 0, "width": 80, "height": 24, "buffer": null, "manual_title": "api" }"#,
+        )
+        .expect("new stored pane should deserialize");
+        assert_eq!(roundtrip.manual_title.as_deref(), Some("api"));
     }
 
     #[test]

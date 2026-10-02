@@ -66,6 +66,15 @@ pub struct StoredPane {
     pub width: u16,
     pub height: u16,
     pub buffer: Option<String>,
+    /// 用户自定义的窗格名；旧数据缺该字段时为 None。
+    #[serde(default)]
+    pub manual_title: Option<String>,
+    /// 窗格最后一次上报的当前目录；旧数据缺该字段时为 None。
+    #[serde(default)]
+    pub cwd: Option<String>,
+    /// 终端最后一次上报的窗格标题；旧数据缺该字段时为 None。
+    #[serde(default)]
+    pub reported_title: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]

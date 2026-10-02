@@ -47,6 +47,7 @@ macro_rules! termy_command_catalog {
             (TogglePaneZoom, "toggle_pane_zoom"),
             (MinimizeWindow, "minimize_window"),
             (RenameTab, "rename_tab"),
+            (RenamePane, "rename_pane"),
             (AppInfo, "app_info"),
             (RestartApp, "restart_app"),
             (OpenConfig, "open_config"),

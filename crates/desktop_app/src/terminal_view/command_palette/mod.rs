@@ -279,6 +279,9 @@ impl TerminalView {
             }
             CommandPaletteMode::AppInfo => self.command_palette_app_info_items(),
             CommandPaletteMode::Releases => self.command_palette_release_items(),
+            CommandPaletteMode::PaneRename => self
+                .command_palette
+                .pane_rename_items_for_query(self.command_palette.input().text()),
         }
     }
 
@@ -657,7 +660,9 @@ impl TerminalView {
             self.schedule_release_list_fetch(cx);
         }
         let items = self.command_palette_items_for_mode(mode, cx);
-        if mode == CommandPaletteMode::PluginInputs && self.plugin_input_uses_free_text() {
+        if (mode == CommandPaletteMode::PluginInputs && self.plugin_input_uses_free_text())
+            || mode == CommandPaletteMode::PaneRename
+        {
             self.command_palette.set_items_unfiltered(items);
         } else {
             self.command_palette.set_items(items);
@@ -805,6 +810,11 @@ impl TerminalView {
                 .saved_layout_items_for_query(self.command_palette.input().text());
             self.insert_saved_layout_tasks_item(&mut items);
             self.command_palette.set_items(items);
+        } else if self.command_palette.mode() == CommandPaletteMode::PaneRename {
+            let items = self
+                .command_palette
+                .pane_rename_items_for_query(self.command_palette.input().text());
+            self.command_palette.set_items_unfiltered(items);
         } else if self.command_palette.mode() == CommandPaletteMode::Tasks {
             let items = self.command_palette_task_items();
             self.command_palette.set_items(items);
@@ -1156,6 +1166,7 @@ impl TerminalView {
             CommandPaletteMode::PluginInputs => CommandPaletteEscapeAction::BackFromPluginInput,
             CommandPaletteMode::AppInfo => CommandPaletteEscapeAction::BackToCommands,
             CommandPaletteMode::Releases => CommandPaletteEscapeAction::BackToCommands,
+            CommandPaletteMode::PaneRename => CommandPaletteEscapeAction::ClosePalette,
         }
     }
 
@@ -1345,6 +1356,9 @@ impl TerminalView {
             ),
             CommandPaletteItemKind::SavedLayoutOpenDeleteMode => {
                 self.open_saved_layout_delete_mode_from_palette(cx);
+            }
+            CommandPaletteItemKind::PaneRenameApply { pane_id, name } => {
+                self.apply_pane_rename_from_palette(pane_id.as_str(), name.as_str(), cx);
             }
             CommandPaletteItemKind::SavedLayoutDelete { layout_name } => {
                 self.delete_saved_layout_from_palette(layout_name.as_str(), cx);
@@ -1647,6 +1661,46 @@ impl TerminalView {
                 self.notify_overlay(cx);
             }
         }
+    }
+
+    /// 打开“重命名窗格”输入：目标为当前活动窗格，输入框预填现有手动名。
+    ///
+    /// 返回是否成功打开；tmux 运行时或没有活动窗格时给出提示并返回 `false`。
+    pub(crate) fn begin_rename_pane(&mut self, cx: &mut Context<Self>) -> bool {
+        if self.runtime_kind() != RuntimeKind::Native {
+            crate::ui::toast::info(t!("Pane names are not supported in tmux yet"));
+            self.notify_overlay(cx);
+            return false;
+        }
+        let Some(pane_id) = self.active_pane_id().map(str::to_string) else {
+            return false;
+        };
+        let current = self
+            .pane_manual_titles
+            .get(pane_id.as_str())
+            .cloned()
+            .unwrap_or_default();
+        self.command_palette.set_pane_rename_target(Some(pane_id));
+        self.open_command_palette_in_mode(CommandPaletteMode::PaneRename, cx);
+        if self.command_palette.mode() != CommandPaletteMode::PaneRename {
+            return false;
+        }
+        self.command_palette.input_mut().set_text(current);
+        self.refresh_command_palette_items_for_current_mode(cx);
+        true
+    }
+
+    /// 应用窗格重命名并关闭面板；空名字表示清除手动名。
+    fn apply_pane_rename_from_palette(
+        &mut self,
+        pane_id: &str,
+        name: &str,
+        cx: &mut Context<Self>,
+    ) {
+        self.set_pane_manual_title(pane_id, name);
+        self.close_command_palette(cx);
+        self.schedule_persist_native_workspace(cx);
+        cx.notify();
     }
 
     fn open_saved_layout_delete_mode_from_palette(&mut self, cx: &mut Context<Self>) {
