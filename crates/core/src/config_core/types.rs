@@ -171,6 +171,26 @@ impl TabWidthMode {
     }
 }
 
+/// Interface language: follow the system (default) or force English / Chinese.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum AppLanguage {
+    #[default]
+    Auto,
+    English,
+    Chinese,
+}
+
+impl AppLanguage {
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "auto" | "system" => Some(Self::Auto),
+            "en" | "en-us" | "en_us" | "english" => Some(Self::English),
+            "zh" | "zh-cn" | "zh_cn" | "zh-hans" | "chinese" | "中文" => Some(Self::Chinese),
+            _ => None,
+        }
+    }
+}
+
 /// Where the tab bar is rendered: the top strip (horizontal, default) or a
 /// vertical sidebar on the right.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -328,6 +348,7 @@ pub struct AppConfig {
     pub theme_light: ThemeId,
     pub theme_dark: ThemeId,
     pub app_icon: AppIcon,
+    pub language: AppLanguage,
     pub chrome_contrast: bool,
     pub auto_update: bool,
     pub multiplexer_enabled: bool,
@@ -429,6 +450,7 @@ impl Default for AppConfig {
             theme_light: "termy-light".to_string(),
             theme_dark: "termy".to_string(),
             app_icon: AppIcon::default(),
+            language: AppLanguage::default(),
             chrome_contrast: false,
             auto_update: true,
             multiplexer_enabled: false,

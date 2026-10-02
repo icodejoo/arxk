@@ -91,6 +91,8 @@ mod surface;
 pub(crate) mod tab_strip;
 mod tabs;
 mod titles;
+mod shortcuts_popup;
+mod tab_colors;
 mod update_overlay;
 mod update_toasts;
 mod workspaces;
@@ -1496,6 +1498,18 @@ pub struct TerminalView {
     pane_resize_drag: Option<PaneResizeDragState>,
     native_split_generation: u64,
     pane_move_drag: Option<PaneMoveDragState>,
+    /// 窗格 id -> 终端上报的标题，用于窗格左上角的标题标签。
+    pane_titles: HashMap<String, String>,
+    /// 窗格 id -> 用户自定义的手动标题，优先级高于终端上报标题。
+    pane_manual_titles: HashMap<String, String>,
+    /// 窗格 id -> shell 上报的当前目录（OSC 7 / OSC 9;9），用于窗格标签的路径文字。
+    pane_cwds: HashMap<String, String>,
+    /// 快捷键弹窗（点击顶栏左侧 logo 打开）是否显示。
+    shortcuts_popup_open: bool,
+    /// 快捷键弹窗列表的滚动状态。
+    shortcuts_scroll: ScrollHandle,
+    /// 标签 id -> 自定义背景色（标签右键菜单里设置，重启后不保留）。
+    tab_colors: HashMap<TabId, tab_colors::TabColor>,
     hovered_pane_divider: Option<HoveredPaneDivider>,
     pane_resize_blocked: bool,
     terminal_scrollbar_marker_cache: TerminalScrollbarMarkerCache,
@@ -2984,7 +2998,7 @@ impl TerminalView {
         {
             self.warned_blur_unsupported_once = true;
             crate::ui::toast::warning(
-                "Background blur is unsupported in this session; using transparency",
+                t!("Background blur is unsupported in this session; using transparency"),
             );
         }
     }
@@ -3241,7 +3255,7 @@ impl TerminalView {
                 Ok(session) => session,
                 Err(error) => {
                     log::error!("Failed to preload native tab workspace: {error}");
-                    crate::ui::toast::error("Failed to load saved native tabs");
+                    crate::ui::toast::error(t!("Failed to load saved native tabs"));
                     None
                 }
             }
@@ -3437,6 +3451,12 @@ impl TerminalView {
             pane_resize_drag: None,
             native_split_generation: 0,
             pane_move_drag: None,
+            pane_titles: HashMap::new(),
+            pane_manual_titles: HashMap::new(),
+            pane_cwds: HashMap::new(),
+            shortcuts_popup_open: false,
+            shortcuts_scroll: ScrollHandle::new(),
+            tab_colors: HashMap::new(),
             hovered_pane_divider: None,
             pane_resize_blocked: false,
             terminal_scrollbar_marker_cache: TerminalScrollbarMarkerCache::default(),
@@ -3470,14 +3490,14 @@ impl TerminalView {
             && !config.multiplexer_enabled
             && view.cached_tmux_command_prefix.is_empty()
         {
-            crate::ui::toast::warning(TMUX_NEEDS_PREFIX_WINDOWS_TOAST);
+            crate::ui::toast::warning(termy::i18n::tr(TMUX_NEEDS_PREFIX_WINDOWS_TOAST));
         }
         let restored_native_workspace = if let Some(session) = live_session {
             match view.restore_stored_session(session, cx) {
                 Ok(()) => true,
                 Err(error) => {
                     log::error!("Failed to restore multiplexer tabs: {error}");
-                    crate::ui::toast::error(format!("Could not restore multiplexer tabs: {error}"));
+                    crate::ui::toast::error(t!("Could not restore multiplexer tabs: {error}", error = error));
                     false
                 }
             }
@@ -3490,7 +3510,7 @@ impl TerminalView {
                             Ok(()) => true,
                             Err(error) => {
                                 log::error!("Failed to restore native tab workspace: {error}");
-                                crate::ui::toast::error("Failed to restore saved native tabs");
+                                crate::ui::toast::error(t!("Failed to restore saved native tabs"));
                                 false
                             }
                         },
@@ -3724,6 +3744,10 @@ impl TerminalView {
     }
 
     fn apply_runtime_config(&mut self, config: AppConfig, cx: &mut Context<Self>) -> bool {
+        // 界面语言变了：刷新所有窗口，让已有文案按新语言重画。
+        if termy::i18n::set_language(config.language) {
+            cx.refresh_windows();
+        }
         let effective_font_family = crate::font_families::effective_terminal_font_family(
             &config.font_family,
             cx.text_system().as_ref(),
@@ -3803,7 +3827,7 @@ impl TerminalView {
             && !config.multiplexer_enabled
             && config.tmux_command_prefix_argv().is_empty()
         {
-            crate::ui::toast::warning(TMUX_NEEDS_PREFIX_WINDOWS_TOAST);
+            crate::ui::toast::warning(termy::i18n::tr(TMUX_NEEDS_PREFIX_WINDOWS_TOAST));
         }
         #[cfg(not(target_os = "windows"))]
         let next_runtime_kind = Self::runtime_kind_from_app_config(&config);
@@ -3812,13 +3836,13 @@ impl TerminalView {
         #[cfg(not(target_os = "windows"))]
         if next_runtime_kind != self.runtime_kind() && tmux_enabled_changed {
             crate::ui::toast::info(
-                "tmux startup default saved. Use Tmux Sessions to switch runtime now.",
+                t!("tmux startup default saved. Use Tmux Sessions to switch runtime now."),
             );
         }
         if self.multiplexer_enabled_config != config.multiplexer_enabled {
             self.multiplexer_enabled_config = config.multiplexer_enabled;
             crate::ui::toast::info(
-                "Built-in multiplexer setting saved. Restart Termy to apply it.",
+                t!("Built-in multiplexer setting saved. Restart Termy to apply it."),
             );
         }
         self.tmux_enabled_config = config.tmux_enabled;
@@ -3986,7 +4010,7 @@ impl TerminalView {
             if loaded.loaded_from_disk {
                 let changed = self.apply_runtime_config(loaded.config, cx);
                 if changed {
-                    crate::ui::toast::info("Configuration reloaded");
+                    crate::ui::toast::info(t!("Configuration reloaded"));
                 }
                 return changed;
             }
@@ -4010,7 +4034,7 @@ impl TerminalView {
         if loaded.loaded_from_disk {
             let changed = self.apply_runtime_config(loaded.config, cx);
             if changed {
-                crate::ui::toast::info("Configuration reloaded");
+                crate::ui::toast::info(t!("Configuration reloaded"));
             }
             changed
         } else {
@@ -4237,11 +4261,25 @@ impl TerminalView {
                             }
                         }
                         TerminalEvent::Title(title) => {
+                            // 窗格标题标签：每个窗格都记，不限于活动窗格。
+                            if self.record_pane_title(pane_id.as_str(), &title) {
+                                // 标题变了就刷新持久化缓存（长防抖合并写入）。
+                                self.schedule_persist_native_pane_meta(cx);
+                                if tab_index == active_tab {
+                                    should_redraw = true;
+                                }
+                            }
                             if pane_is_active && self.apply_terminal_title(tab_index, &title, cx) {
                                 should_redraw = true;
                             }
                         }
                         TerminalEvent::ResetTitle => {
+                            if self.pane_titles.remove(pane_id.as_str()).is_some() {
+                                self.schedule_persist_native_pane_meta(cx);
+                                if tab_index == active_tab {
+                                    should_redraw = true;
+                                }
+                            }
                             if pane_is_active && self.clear_terminal_titles(tab_index) {
                                 should_redraw = true;
                             }
@@ -4309,6 +4347,14 @@ impl TerminalView {
                         }
                         // Working directory (OSC 7)
                         TerminalEvent::WorkingDirectory(path) => {
+                            // 窗格标签的路径文字：每个窗格都记，不限于活动窗格。
+                            if self.record_pane_cwd(pane_id.as_str(), &path) {
+                                // 路径变了就刷新持久化缓存（长防抖合并写入）。
+                                self.schedule_persist_native_pane_meta(cx);
+                                if tab_index == active_tab {
+                                    should_redraw = true;
+                                }
+                            }
                             if pane_is_active {
                                 self.session.tabs[tab_index].last_prompt_cwd = Some(path);
                             }

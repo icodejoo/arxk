@@ -6,6 +6,7 @@
     "splits-panes",
     "search",
     "command-palette",
+    "keyboard-shortcuts",
     "plugins",
     "ssh-hosts",
     "multiplexer",

@@ -76,13 +76,13 @@ pub fn release_list_rows(
 fn release_status_hint(is_latest: bool, is_installed: bool, prerelease: bool) -> Option<String> {
     let mut parts = Vec::new();
     if is_latest {
-        parts.push("Latest");
+        parts.push(t!("Latest"));
     }
     if is_installed {
-        parts.push("Installed");
+        parts.push(t!("Installed"));
     }
     if prerelease {
-        parts.push("Pre-release");
+        parts.push(t!("Pre-release"));
     }
     if parts.is_empty() {
         None
@@ -126,7 +126,7 @@ pub fn store_seen_release_notes_version(version: &str) {
 
 pub fn fetch_markdown_image_rgba(url: &str) -> Result<RgbaImage, String> {
     if !crate::ui::markdown::is_http_url(url) {
-        return Err("Only http(s) images can be loaded.".to_string());
+        return Err(t!("Only http(s) images can be loaded.").to_string());
     }
 
     let response = ureq::get(url)
@@ -137,13 +137,13 @@ pub fn fetch_markdown_image_rgba(url: &str) -> Result<RgbaImage, String> {
     let mut bytes = Vec::new();
     reader
         .read_to_end(&mut bytes)
-        .map_err(|error| format!("Could not read image: {error}"))?;
+        .map_err(|error| t!("Could not read image: {error}", error = error))?;
     if bytes.len() as u64 > MAX_MARKDOWN_IMAGE_BYTES {
-        return Err("Image is larger than 5 MB.".to_string());
+        return Err(t!("Image is larger than 5 MB.").to_string());
     }
     image::load_from_memory(&bytes)
         .map(|decoded| decoded.to_rgba8())
-        .map_err(|error| format!("Could not decode image: {error}"))
+        .map_err(|error| t!("Could not decode image: {error}", error = error))
 }
 
 fn user_facing_error(error: impl std::fmt::Display) -> String {

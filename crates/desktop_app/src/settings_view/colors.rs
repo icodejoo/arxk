@@ -9,7 +9,7 @@ impl SettingsWindow {
             .iter()
             .map(|spec| {
                 let display = self.custom_color_for_id(spec.id).map_or_else(
-                    || "Theme default".to_string(),
+                    || t!("Theme default").to_string(),
                     |rgb| format!("#{:02x}{:02x}{:02x}", rgb.r, rgb.g, rgb.b),
                 );
                 self.render_editable_row(
@@ -33,6 +33,6 @@ impl SettingsWindow {
                 SettingsSection::Colors,
                 cx,
             ))
-            .child(self.render_settings_group("Overrides", rows))
+            .child(self.render_settings_group(t!("Overrides"), rows))
     }
 }

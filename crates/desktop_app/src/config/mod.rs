@@ -98,12 +98,12 @@ pub fn summarize_parse_diagnostics(diagnostics: &[ConfigDiagnostic]) -> Option<S
     }
 
     let first = &diagnostics[0];
-    Some(format!(
-        "Config has {} warning(s). First: line {} [{}] {}",
-        diagnostics.len(),
-        first.line_number,
-        diagnostic_kind_label(first.kind),
-        first.message
+    Some(t!(
+        "Config has {count} warning(s). First: line {line} [{kind}] {message}",
+        count = diagnostics.len(),
+        line = first.line_number,
+        kind = diagnostic_kind_label(first.kind),
+        message = first.message
     ))
 }
 
@@ -138,7 +138,7 @@ pub fn show_parse_diagnostics_toast(diagnostics: &[ConfigDiagnostic]) {
     let action_label = if fixable_keys.is_empty() {
         None
     } else {
-        Some("Fix".to_string())
+        Some(t!("Fix").to_string())
     };
 
     let toast_id = crate::ui::toast::enqueue_actionable_toast_with_id(

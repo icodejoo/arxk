@@ -25,7 +25,7 @@ impl CommandPaletteItem {
                 layout_name.replace('-', " ")
             ),
             enabled: true,
-            status_hint: is_live.then(|| SAVED_LAYOUT_LIVE_HINT.to_string()),
+            status_hint: is_live.then(|| termy::i18n::tr(SAVED_LAYOUT_LIVE_HINT).to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::SavedLayoutOpen {
                 layout_name: layout_name.to_string(),
@@ -35,7 +35,7 @@ impl CommandPaletteItem {
 
     pub(super) fn saved_layout_open_save_mode() -> Self {
         Self {
-            title: SAVED_LAYOUT_OPEN_SAVE_MODE_TITLE.to_string(),
+            title: termy::i18n::tr(SAVED_LAYOUT_OPEN_SAVE_MODE_TITLE).to_string(),
             keywords: "saved layout save current".to_string(),
             enabled: true,
             status_hint: None,
@@ -47,16 +47,16 @@ impl CommandPaletteItem {
     pub(super) fn saved_layout_save_as(layout_name: &str) -> Self {
         let trimmed = layout_name.trim();
         let exists_title = if trimmed.is_empty() {
-            "Save Current Layout".to_string()
+            t!("Save Current Layout").to_string()
         } else {
-            format!("Save Current Layout as \"{trimmed}\"")
+            t!("Save Current Layout as \"{name}\"", name = trimmed)
         };
         let enabled = !trimmed.is_empty();
         Self {
             title: exists_title,
             keywords: format!("saved layout save {}", trimmed.replace('-', " ")),
             enabled,
-            status_hint: (!enabled).then(|| SAVED_LAYOUT_NAME_REQUIRED_HINT.to_string()),
+            status_hint: (!enabled).then(|| termy::i18n::tr(SAVED_LAYOUT_NAME_REQUIRED_HINT).to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::SavedLayoutSaveAs {
                 layout_name: trimmed.to_string(),
@@ -66,7 +66,7 @@ impl CommandPaletteItem {
 
     pub(super) fn saved_layout_open_rename_mode() -> Self {
         Self {
-            title: SAVED_LAYOUT_OPEN_RENAME_MODE_TITLE.to_string(),
+            title: termy::i18n::tr(SAVED_LAYOUT_OPEN_RENAME_MODE_TITLE).to_string(),
             keywords: "saved layout rename".to_string(),
             enabled: true,
             status_hint: None,
@@ -97,19 +97,19 @@ impl CommandPaletteItem {
         let mut status_hint = None;
         if next_layout_name.is_empty() {
             enabled = false;
-            status_hint = Some(SAVED_LAYOUT_NAME_REQUIRED_HINT.to_string());
+            status_hint = Some(termy::i18n::tr(SAVED_LAYOUT_NAME_REQUIRED_HINT).to_string());
         } else if current_layout_name.eq_ignore_ascii_case(&next_layout_name) {
             enabled = false;
-            status_hint = Some(SAVED_LAYOUT_NAME_UNCHANGED_HINT.to_string());
+            status_hint = Some(termy::i18n::tr(SAVED_LAYOUT_NAME_UNCHANGED_HINT).to_string());
         }
 
         let rendered_next = if next_layout_name.is_empty() {
-            "<new name>"
+            t!("<new name>")
         } else {
             next_layout_name.as_str()
         };
         Self {
-            title: format!("Rename \"{current_layout_name}\" -> \"{rendered_next}\""),
+            title: t!("Rename \"{current}\" -> \"{next}\"", current = current_layout_name, next = rendered_next),
             keywords: format!(
                 "saved layout rename {} {}",
                 current_layout_name.replace('-', " "),
@@ -127,7 +127,7 @@ impl CommandPaletteItem {
 
     pub(super) fn saved_layout_open_delete_mode() -> Self {
         Self {
-            title: SAVED_LAYOUT_OPEN_DELETE_MODE_TITLE.to_string(),
+            title: termy::i18n::tr(SAVED_LAYOUT_OPEN_DELETE_MODE_TITLE).to_string(),
             keywords: "saved layout delete remove".to_string(),
             enabled: true,
             status_hint: None,
@@ -138,7 +138,7 @@ impl CommandPaletteItem {
 
     pub(super) fn saved_layout_delete(layout_name: &str) -> Self {
         Self {
-            title: format!("Delete \"{layout_name}\""),
+            title: t!("Delete \"{name}\"", name = layout_name),
             keywords: format!("saved layout delete {}", layout_name.replace('-', " ")),
             enabled: true,
             status_hint: None,

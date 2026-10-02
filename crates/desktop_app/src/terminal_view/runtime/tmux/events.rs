@@ -107,7 +107,7 @@ impl TerminalView {
                         .complete_attempt(Instant::now(), converged);
                 }
                 Err(error) => {
-                    crate::ui::toast::error(format!("tmux sync failed: {error}"));
+                    crate::ui::toast::error(t!("tmux sync failed: {error}", error = error));
                     self.clear_tmux_resize_convergence();
                 }
             }
@@ -225,7 +225,7 @@ impl TerminalView {
                 TmuxNotification::SubscriptionChanged { .. } => {}
                 TmuxNotification::Exit(reason) => {
                     let reason =
-                        Some(reason.unwrap_or_else(|| "tmux control mode exited".to_string()));
+                        Some(reason.unwrap_or_else(|| t!("tmux control mode exited").to_string()));
                     return self.recover_from_tmux_runtime_exit(reason, cx);
                 }
             }

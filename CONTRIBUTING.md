@@ -118,6 +118,19 @@ If you change commands or keybind-facing actions:
 - wire the action through the app in `crates/desktop_app/src/`
 - regenerate keybinding docs if defaults or public command names changed
 
+## User-visible text
+
+Interface text is translated into English and Chinese. When you add or change
+text a user can see (labels, tooltips, toasts, dialogs, errors shown in the UI):
+
+- write the English text through `t!("…")` instead of a bare string literal
+- add the Chinese translation to the matching table in `crates/desktop_app/src/i18n/`
+- keep `{name}` placeholders identical in both languages
+- run `cargo test -p termy --lib i18n`
+
+Log messages, config keys, ids, and paths are not translated. See
+[docs/i18n.md](docs/i18n.md) for the rules and examples.
+
 ## Documentation changes
 
 Pick the right place:

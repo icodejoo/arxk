@@ -58,7 +58,12 @@ impl TerminalView {
         _sidebar_tabs: bool,
         show_tab_strip_chrome: bool,
     ) -> f32 {
-        Self::window_titlebar_height_for_platform(cfg!(target_os = "macos"), show_tab_strip_chrome)
+        // macOS 与 Windows 都由应用自己画顶栏，即使标签栏被隐藏也要保留，
+        // 否则窗口没有可拖动区域和窗口控制按钮。
+        Self::window_titlebar_height_for_platform(
+            cfg!(any(target_os = "macos", target_os = "windows")),
+            show_tab_strip_chrome,
+        )
     }
 
     fn window_titlebar_height_for_platform(

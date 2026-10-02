@@ -160,7 +160,7 @@ impl AutoUpdater {
                     Err(e) => {
                         this.update(cx, |this, cx| {
                             this.state =
-                                UpdateState::Error(format!("Download or verification failed: {e}"));
+                                UpdateState::Error(t!("Download or verification failed: {error}", error = e));
                             cx.notify();
                         });
                     }
@@ -203,7 +203,7 @@ impl AutoUpdater {
                             this.state = UpdateState::InstallerLaunched { version };
                         }
                         Err(e) => {
-                            this.state = UpdateState::Error(format!("Install failed: {e}"));
+                            this.state = UpdateState::Error(t!("Install failed: {error}", error = e));
                         }
                     }
                     cx.notify();

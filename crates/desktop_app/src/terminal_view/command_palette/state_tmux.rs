@@ -34,7 +34,7 @@ pub(in super::super) enum TmuxSessionIntent {
 impl CommandPaletteItem {
     fn tmux_socket_label(socket_target: &TmuxSocketTarget) -> String {
         match socket_target {
-            TmuxSocketTarget::Default => TMUX_SOCKET_DEFAULT_LABEL.to_string(),
+            TmuxSocketTarget::Default => termy::i18n::tr(TMUX_SOCKET_DEFAULT_LABEL).to_string(),
             TmuxSocketTarget::DedicatedTermy => TMUX_SOCKET_DEDICATED_LABEL.to_string(),
             TmuxSocketTarget::Named(name) => name.clone(),
         }
@@ -42,17 +42,23 @@ impl CommandPaletteItem {
 
     fn tmux_session_title(row: &TmuxSessionRow) -> String {
         let socket_label = Self::tmux_socket_label(&row.socket_target);
-        format!(
-            "{}  ({} window{}, {} attached)  [{socket_label}]",
-            row.summary.name,
-            row.summary.window_count,
-            if row.summary.window_count == 1 {
-                ""
-            } else {
-                "s"
-            },
-            row.summary.attached_clients
-        )
+        if row.summary.window_count == 1 {
+            t!(
+                "{name}  ({windows} window, {attached} attached)  [{socket}]",
+                name = row.summary.name,
+                windows = row.summary.window_count,
+                attached = row.summary.attached_clients,
+                socket = socket_label
+            )
+        } else {
+            t!(
+                "{name}  ({windows} windows, {attached} attached)  [{socket}]",
+                name = row.summary.name,
+                windows = row.summary.window_count,
+                attached = row.summary.attached_clients,
+                socket = socket_label
+            )
+        }
     }
 
     pub(super) fn tmux_session_attach_or_switch(row: &TmuxSessionRow) -> Self {
@@ -92,7 +98,7 @@ impl CommandPaletteItem {
             title,
             keywords,
             enabled: !is_active,
-            status_hint: is_active.then(|| TMUX_SESSION_ACTIVE_HINT.to_string()),
+            status_hint: is_active.then(|| termy::i18n::tr(TMUX_SESSION_ACTIVE_HINT).to_string()),
             tmux_status_hint: is_active.then_some(TmuxSessionStatusHint::ActiveSession),
             kind: CommandPaletteItemKind::TmuxSessionRenameSelect {
                 session_name: row.summary.name.clone(),
@@ -112,22 +118,22 @@ impl CommandPaletteItem {
         let mut tmux_status_hint = None;
         if next_session_name.is_empty() {
             enabled = false;
-            status_hint = Some(TMUX_SESSION_NAME_REQUIRED_HINT.to_string());
+            status_hint = Some(termy::i18n::tr(TMUX_SESSION_NAME_REQUIRED_HINT).to_string());
             tmux_status_hint = Some(TmuxSessionStatusHint::NameRequired);
         } else if current_session_name.eq_ignore_ascii_case(&next_session_name) {
             enabled = false;
-            status_hint = Some(TMUX_SESSION_NAME_UNCHANGED_HINT.to_string());
+            status_hint = Some(termy::i18n::tr(TMUX_SESSION_NAME_UNCHANGED_HINT).to_string());
             tmux_status_hint = Some(TmuxSessionStatusHint::NameUnchanged);
         }
 
         let rendered_next_name = if next_session_name.is_empty() {
-            "<new name>"
+            t!("<new name>")
         } else {
             next_session_name.as_str()
         };
 
         Self {
-            title: format!("Rename \"{current_session_name}\" -> \"{rendered_next_name}\""),
+            title: t!("Rename \"{current}\" -> \"{next}\"", current = current_session_name, next = rendered_next_name),
             keywords: format!(
                 "tmux rename session {} {}",
                 current_session_name.replace('-', " "),
@@ -160,7 +166,7 @@ impl CommandPaletteItem {
             title,
             keywords,
             enabled: !is_active,
-            status_hint: is_active.then(|| TMUX_SESSION_ACTIVE_HINT.to_string()),
+            status_hint: is_active.then(|| termy::i18n::tr(TMUX_SESSION_ACTIVE_HINT).to_string()),
             tmux_status_hint: is_active.then_some(TmuxSessionStatusHint::ActiveSession),
             kind: CommandPaletteItemKind::TmuxSessionKill {
                 session_name: row.summary.name.clone(),
@@ -175,7 +181,7 @@ impl CommandPaletteItem {
     ) -> Self {
         let session_name = session_name.trim().to_string();
         Self {
-            title: format!("Create tmux Session \"{session_name}\""),
+            title: t!("Create tmux Session \"{name}\"", name = session_name),
             keywords: format!(
                 "tmux attach create switch session {}",
                 session_name.replace('-', " ")
@@ -192,7 +198,7 @@ impl CommandPaletteItem {
 
     pub(super) fn tmux_session_detach_current() -> Self {
         Self {
-            title: TMUX_DETACH_CURRENT_TITLE.to_string(),
+            title: termy::i18n::tr(TMUX_DETACH_CURRENT_TITLE).to_string(),
             keywords: "tmux detach current session".to_string(),
             enabled: true,
             status_hint: None,
@@ -203,7 +209,7 @@ impl CommandPaletteItem {
 
     pub(super) fn tmux_session_open_rename_mode() -> Self {
         Self {
-            title: TMUX_OPEN_RENAME_MODE_TITLE.to_string(),
+            title: termy::i18n::tr(TMUX_OPEN_RENAME_MODE_TITLE).to_string(),
             keywords: "tmux rename session".to_string(),
             enabled: true,
             status_hint: None,
@@ -214,7 +220,7 @@ impl CommandPaletteItem {
 
     pub(super) fn tmux_session_open_kill_mode() -> Self {
         Self {
-            title: TMUX_OPEN_KILL_MODE_TITLE.to_string(),
+            title: termy::i18n::tr(TMUX_OPEN_KILL_MODE_TITLE).to_string(),
             keywords: "tmux kill session".to_string(),
             enabled: true,
             status_hint: None,

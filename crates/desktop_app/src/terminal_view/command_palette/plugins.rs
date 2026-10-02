@@ -167,7 +167,7 @@ impl PluginInputSession {
     }
 
     pub(super) fn progress_label(&self) -> String {
-        format!("{} of {}", self.input_index + 1, self.command.inputs.len())
+        t!("{current} of {total}", current = self.input_index + 1, total = self.command.inputs.len())
     }
 
     pub(super) fn can_go_back(&self) -> bool {
@@ -185,7 +185,7 @@ impl PluginInputSession {
             PluginInput::Text { label, .. } => label.clone(),
             PluginInput::Select { label, .. } => label.clone(),
             PluginInput::Pick { label, .. } => label.clone(),
-            PluginInput::Confirm { .. } => "Choose Yes or No".to_string(),
+            PluginInput::Confirm { .. } => t!("Choose Yes or No").to_string(),
         }
     }
 
@@ -403,7 +403,7 @@ impl TerminalView {
             if !self.plugin_lifecycle.overflow_warned {
                 self.plugin_lifecycle.overflow_warned = true;
                 log::warn!("Plugin lifecycle event queue is full; dropping events");
-                crate::ui::toast::warning("Plugin events are falling behind");
+                crate::ui::toast::warning(t!("Plugin events are falling behind"));
                 self.notify_overlay(cx);
             }
             return;
@@ -454,7 +454,7 @@ impl TerminalView {
         if !dispatch.errors.is_empty() {
             let message = dispatch.errors.join("; ");
             log::error!("Plugin event failed: {message}");
-            crate::ui::toast::error(format!("Plugin event failed: {message}"));
+            crate::ui::toast::error(t!("Plugin event failed: {message}", message = message));
         }
         if let Err(error) = self.apply_plugin_actions(dispatch.actions, window, cx) {
             log::error!("Plugin event action failed: {error}");
@@ -474,7 +474,7 @@ impl TerminalView {
             .collect::<Vec<_>>()
             .join("; ");
         if errors.len() > 3 {
-            message.push_str(&format!("; and {} more", errors.len() - 3));
+            message.push_str(&t!("; and {count} more", count = errors.len() - 3));
         }
         Some(message)
     }
@@ -486,7 +486,7 @@ impl TerminalView {
         }
         if let Some(error) = error_message.as_deref() {
             log::error!("Plugin refresh failed: {error}");
-            crate::ui::toast::error(format!("Plugin error: {error}"));
+            crate::ui::toast::error(t!("Plugin error: {error}", error = error));
             self.notify_overlay(cx);
         }
         self.plugin_last_error = error_message;
@@ -612,17 +612,17 @@ impl TerminalView {
                 let value = self.command_palette.input().text();
                 let char_count = value.chars().count();
                 let (enabled, status_hint) = if *required && value.trim().is_empty() {
-                    (false, Some("Required".to_string()))
+                    (false, Some(t!("Required").to_string()))
                 } else if char_count > *max_length {
-                    (false, Some(format!("Max {max_length} characters")))
+                    (false, Some(t!("Max {max_length} characters", max_length = max_length)))
                 } else {
                     (true, None)
                 };
                 vec![CommandPaletteItem {
                     title: if session.is_last_input() {
-                        format!("Run {}", session.command.title)
+                        t!("Run {title}", title = session.command.title)
                     } else {
-                        "Continue".to_string()
+                        t!("Continue").to_string()
                     },
                     keywords: String::new(),
                     enabled,
@@ -667,10 +667,10 @@ impl TerminalView {
                     .collect::<Vec<_>>();
                 if !required {
                     items.push(CommandPaletteItem {
-                        title: "Skip".to_string(),
+                        title: t!("Skip").to_string(),
                         keywords: "none skip optional".to_string(),
                         enabled: true,
-                        status_hint: Some("Optional".to_string()),
+                        status_hint: Some(t!("Optional").to_string()),
                         tmux_status_hint: None,
                         kind: CommandPaletteItemKind::PluginInputOption {
                             value: Value::Null,
@@ -688,7 +688,7 @@ impl TerminalView {
             } => {
                 if session.pick_loading {
                     return vec![CommandPaletteItem {
-                        title: "Loading options…".to_string(),
+                        title: t!("Loading options…").to_string(),
                         keywords: String::new(),
                         enabled: false,
                         status_hint: None,
@@ -701,7 +701,7 @@ impl TerminalView {
                 }
                 if let Some(error) = session.pick_error.as_ref() {
                     return vec![CommandPaletteItem {
-                        title: "Couldn’t load options".to_string(),
+                        title: t!("Couldn’t load options").to_string(),
                         keywords: String::new(),
                         enabled: false,
                         status_hint: Some(error.clone()),
@@ -732,10 +732,10 @@ impl TerminalView {
                     .collect::<Vec<_>>();
                 if !required {
                     items.push(CommandPaletteItem {
-                        title: "Skip".to_string(),
+                        title: t!("Skip").to_string(),
                         keywords: "none skip optional".to_string(),
                         enabled: true,
-                        status_hint: Some("Optional".to_string()),
+                        status_hint: Some(t!("Optional").to_string()),
                         tmux_status_hint: None,
                         kind: CommandPaletteItemKind::PluginInputOption {
                             value: Value::Null,
@@ -745,7 +745,7 @@ impl TerminalView {
                 }
                 if items.is_empty() {
                     items.push(CommandPaletteItem {
-                        title: "No matching options".to_string(),
+                        title: t!("No matching options").to_string(),
                         keywords: String::new(),
                         enabled: false,
                         status_hint: None,
@@ -770,7 +770,7 @@ impl TerminalView {
                 let mut items = values
                     .into_iter()
                     .map(|(label, value)| CommandPaletteItem {
-                        title: label.to_string(),
+                        title: termy::i18n::tr(label).to_string(),
                         keywords: if value { "yes confirm" } else { "no cancel" }.to_string(),
                         enabled: true,
                         status_hint: None,
@@ -873,7 +873,7 @@ impl TerminalView {
             .plugin_input_session
             .as_ref()
             .map_or_else(
-                || "Plugin input".to_string(),
+                || t!("Plugin input").to_string(),
                 |session| session.command.title.clone(),
             )
     }
@@ -917,8 +917,10 @@ impl TerminalView {
             .plugin_runtime
             .command_with_revision(plugin_id, command_id)
         else {
-            crate::ui::toast::error(format!(
-                "Plugin command {plugin_id}.{command_id} is unavailable"
+            crate::ui::toast::error(t!(
+                "Plugin command {plugin_id}.{command_id} is unavailable",
+                plugin_id = plugin_id,
+                command_id = command_id
             ));
             self.notify_overlay(cx);
             return;
@@ -930,7 +932,7 @@ impl TerminalView {
         }
         let context = self.plugin_context(cx);
         if !command.when.matches(&context) {
-            crate::ui::toast::info("That plugin command is not available in this terminal context");
+            crate::ui::toast::info(t!("That plugin command is not available in this terminal context"));
             self.notify_overlay(cx);
             return;
         }
@@ -964,7 +966,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         let Some(window_handle) = window.window_handle().downcast::<Self>() else {
-            crate::ui::toast::error("Plugin keybinding lost its Termy window");
+            crate::ui::toast::error(t!("Plugin keybinding lost its Termy window"));
             self.notify_overlay(cx);
             return;
         };
@@ -1014,14 +1016,15 @@ impl TerminalView {
             {
                 let text = value.as_str().unwrap_or_default();
                 if *required && text.trim().is_empty() {
-                    crate::ui::toast::info(format!("{} is required", input.label()));
+                    crate::ui::toast::info(t!("{label} is required", label = input.label()));
                     self.notify_overlay(cx);
                     return;
                 }
                 if text.chars().count() > *max_length {
-                    crate::ui::toast::info(format!(
-                        "{} must be at most {max_length} characters",
-                        input.label()
+                    crate::ui::toast::info(t!(
+                        "{label} must be at most {max_length} characters",
+                        label = input.label(),
+                        max_length = max_length
                     ));
                     self.notify_overlay(cx);
                     return;
@@ -1031,7 +1034,7 @@ impl TerminalView {
                 && *required
                 && value.as_str().is_none_or(|value| value.trim().is_empty())
             {
-                crate::ui::toast::info(format!("{} is required", input.label()));
+                crate::ui::toast::info(t!("{label} is required", label = input.label()));
                 self.notify_overlay(cx);
                 return;
             }
@@ -1103,15 +1106,15 @@ impl TerminalView {
         let command_id = command.id.clone();
         let title = command.title;
         let Some(window_handle) = window.window_handle().downcast::<Self>() else {
-            crate::ui::toast::error("Plugin command lost its Termy window");
+            crate::ui::toast::error(t!("Plugin command lost its Termy window"));
             self.notify_overlay(cx);
             return;
         };
         let loading_id = crate::ui::toast::enqueue_actionable_toast_with_id(
             crate::ui::toast::ToastKind::Loading,
-            format!("Running {title}…"),
+            t!("Running {title}…", title = title),
             Some(Duration::from_secs(60 * 60)),
-            Some("Cancel".to_string()),
+            Some(t!("Cancel").to_string()),
         );
         let (progress_tx, progress_rx) = flume::bounded(32);
         let control = termy_core::plugin_runtime::PluginInvocationControl::with_progress_handler(
@@ -1126,11 +1129,11 @@ impl TerminalView {
             while let Ok(progress) = progress_rx.recv_async().await {
                 let detail = match (progress.message, progress.percentage) {
                     (Some(message), Some(percentage)) => {
-                        format!("{progress_title}: {message} ({percentage}%)")
+                        t!("{title}: {message} ({percentage}%)", title = progress_title, message = message, percentage = percentage)
                     }
-                    (Some(message), None) => format!("{progress_title}: {message}"),
-                    (None, Some(percentage)) => format!("{progress_title} ({percentage}%)"),
-                    (None, None) => format!("Running {progress_title}…"),
+                    (Some(message), None) => t!("{title}: {message}", title = progress_title, message = message),
+                    (None, Some(percentage)) => t!("{title} ({percentage}%)", title = progress_title, percentage = percentage),
+                    (None, None) => t!("Running {title}…", title = progress_title),
                 };
                 cx.update(|cx| {
                     crate::ui::toast::update_toast(
@@ -1206,7 +1209,7 @@ impl TerminalView {
         crate::ui::toast::update_toast(
             toast_id,
             crate::ui::toast::ToastKind::Loading,
-            "Cancelling plugin command…",
+            t!("Cancelling plugin command…"),
         );
         self.notify_overlay(cx);
         true
@@ -1222,7 +1225,7 @@ impl TerminalView {
             if let PluginAction::TermyCommand { command } = action
                 && CommandAction::from_config_name(command).is_none()
             {
-                return Err(format!("Plugin returned unknown Termy command `{command}`"));
+                return Err(t!("Plugin returned unknown Termy command `{command}`", command = command));
             }
         }
 
@@ -1234,10 +1237,10 @@ impl TerminalView {
                 } => {
                     let launch = TerminalLaunch::ShellCommand(command);
                     if !self.add_tab_with_launch(working_directory.as_deref(), Some(&launch), cx) {
-                        return Err(
+                        return Err(t!(
                             "Plugin command stopped because its terminal could not be created"
-                                .to_string(),
-                        );
+                        )
+                        .to_string());
                     }
                     cx.notify();
                 }
@@ -1252,7 +1255,7 @@ impl TerminalView {
                         input.push(b'\n');
                     }
                     if !self.send_input_to_pane(&pane_id, &input) {
-                        return Err("Plugin terminal target stopped accepting input".to_string());
+                        return Err(t!("Plugin terminal target stopped accepting input").to_string());
                     }
                 }
                 PluginAction::TerminalOpen {
@@ -1272,10 +1275,10 @@ impl TerminalView {
                     if self.runtime_kind().uses_tmux()
                         && matches!(launch, Some(TerminalLaunch::Program { .. }))
                     {
-                        return Err(
+                        return Err(t!(
                             "Plugin structured program launches require the native runtime"
-                                .to_string(),
-                        );
+                        )
+                        .to_string());
                     }
                     let _ = self.focus_plugin_terminal_target(&target, cx)?;
                     let opened = match location {
@@ -1323,8 +1326,9 @@ impl TerminalView {
                                         }
                                     })
                                     .map_err(|error| {
-                                        format!(
-                                            "Plugin terminal window became unavailable: {error}"
+                                        t!(
+                                            "Plugin terminal window became unavailable: {error}",
+                                            error = error
                                         )
                                     })?
                             } else {
@@ -1333,7 +1337,7 @@ impl TerminalView {
                         }
                     };
                     if !opened {
-                        return Err("Plugin terminal could not be opened".to_string());
+                        return Err(t!("Plugin terminal could not be opened").to_string());
                     }
                     if !focus && location != PluginTerminalOpenLocation::Window {
                         self.restore_plugin_terminal_focus(previous_tab_id, previous_pane_id, cx);
@@ -1341,7 +1345,7 @@ impl TerminalView {
                 }
                 PluginAction::TermyCommand { command } => {
                     let action = CommandAction::from_config_name(&command)
-                        .ok_or_else(|| format!("Unknown Termy command `{command}`"))?;
+                        .ok_or_else(|| t!("Unknown Termy command `{command}`", command = command))?;
                     self.execute_command_action(action, false, window, cx);
                 }
                 PluginAction::ClipboardWrite { text } => {
@@ -1349,7 +1353,7 @@ impl TerminalView {
                 }
                 PluginAction::UrlOpen { url } => {
                     webbrowser::open(&url)
-                        .map_err(|error| format!("Failed to open plugin URL: {error}"))?;
+                        .map_err(|error| t!("Failed to open plugin URL: {error}", error = error))?;
                 }
                 PluginAction::Toast { level, message } => match level {
                     PluginToastLevel::Info => crate::ui::toast::info(message),
@@ -1379,10 +1383,10 @@ impl TerminalView {
                     revision,
                 } => {
                     let plugin_ui = self.plugin_ui.as_ref().ok_or_else(|| {
-                        "Plugin returned view.close without an open view".to_string()
+                        t!("Plugin returned view.close without an open view").to_string()
                     })?;
                     if !plugin_ui.read(cx).belongs_to(&plugin_id, &revision) {
-                        return Err("Plugin cannot close another plugin's view".to_string());
+                        return Err(t!("Plugin cannot close another plugin's view").to_string());
                     }
                     self.close_plugin_ui(window, cx);
                 }
@@ -1398,7 +1402,7 @@ impl TerminalView {
         let (tab_id, pane_id) = match target {
             PluginTerminalTarget::Named(PluginTerminalTargetKind::Active) => (None, None),
             PluginTerminalTarget::Named(PluginTerminalTargetKind::Origin) => {
-                return Err("Plugin terminal origin was not resolved by the runtime".to_string());
+                return Err(t!("Plugin terminal origin was not resolved by the runtime").to_string());
             }
             PluginTerminalTarget::Exact {
                 window_id,
@@ -1406,7 +1410,7 @@ impl TerminalView {
                 pane_id,
             } => {
                 if window_id != &self.plugin_lifecycle.window_id {
-                    return Err("Plugin terminal target belongs to another window".to_string());
+                    return Err(t!("Plugin terminal target belongs to another window").to_string());
                 }
                 (tab_id.as_deref(), pane_id.as_deref())
             }
@@ -1416,7 +1420,7 @@ impl TerminalView {
                 .tabs
                 .iter()
                 .position(|tab| tab.id.to_string() == tab_id)
-                .ok_or_else(|| "Plugin terminal target tab is no longer available".to_string())?
+                .ok_or_else(|| t!("Plugin terminal target tab is no longer available").to_string())?
         } else {
             self.session.active_tab
         };
@@ -1424,13 +1428,13 @@ impl TerminalView {
             .session
             .tabs
             .get(tab_index)
-            .ok_or_else(|| "Plugin terminal target tab is unavailable".to_string())?;
+            .ok_or_else(|| t!("Plugin terminal target tab is unavailable").to_string())?;
         let pane_id = pane_id
             .map(str::to_string)
             .or_else(|| tab.active_pane_id().map(str::to_string))
-            .ok_or_else(|| "Plugin terminal target pane is unavailable".to_string())?;
+            .ok_or_else(|| t!("Plugin terminal target pane is unavailable").to_string())?;
         if !tab.panes.iter().any(|pane| pane.id == pane_id) {
-            return Err("Plugin terminal target pane is no longer available".to_string());
+            return Err(t!("Plugin terminal target pane is no longer available").to_string());
         }
         Ok((tab_index, pane_id))
     }

@@ -21,7 +21,7 @@ pub(super) fn command_icon_path(id: CommandId) -> &'static str {
         // the move-right glyph.
         SwitchToTab1 | SwitchToTab2 | SwitchToTab3 | SwitchToTab4 | SwitchToTab5 | SwitchToTab6
         | SwitchToTab7 | SwitchToTab8 | SwitchToTab9 => "icons/settings/tabs.svg",
-        RenameTab => "icons/command_palette/rename.svg",
+        RenameTab | RenamePane => "icons/command_palette/rename.svg",
         SplitPaneVertical => "icons/command_palette/split-right.svg",
         SplitPaneHorizontal => "icons/command_palette/split-down.svg",
         FocusPaneLeft | FocusPaneRight | FocusPaneUp | FocusPaneDown | FocusPaneNext
@@ -93,6 +93,7 @@ pub(super) fn palette_item_icon_path(item: &CommandPaletteItem) -> &'static str 
         | CommandPaletteItemKind::SavedLayoutRenameApply { .. }
         | CommandPaletteItemKind::SavedLayoutOpenDeleteMode
         | CommandPaletteItemKind::SavedLayoutDelete { .. } => "icons/command_palette/layout.svg",
+        CommandPaletteItemKind::PaneRenameApply { .. } => "icons/command_palette/rename.svg",
         CommandPaletteItemKind::TaskOpenCreateGlobalMode
         | CommandPaletteItemKind::TaskOpenCreateLayoutMode { .. }
         | CommandPaletteItemKind::TaskOpenSaveCurrentCommandGlobalMode
@@ -132,7 +133,7 @@ pub(super) fn command_category(id: CommandId) -> &'static str {
         | FocusPaneRight | FocusPaneUp | FocusPaneDown | FocusPaneNext | FocusPanePrevious
         | FocusPane1 | FocusPane2 | FocusPane3 | FocusPane4 | FocusPane5 | FocusPane6
         | FocusPane7 | FocusPane8 | FocusPane9 | ResizePaneLeft | ResizePaneRight
-        | ResizePaneUp | ResizePaneDown | TogglePaneZoom => "Panes",
+        | ResizePaneUp | ResizePaneDown | TogglePaneZoom | RenamePane => "Panes",
         MinimizeWindow | ToggleWorkspaceSidebar => "Window",
         ManageTmuxSessions | ManageSavedLayouts | RunTask => "Sessions",
         OpenSearch
@@ -217,13 +218,13 @@ fn keystroke_keycaps(keystroke: &str) -> Vec<String> {
 pub(super) fn palette_item_category(item: &CommandPaletteItem) -> Option<String> {
     match &item.kind {
         CommandPaletteItemKind::Command(action) => {
-            Some(command_category(action.to_command_id()).to_string())
+            Some(termy::i18n::tr(command_category(action.to_command_id())).to_string())
         }
         CommandPaletteItemKind::PluginCommand { plugin_id, .. } => Some(plugin_id.clone()),
         CommandPaletteItemKind::SshHost { .. } | CommandPaletteItemKind::ManageSshHosts => {
             Some("SSH".to_string())
         }
-        CommandPaletteItemKind::Task { .. } => Some("Tasks".to_string()),
+        CommandPaletteItemKind::Task { .. } => Some(t!("Tasks").to_string()),
         _ => None,
     }
 }
@@ -255,6 +256,7 @@ pub(super) fn palette_item_tint_category(item: &CommandPaletteItem) -> &'static 
         | CommandPaletteItemKind::SavedLayoutRenameApply { .. }
         | CommandPaletteItemKind::SavedLayoutOpenDeleteMode
         | CommandPaletteItemKind::SavedLayoutDelete { .. } => "Sessions",
+        CommandPaletteItemKind::PaneRenameApply { .. } => "Panes",
         CommandPaletteItemKind::TaskOpenCreateGlobalMode
         | CommandPaletteItemKind::TaskOpenCreateLayoutMode { .. }
         | CommandPaletteItemKind::TaskOpenSaveCurrentCommandGlobalMode

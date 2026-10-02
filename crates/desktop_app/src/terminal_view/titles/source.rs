@@ -2,6 +2,15 @@ use super::super::*;
 use crate::terminal_ui::TmuxPaneState;
 use std::path::Path;
 
+/// 窗格标签的两段文字：左段用标题样式，右段（可选）用路径样式。
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct PaneLabelTexts {
+    /// 左段：自定义标题；没有自定义标题时就是路径。
+    pub(crate) left: String,
+    /// 右段：路径；仅在有自定义标题且目录已知时存在。
+    pub(crate) right: Option<String>,
+}
+
 impl TerminalView {
     pub(crate) fn fallback_title(&self) -> &str {
         let fallback = self.tab_title.fallback.trim();
@@ -229,6 +238,130 @@ impl TerminalView {
         }
 
         Some(ExplicitTitlePayload::Title(explicit.to_string()))
+    }
+
+    /// 把终端上报的原始标题转成窗格标签文字。
+    /// 带内部前缀（`termy:tab:`）的载荷会按标签标题同样的规则解析，其余原样清洗。
+    /// 清洗后为空返回 `None`。
+    pub(crate) fn pane_display_title(&self, raw: &str) -> Option<String> {
+        let raw = raw.trim();
+        let text = match self.parse_explicit_title(raw) {
+            Some(ExplicitTitlePayload::Prompt { title, .. })
+            | Some(ExplicitTitlePayload::Command { title, .. })
+            | Some(ExplicitTitlePayload::Title(title)) => title,
+            None => raw.to_string(),
+        };
+        let text = Self::truncate_tab_title(text.trim());
+        (!text.is_empty()).then_some(text)
+    }
+
+    /// 记录某个窗格的标题，返回显示内容是否发生变化（决定是否需要重绘）。
+    pub(crate) fn record_pane_title(&mut self, pane_id: &str, raw: &str) -> bool {
+        let Some(title) = self.pane_display_title(raw) else {
+            return false;
+        };
+        if self.pane_titles.get(pane_id) == Some(&title) {
+            return false;
+        }
+        self.pane_titles.insert(pane_id.to_string(), title);
+        true
+    }
+
+    /// 记录某个窗格的当前目录（来自 shell 上报的 OSC 7 / OSC 9;9），
+    /// 返回显示内容是否发生变化。
+    pub(crate) fn record_pane_cwd(&mut self, pane_id: &str, raw: &str) -> bool {
+        let cwd = Self::truncate_tab_title(raw.trim().trim_matches('"'));
+        if cwd.is_empty() || self.pane_cwds.get(pane_id) == Some(&cwd) {
+            return false;
+        }
+        self.pane_cwds.insert(pane_id.to_string(), cwd);
+        true
+    }
+
+    /// 解析窗格标签使用的标题：手动名优先于终端上报标题。
+    ///
+    /// - `manual`：手动名表（窗格 id -> 名字）。
+    /// - `reported`：终端上报标题表（窗格 id -> 标题）。
+    /// - `pane_id`：目标窗格 id。
+    ///
+    /// 返回应显示的标题，两者都没有时为 `None`。
+    pub(crate) fn resolve_pane_title<'a>(
+        manual: &'a HashMap<String, String>,
+        reported: &'a HashMap<String, String>,
+        pane_id: &str,
+    ) -> Option<&'a str> {
+        manual
+            .get(pane_id)
+            .or_else(|| reported.get(pane_id))
+            .map(String::as_str)
+    }
+
+    /// 把用户输入写入手动名表：截断后为空则清除，返回表是否发生变化。
+    ///
+    /// - `manual`：手动名表（窗格 id -> 名字）。
+    /// - `pane_id`：目标窗格 id。
+    /// - `raw`：用户输入的原始文本。
+    pub(crate) fn apply_manual_pane_title(
+        manual: &mut HashMap<String, String>,
+        pane_id: &str,
+        raw: &str,
+    ) -> bool {
+        let title = Self::truncate_tab_title(raw.trim());
+        if title.is_empty() {
+            return manual.remove(pane_id).is_some();
+        }
+        if manual.get(pane_id) == Some(&title) {
+            return false;
+        }
+        manual.insert(pane_id.to_string(), title);
+        true
+    }
+
+    /// 设置（或清除，传空串）某个窗格的手动名，返回是否发生变化。
+    pub(crate) fn set_pane_manual_title(&mut self, pane_id: &str, raw: &str) -> bool {
+        Self::apply_manual_pane_title(&mut self.pane_manual_titles, pane_id, raw)
+    }
+
+    /// 窗格被关闭时，清理这些窗格的手动名。
+    pub(crate) fn forget_pane_manual_titles(&mut self, pane_ids: &[String]) {
+        for pane_id in pane_ids {
+            self.pane_manual_titles.remove(pane_id.as_str());
+        }
+    }
+
+    /// 比较两段文字是否指向同一路径：忽略首尾空白、末尾分隔符、`/` 与 `\` 的差别和大小写。
+    fn same_path_text(a: &str, b: &str) -> bool {
+        let normalize = |text: &str| {
+            text.trim()
+                .trim_end_matches(['/', '\\'])
+                .replace('\\', "/")
+                .to_lowercase()
+        };
+        normalize(a) == normalize(b)
+    }
+
+    /// 计算窗格标签的两段文字。
+    ///
+    /// - 标题与当前目录不同 → 有自定义标题：左标题、右路径（目录未知时只有左标题）；
+    /// - 否则（没有标题，或标题只是路径本身）→ 路径就是标题：只有左段。
+    ///
+    /// 标题和目录都没有时返回 `None`。
+    pub(crate) fn pane_label_texts(
+        title: Option<&str>,
+        cwd: Option<&str>,
+    ) -> Option<PaneLabelTexts> {
+        let title = title.map(str::trim).filter(|text| !text.is_empty());
+        let cwd = cwd.map(str::trim).filter(|text| !text.is_empty());
+        match (title, cwd) {
+            (Some(title), Some(cwd)) if !Self::same_path_text(title, cwd) => Some(PaneLabelTexts {
+                left: title.to_string(),
+                right: Some(cwd.to_string()),
+            }),
+            (title, cwd) => cwd.or(title).map(|text| PaneLabelTexts {
+                left: text.to_string(),
+                right: None,
+            }),
+        }
     }
 
     pub(crate) fn resolved_tab_title(&self, index: usize) -> String {
@@ -604,5 +737,118 @@ mod tests {
 
         let title = TerminalView::derive_tmux_shell_title(&tab_title, &pane);
         assert!(title.is_none());
+    }
+
+    fn texts(left: &str, right: Option<&str>) -> Option<PaneLabelTexts> {
+        Some(PaneLabelTexts {
+            left: left.to_string(),
+            right: right.map(str::to_string),
+        })
+    }
+
+    #[test]
+    fn pane_label_custom_title_goes_left_and_path_right() {
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("build"), Some(r"C:\work\app")),
+            texts("build", Some(r"C:\work\app"))
+        );
+    }
+
+    #[test]
+    fn pane_label_title_equal_to_path_counts_as_no_title() {
+        // 大小写、分隔符、末尾分隔符不同，仍视为同一路径。
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("c:/work/app/"), Some(r"C:\work\app")),
+            texts(r"C:\work\app", None)
+        );
+    }
+
+    #[test]
+    fn pane_label_without_title_uses_path_as_title() {
+        assert_eq!(
+            TerminalView::pane_label_texts(None, Some(r"C:\work")),
+            texts(r"C:\work", None)
+        );
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("  "), Some(r"C:\work")),
+            texts(r"C:\work", None)
+        );
+    }
+
+    #[test]
+    fn pane_label_without_known_cwd_shows_title_only() {
+        assert_eq!(
+            TerminalView::pane_label_texts(Some("vim main.rs"), None),
+            texts("vim main.rs", None)
+        );
+    }
+
+    #[test]
+    fn pane_label_is_none_without_any_text() {
+        assert_eq!(TerminalView::pane_label_texts(None, None), None);
+        assert_eq!(TerminalView::pane_label_texts(Some(""), Some(" ")), None);
+    }
+
+    fn map_of(entries: &[(&str, &str)]) -> HashMap<String, String> {
+        entries
+            .iter()
+            .map(|(key, value)| (key.to_string(), value.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn manual_pane_title_wins_over_reported_title() {
+        let manual = map_of(&[("p1", "build")]);
+        let reported = map_of(&[("p1", "zsh"), ("p2", "vim")]);
+        assert_eq!(
+            TerminalView::resolve_pane_title(&manual, &reported, "p1"),
+            Some("build")
+        );
+        assert_eq!(
+            TerminalView::resolve_pane_title(&manual, &reported, "p2"),
+            Some("vim")
+        );
+        assert_eq!(
+            TerminalView::resolve_pane_title(&manual, &reported, "p3"),
+            None
+        );
+    }
+
+    #[test]
+    fn clearing_manual_pane_title_falls_back_to_reported_title() {
+        let mut manual = HashMap::new();
+        let reported = map_of(&[("p1", "zsh")]);
+        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p1", "  build  "));
+        assert_eq!(
+            TerminalView::resolve_pane_title(&manual, &reported, "p1"),
+            Some("build")
+        );
+        // 重复提交相同名字不算变化。
+        assert!(!TerminalView::apply_manual_pane_title(&mut manual, "p1", "build"));
+        // 空串清除手动名，恢复终端标题。
+        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p1", "   "));
+        assert_eq!(
+            TerminalView::resolve_pane_title(&manual, &reported, "p1"),
+            Some("zsh")
+        );
+        assert!(!TerminalView::apply_manual_pane_title(&mut manual, "p1", ""));
+    }
+
+    #[test]
+    fn manual_pane_title_is_truncated_and_single_line() {
+        let mut manual = HashMap::new();
+        let long = "a".repeat(MAX_TAB_TITLE_CHARS + 20);
+        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p1", &long));
+        assert_eq!(manual["p1"].chars().count(), MAX_TAB_TITLE_CHARS);
+        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p2", "a\nb"));
+        assert_eq!(manual["p2"], "a b");
+    }
+
+    #[test]
+    fn manual_pane_title_without_cwd_shows_only_left() {
+        let manual = map_of(&[("p1", "build")]);
+        let reported = HashMap::new();
+        let title = TerminalView::resolve_pane_title(&manual, &reported, "p1");
+        assert_eq!(TerminalView::pane_label_texts(title, None), texts("build", None));
     }
 }

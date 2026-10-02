@@ -268,7 +268,7 @@ impl TerminalView {
             self.search_open,
             self.renaming_tab,
             self.renaming_workspace,
-            self.release_notes_open(),
+            self.release_notes_open() || self.shortcuts_popup_open(),
         )
     }
 
@@ -724,7 +724,7 @@ impl TerminalView {
                     .and_then(|selection| self.current_kitty_image_placement(selection))
                 {
                     cx.write_to_clipboard(kitty_png_clipboard_item(image.image.png().as_ref()));
-                    crate::ui::toast::success("Copied image");
+                    crate::ui::toast::success(t!("Copied image"));
                     self.notify_overlay(cx);
                     return true;
                 }
@@ -751,8 +751,9 @@ impl TerminalView {
                         }
                         Ok(None) => self.write_paste_fallback_input(cx),
                         Err(error) => {
-                            crate::ui::toast::error(format!(
-                                "Failed to prepare clipboard image for paste: {error}"
+                            crate::ui::toast::error(t!(
+                                "Failed to prepare clipboard image for paste: {error}",
+                                error = error
                             ));
                         }
                     }
@@ -833,6 +834,15 @@ impl TerminalView {
             if self.release_notes_open() {
                 if key.eq_ignore_ascii_case("escape") {
                     self.close_release_notes(cx);
+                    self.remember_consumed_key_release(key);
+                }
+                return;
+            }
+
+            // 快捷键弹窗：只响应 Esc 关闭，其余按键不进终端。
+            if self.shortcuts_popup_open() {
+                if key.eq_ignore_ascii_case("escape") {
+                    self.close_shortcuts_popup(cx);
                     self.remember_consumed_key_release(key);
                 }
                 return;

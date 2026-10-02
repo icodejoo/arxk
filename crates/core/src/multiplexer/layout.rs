@@ -173,6 +173,9 @@ impl SessionClient {
             .split_pane(
                 id,
                 StoredPane {
+                    manual_title: None,
+                    cwd: None,
+                    reported_title: None,
                     session_id: Some(probe_id),
                     ..pane.clone()
                 },
@@ -220,6 +223,9 @@ impl SessionClient {
                 tab.split_pane(
                     id,
                     StoredPane {
+                        manual_title: None,
+                        cwd: None,
+                        reported_title: None,
                         session_id: Some(new_id.clone()),
                         ..pane.clone()
                     },
@@ -323,6 +329,9 @@ impl SessionClient {
                     active_pane: 0,
                     layout_tree_json: None,
                     panes: vec![StoredPane {
+                        manual_title: None,
+                        cwd: None,
+                        reported_title: None,
                         session_id: Some(id.clone()),
                         left: 0,
                         top: 0,

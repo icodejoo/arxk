@@ -61,7 +61,7 @@ impl TerminalView {
     ) -> bool {
         if self.multiplexer.is_some() {
             crate::ui::toast::info(
-                "Disable the built-in multiplexer and restart Termy to switch to tmux",
+                t!("Disable the built-in multiplexer and restart Termy to switch to tmux"),
             );
             return false;
         }
@@ -108,7 +108,7 @@ impl TerminalView {
             3,
             3,
         ) {
-            crate::ui::toast::error(format!("tmux preflight failed: {error}"));
+            crate::ui::toast::error(t!("tmux preflight failed: {error}", error = error));
             return false;
         }
 
@@ -128,7 +128,7 @@ impl TerminalView {
         ) {
             Ok(client) => client,
             Err(error) => {
-                crate::ui::toast::error(format!("failed to start tmux control runtime: {error}"));
+                crate::ui::toast::error(t!("failed to start tmux control runtime: {error}", error = error));
                 return false;
             }
         };
@@ -136,12 +136,11 @@ impl TerminalView {
             Ok(snapshot) => snapshot,
             Err(error) => {
                 if let Err(cleanup_error) = tmux_client.shutdown_default() {
-                    crate::ui::toast::error(format!(
-                        "failed to fetch tmux snapshot: {error}; cleanup failed: {cleanup_error}"
-                    ));
+                    crate::ui::toast::error(t!(
+                        "failed to fetch tmux snapshot: {error}; cleanup failed: {cleanup_error}", error = error, cleanup_error = cleanup_error));
                     return false;
                 }
-                crate::ui::toast::error(format!("failed to fetch tmux snapshot: {error}"));
+                crate::ui::toast::error(t!("failed to fetch tmux snapshot: {error}", error = error));
                 return false;
             }
         };
@@ -158,16 +157,14 @@ impl TerminalView {
                     let cleanup_error = new_cleanup_result.expect_err(
                         "new cleanup error must be present when decision is combined failure",
                     );
-                    crate::ui::toast::error(format!(
+                    crate::ui::toast::error(t!(
                         "failed to cleanup previous tmux client before attach: {error}; \
-                         failed to cleanup new tmux client: {cleanup_error}"
-                    ));
+                         failed to cleanup new tmux client: {cleanup_error}", error = error, cleanup_error = cleanup_error));
                     return false;
                 }
                 TmuxCutoverCleanupDecision::AbortOldCleanupFailure => {
-                    crate::ui::toast::error(format!(
-                        "failed to cleanup previous tmux client before attach: {error}"
-                    ));
+                    crate::ui::toast::error(t!(
+                        "failed to cleanup previous tmux client before attach: {error}", error = error));
                     return false;
                 }
                 TmuxCutoverCleanupDecision::Proceed => {}
@@ -215,7 +212,7 @@ impl TerminalView {
         let native_tab = match self.create_native_runtime_tab_for_size(size) {
             Ok(tab) => tab,
             Err(error) => {
-                crate::ui::toast::error(format!("Failed to start native runtime: {error}"));
+                crate::ui::toast::error(t!("Failed to start native runtime: {error}", error = error));
                 return false;
             }
         };
@@ -233,7 +230,7 @@ impl TerminalView {
         }
         if self.tmux_exclusive {
             crate::ui::toast::info(
-                "tmux_exclusive keeps Termy in control mode; disable it to detach to a classic terminal",
+                t!("tmux_exclusive keeps Termy in control mode; disable it to detach to a classic terminal"),
             );
             return false;
         }
@@ -246,7 +243,7 @@ impl TerminalView {
         let native_tab = match self.create_native_runtime_tab_for_size(size) {
             Ok(tab) => tab,
             Err(error) => {
-                crate::ui::toast::error(format!("Failed to start native runtime: {error}"));
+                crate::ui::toast::error(t!("Failed to start native runtime: {error}", error = error));
                 return false;
             }
         };
@@ -261,7 +258,7 @@ impl TerminalView {
                 let error = shutdown_result.expect_err(
                     "shutdown error must be present when decision aborts tmux shutdown",
                 );
-                crate::ui::toast::error(format!("Failed to detach tmux session: {error}"));
+                crate::ui::toast::error(t!("Failed to detach tmux session: {error}", error = error));
                 false
             }
             TmuxDetachTransitionDecision::AbortNativeRuntimeStart => {
@@ -282,12 +279,11 @@ impl TerminalView {
         match tmux_exit_recovery_decision(self.tmux_exclusive) {
             TmuxExitRecoveryDecision::RestartControlMode => {
                 if let Some(reason) = reason {
-                    crate::ui::toast::warning(format!(
-                        "{reason}; restarting tmux control mode (tmux_exclusive)"
-                    ));
+                    crate::ui::toast::warning(t!(
+                        "{reason}; restarting tmux control mode (tmux_exclusive)", reason = reason));
                 } else {
                     crate::ui::toast::warning(
-                        "tmux control mode exited; restarting (tmux_exclusive)",
+                        t!("tmux control mode exited; restarting (tmux_exclusive)"),
                     );
                 }
                 self.restart_tmux_runtime_after_exit(cx)
@@ -330,7 +326,7 @@ impl TerminalView {
             3,
             3,
         ) {
-            crate::ui::toast::error(format!("tmux exclusive restart failed: {error}"));
+            crate::ui::toast::error(t!("tmux exclusive restart failed: {error}", error = error));
             return false;
         }
 
@@ -343,9 +339,8 @@ impl TerminalView {
         ) {
             Ok(client) => client,
             Err(error) => {
-                crate::ui::toast::error(format!(
-                    "tmux exclusive restart failed to start control mode: {error}"
-                ));
+                crate::ui::toast::error(t!(
+                    "tmux exclusive restart failed to start control mode: {error}", error = error));
                 return false;
             }
         };
@@ -354,9 +349,8 @@ impl TerminalView {
             Ok(snapshot) => snapshot,
             Err(error) => {
                 let _ = next_client.shutdown_default();
-                crate::ui::toast::error(format!(
-                    "tmux exclusive restart failed to fetch snapshot: {error}"
-                ));
+                crate::ui::toast::error(t!(
+                    "tmux exclusive restart failed to fetch snapshot: {error}", error = error));
                 return false;
             }
         };
@@ -434,7 +428,7 @@ impl TerminalView {
             3,
             3,
         ) {
-            crate::ui::toast::error(format!("tmux preflight failed: {error}"));
+            crate::ui::toast::error(t!("tmux preflight failed: {error}", error = error));
             return;
         }
         match TmuxClient::new(
@@ -452,16 +446,14 @@ impl TerminalView {
                             let cleanup_error = new_cleanup_result.expect_err(
                                 "new cleanup error must be present when decision is combined failure",
                             );
-                            crate::ui::toast::error(format!(
+                            crate::ui::toast::error(t!(
                                 "tmux reconnect failed while cleaning previous client: {error}; \
-                                 failed to cleanup new client: {cleanup_error}"
-                            ));
+                                 failed to cleanup new client: {cleanup_error}", error = error, cleanup_error = cleanup_error));
                             return;
                         }
                         TmuxCutoverCleanupDecision::AbortOldCleanupFailure => {
-                            crate::ui::toast::error(format!(
-                                "tmux reconnect failed while cleaning previous client: {error}"
-                            ));
+                            crate::ui::toast::error(t!(
+                                "tmux reconnect failed while cleaning previous client: {error}", error = error));
                             return;
                         }
                         TmuxCutoverCleanupDecision::Proceed => {}
@@ -479,7 +471,7 @@ impl TerminalView {
                 let _ = self.refresh_tmux_snapshot();
             }
             Err(error) => {
-                crate::ui::toast::error(format!("tmux reconnect failed: {error}"));
+                crate::ui::toast::error(t!("tmux reconnect failed: {error}", error = error));
             }
         }
     }

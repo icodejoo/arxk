@@ -30,7 +30,8 @@ pub(super) enum RuntimeKind {
 }
 
 fn tmux_startup_fallback_message(reason: &str, error: &anyhow::Error) -> String {
-    format!("tmux is unavailable ({reason}: {error:#}); starting in native mode")
+    let error = format!("{error:#}");
+    t!("tmux is unavailable ({reason}: {error}); starting in native mode", reason = reason, error = error)
 }
 
 impl RuntimeKind {
@@ -230,7 +231,7 @@ impl TerminalView {
                     Ok(client) => client,
                     Err(error) => {
                         let message = tmux_startup_fallback_message(
-                            "failed to start tmux control runtime",
+                            t!("failed to start tmux control runtime"),
                             &error,
                         );
                         log::warn!("{message}");
@@ -248,7 +249,7 @@ impl TerminalView {
                             );
                         }
                         let message = tmux_startup_fallback_message(
-                            "failed to fetch initial tmux snapshot",
+                            t!("failed to fetch initial tmux snapshot"),
                             &error,
                         );
                         log::warn!("{message}");

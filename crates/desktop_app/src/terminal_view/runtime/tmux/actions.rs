@@ -40,7 +40,7 @@ impl TerminalView {
         }
 
         if let Err(error) = action(&self.tmux_runtime().client) {
-            crate::ui::toast::error(format!("{error_prefix}: {error}"));
+            crate::ui::toast::error(t!("{prefix}: {error}", prefix = error_prefix, error = error));
             return false;
         }
 
@@ -95,7 +95,7 @@ impl TerminalView {
         match tmux.client.send_input(pane_id, input) {
             Ok(()) => true,
             Err(error) => {
-                crate::ui::toast::error(format!("Input write failed: {error}"));
+                crate::ui::toast::error(t!("Input write failed: {error}", error = error));
                 false
             }
         }
@@ -112,7 +112,7 @@ impl TerminalView {
             return false;
         }
 
-        let resized = self.run_tmux_action("Failed to resize pane", |tmux_client| {
+        let resized = self.run_tmux_action(t!("Failed to resize pane"), |tmux_client| {
             match (axis, positive_direction) {
                 (PaneResizeAxis::Horizontal, true) => tmux_client.resize_pane_right(pane_id, cells),
                 (PaneResizeAxis::Horizontal, false) => tmux_client.resize_pane_left(pane_id, cells),
@@ -162,7 +162,7 @@ impl TerminalView {
             for index in from..to {
                 let source = window_order[index].clone();
                 let target = window_order[index + 1].clone();
-                if !self.run_tmux_action("Failed to reorder tabs", |tmux_client| {
+                if !self.run_tmux_action(t!("Failed to reorder tabs"), |tmux_client| {
                     tmux_client.swap_windows(source.as_str(), target.as_str())
                 }) {
                     // Swap-window is incremental. If any earlier step succeeded, force
@@ -179,7 +179,7 @@ impl TerminalView {
             for index in (to + 1..=from).rev() {
                 let source = window_order[index].clone();
                 let target = window_order[index - 1].clone();
-                if !self.run_tmux_action("Failed to reorder tabs", |tmux_client| {
+                if !self.run_tmux_action(t!("Failed to reorder tabs"), |tmux_client| {
                     tmux_client.swap_windows(source.as_str(), target.as_str())
                 }) {
                     if swapped_any {
@@ -218,7 +218,7 @@ impl TerminalView {
         &mut self,
         cx: &mut Context<Self>,
     ) -> bool {
-        if !self.run_tmux_action("Failed to switch tab", |tmux_client| {
+        if !self.run_tmux_action(t!("Failed to switch tab"), |tmux_client| {
             tmux_client.previous_window()
         }) {
             return false;
@@ -237,7 +237,7 @@ impl TerminalView {
         &mut self,
         cx: &mut Context<Self>,
     ) -> bool {
-        if !self.run_tmux_action("Failed to switch tab", |tmux_client| {
+        if !self.run_tmux_action(t!("Failed to switch tab"), |tmux_client| {
             tmux_client.next_window()
         }) {
             return false;
@@ -263,12 +263,12 @@ impl TerminalView {
             .get(self.session.active_tab)
             .map(|tab| tab.window_id.clone())
         else {
-            crate::ui::toast::error("Failed to create tab: active tmux window is unavailable");
+            crate::ui::toast::error(t!("Failed to create tab: active tmux window is unavailable"));
             return false;
         };
         let working_dir = self.preferred_working_dir_for_new_session(working_dir, cx);
 
-        if !self.run_tmux_action("Failed to create tab", |tmux_client| {
+        if !self.run_tmux_action(t!("Failed to create tab"), |tmux_client| {
             tmux_client.new_window_after(active_window_id.as_str(), working_dir.as_deref())
         }) {
             return false;
@@ -285,7 +285,7 @@ impl TerminalView {
                 tab.window_id != active_window_id && tab.active_terminal().is_some()
             });
         if !created_terminal_is_active {
-            crate::ui::toast::error("Failed to create tab: new tmux terminal is unavailable");
+            crate::ui::toast::error(t!("Failed to create tab: new tmux terminal is unavailable"));
             return false;
         }
         self.reset_tab_interaction_state();
@@ -314,7 +314,7 @@ impl TerminalView {
                 index == self.session.active_tab,
             )
         });
-        if !self.run_tmux_action("Failed to close tab", |tmux_client| {
+        if !self.run_tmux_action(t!("Failed to close tab"), |tmux_client| {
             tmux_client.kill_window(window_id.as_str())
         }) {
             return;
@@ -352,7 +352,7 @@ impl TerminalView {
             Self::warn_stale_tmux_tab_index("switch", index, self.session.tabs.len());
             return;
         };
-        if !self.run_tmux_action("Failed to switch tab", |tmux_client| {
+        if !self.run_tmux_action(t!("Failed to switch tab"), |tmux_client| {
             tmux_client.select_window(window_id.as_str())
         }) {
             return;
@@ -383,7 +383,7 @@ impl TerminalView {
             Self::warn_stale_tmux_tab_index("rename", index, self.session.tabs.len());
             return;
         };
-        if self.run_tmux_action("Failed to rename tab", |tmux_client| {
+        if self.run_tmux_action(t!("Failed to rename tab"), |tmux_client| {
             tmux_client.rename_window(window_id.as_str(), renamed.as_str())
         }) {
             let _ = self.refresh_tmux_snapshot();
@@ -402,7 +402,7 @@ impl TerminalView {
             return false;
         }
 
-        if !self.run_tmux_action("Failed to focus pane", |tmux_client| {
+        if !self.run_tmux_action(t!("Failed to focus pane"), |tmux_client| {
             tmux_client.select_pane(pane_id)
         }) {
             return false;
@@ -459,7 +459,7 @@ impl TerminalView {
     ) -> bool {
         let working_dir = self.preferred_working_dir_for_new_session(working_dir, cx);
         self.with_active_pane_action(
-            "Failed to split pane",
+            t!("Failed to split pane"),
             TmuxPostActionRefresh::ImmediateSnapshot,
             true,
             cx,
@@ -474,7 +474,7 @@ impl TerminalView {
     ) -> bool {
         let working_dir = self.preferred_working_dir_for_new_session(working_dir, cx);
         self.with_active_pane_action(
-            "Failed to split pane",
+            t!("Failed to split pane"),
             TmuxPostActionRefresh::ImmediateSnapshot,
             true,
             cx,
@@ -489,7 +489,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to close pane",
+            t!("Failed to close pane"),
             TmuxPostActionRefresh::ImmediateSnapshot,
             true,
             cx,
@@ -502,7 +502,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to focus pane",
+            t!("Failed to focus pane"),
             TmuxPostActionRefresh::EventDriven,
             true,
             cx,
@@ -515,7 +515,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to focus pane",
+            t!("Failed to focus pane"),
             TmuxPostActionRefresh::EventDriven,
             true,
             cx,
@@ -525,7 +525,7 @@ impl TerminalView {
 
     pub(in crate::terminal_view) fn tmux_focus_pane_up(&mut self, cx: &mut Context<Self>) -> bool {
         self.with_active_pane_action(
-            "Failed to focus pane",
+            t!("Failed to focus pane"),
             TmuxPostActionRefresh::EventDriven,
             true,
             cx,
@@ -538,7 +538,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to focus pane",
+            t!("Failed to focus pane"),
             TmuxPostActionRefresh::EventDriven,
             true,
             cx,
@@ -551,7 +551,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to resize pane",
+            t!("Failed to resize pane"),
             TmuxPostActionRefresh::EventDriven,
             false,
             cx,
@@ -564,7 +564,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to resize pane",
+            t!("Failed to resize pane"),
             TmuxPostActionRefresh::EventDriven,
             false,
             cx,
@@ -574,7 +574,7 @@ impl TerminalView {
 
     pub(in crate::terminal_view) fn tmux_resize_pane_up(&mut self, cx: &mut Context<Self>) -> bool {
         self.with_active_pane_action(
-            "Failed to resize pane",
+            t!("Failed to resize pane"),
             TmuxPostActionRefresh::EventDriven,
             false,
             cx,
@@ -587,7 +587,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to resize pane",
+            t!("Failed to resize pane"),
             TmuxPostActionRefresh::EventDriven,
             false,
             cx,
@@ -600,7 +600,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) -> bool {
         self.with_active_pane_action(
-            "Failed to toggle pane zoom",
+            t!("Failed to toggle pane zoom"),
             TmuxPostActionRefresh::ImmediateSnapshot,
             false,
             cx,

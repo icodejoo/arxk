@@ -486,7 +486,7 @@ impl TerminalView {
                 {
                     let now = Instant::now();
                     if self.should_emit_tmux_resize_error_toast(now) {
-                        crate::ui::toast::error(format!("tmux resize failed: {error}"));
+                        crate::ui::toast::error(t!("tmux resize failed: {error}", error = error));
                     } else {
                         log::debug!("tmux resize failed (toast debounced): {error}");
                     }

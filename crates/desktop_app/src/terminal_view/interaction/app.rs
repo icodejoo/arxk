@@ -65,7 +65,7 @@ impl TerminalView {
         cx.spawn(async move |this, cx: &mut AsyncApp| {
             let file = rfd::AsyncFileDialog::new()
                 .add_filter("JSON", &["json"])
-                .set_title("Import Colors")
+                .set_title(t!("Import Colors"))
                 .pick_file()
                 .await;
 
@@ -95,15 +95,15 @@ impl TerminalView {
 
     fn app_info_action(&mut self, cx: &mut Context<Self>) {
         let config_path = self.config_path.as_ref().map_or_else(
-            || "unknown".to_string(),
+            || t!("unknown").to_string(),
             |path| path.to_string_lossy().into_owned(),
         );
-        let message = format!(
-            "Termy v{} | {}-{} | config: {}",
-            crate::APP_VERSION,
-            std::env::consts::OS,
-            std::env::consts::ARCH,
-            config_path
+        let message = t!(
+            "Termy v{version} | {os}-{arch} | config: {config_path}",
+            version = crate::APP_VERSION,
+            os = std::env::consts::OS,
+            arch = std::env::consts::ARCH,
+            config_path = config_path
         );
         crate::ui::toast::info(message);
         self.notify_overlay(cx);
@@ -124,13 +124,13 @@ impl TerminalView {
 
     fn check_for_updates_action(&mut self, cx: &mut Context<Self>) {
         let Some(updater) = self.ensure_auto_updater(cx) else {
-            crate::ui::toast::info("Auto updates are only available on macOS and Windows");
+            crate::ui::toast::info(t!("Auto updates are only available on macOS and Windows"));
             self.notify_overlay(cx);
             return;
         };
 
         AutoUpdater::check(updater.downgrade(), cx);
-        self.update_check_toast_id = Some(crate::ui::toast::loading("Checking for updates"));
+        self.update_check_toast_id = Some(crate::ui::toast::loading(t!("Checking for updates")));
         self.notify_overlay(cx);
     }
 

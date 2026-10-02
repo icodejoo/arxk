@@ -327,7 +327,7 @@ pub fn show_alert(title: &str, message: &str) {
             let alert = NSAlert::new(mtm);
             let ns_title = NSString::from_str(title);
             let ns_message = NSString::from_str(message);
-            let ok = NSString::from_str("OK");
+            let ok = NSString::from_str(t!("OK"));
 
             alert.setMessageText(&ns_title);
             alert.setInformativeText(&ns_message);
@@ -402,33 +402,33 @@ pub fn show_copy_paste_context_menu(
 
             let copy_item = TermyContextMenuItem::new_with_action_id(
                 mtm,
-                "Copy",
+                t!("Copy"),
                 CONTEXT_MENU_COPY_ID,
                 can_copy,
             );
             let copy_image_item = can_copy_image.then(|| {
                 TermyContextMenuItem::new_with_action_id(
                     mtm,
-                    "Copy Image",
+                    t!("Copy Image"),
                     CONTEXT_MENU_COPY_IMAGE_ID,
                     true,
                 )
             });
             let paste_item = TermyContextMenuItem::new_with_action_id(
                 mtm,
-                "Paste",
+                t!("Paste"),
                 CONTEXT_MENU_PASTE_ID,
                 can_paste,
             );
             let copy_buffer_position_item = TermyContextMenuItem::new_with_action_id(
                 mtm,
-                "Copy Buffer Position",
+                t!("Copy Buffer Position"),
                 CONTEXT_MENU_COPY_BUFFER_POSITION_ID,
                 buffer_position_label.is_some(),
             );
             let open_search_item = TermyContextMenuItem::new_with_action_id(
                 mtm,
-                "Open Search",
+                t!("Open Search"),
                 CONTEXT_MENU_OPEN_SEARCH_ID,
                 true,
             );
@@ -490,11 +490,11 @@ pub fn show_copy_paste_context_menu(
             }
         }
 
-        let copy_title = wide_string("Copy");
-        let copy_image_title = wide_string("Copy Image");
-        let paste_title = wide_string("Paste");
-        let open_search_title = wide_string("Open Search");
-        let copy_buffer_position_title = wide_string("Copy Buffer Position");
+        let copy_title = wide_string(t!("Copy"));
+        let copy_image_title = wide_string(t!("Copy Image"));
+        let paste_title = wide_string(t!("Paste"));
+        let open_search_title = wide_string(t!("Open Search"));
+        let copy_buffer_position_title = wide_string(t!("Copy Buffer Position"));
         let copy_flags = if can_copy {
             MF_STRING
         } else {
@@ -608,7 +608,7 @@ pub fn show_tab_context_menu(
             // Rename Tab
             let rename_item = TermyContextMenuItem::new_with_action_id(
                 mtm,
-                "Rename Tab",
+                t!("Rename Tab"),
                 TAB_CONTEXT_MENU_RENAME_ID,
                 true,
             );
@@ -616,9 +616,9 @@ pub fn show_tab_context_menu(
 
             // Pin/Unpin Tab
             let (pin_title, pin_action_id) = if pinned {
-                ("Unpin Tab", TAB_CONTEXT_MENU_UNPIN_ID)
+                (t!("Unpin Tab"), TAB_CONTEXT_MENU_UNPIN_ID)
             } else {
-                ("Pin Tab", TAB_CONTEXT_MENU_PIN_ID)
+                (t!("Pin Tab"), TAB_CONTEXT_MENU_PIN_ID)
             };
             let pin_item =
                 TermyContextMenuItem::new_with_action_id(mtm, pin_title, pin_action_id, true);
@@ -630,7 +630,7 @@ pub fn show_tab_context_menu(
             // Close Tab
             let close_item = TermyContextMenuItem::new_with_action_id(
                 mtm,
-                "Close Tab",
+                t!("Close Tab"),
                 TAB_CONTEXT_MENU_CLOSE_ID,
                 true,
             );
@@ -662,7 +662,7 @@ pub fn show_tab_context_menu(
         let _menu_guard = MenuGuard(menu);
 
         // Rename Tab
-        let rename_title = wide_string("Rename Tab");
+        let rename_title = wide_string(t!("Rename Tab"));
         unsafe {
             AppendMenuW(
                 menu,
@@ -675,9 +675,9 @@ pub fn show_tab_context_menu(
 
         // Pin/Unpin Tab
         let (pin_title, pin_action_id) = if pinned {
-            (wide_string("Unpin Tab"), TAB_CONTEXT_MENU_UNPIN_ID)
+            (wide_string(t!("Unpin Tab")), TAB_CONTEXT_MENU_UNPIN_ID)
         } else {
-            (wide_string("Pin Tab"), TAB_CONTEXT_MENU_PIN_ID)
+            (wide_string(t!("Pin Tab")), TAB_CONTEXT_MENU_PIN_ID)
         };
         unsafe {
             AppendMenuW(
@@ -695,7 +695,7 @@ pub fn show_tab_context_menu(
         }
 
         // Close Tab
-        let close_title = wide_string("Close Tab");
+        let close_title = wide_string(t!("Close Tab"));
         unsafe {
             AppendMenuW(
                 menu,
@@ -750,8 +750,8 @@ pub fn confirm(title: &str, message: &str) -> bool {
             let alert = NSAlert::new(mtm);
             let ns_title = NSString::from_str(title);
             let ns_message = NSString::from_str(message);
-            let cancel = NSString::from_str("Cancel");
-            let ok = NSString::from_str("OK");
+            let cancel = NSString::from_str(t!("Cancel"));
+            let ok = NSString::from_str(t!("OK"));
 
             alert.setMessageText(&ns_title);
             alert.setInformativeText(&ns_message);
@@ -814,10 +814,10 @@ pub fn request_clipboard_permission(
             let alert = NSAlert::new(mtm);
             alert.setMessageText(&NSString::from_str(title));
             alert.setInformativeText(&NSString::from_str(message));
-            let _ = alert.addButtonWithTitle(&NSString::from_str("Deny"));
-            let _ = alert.addButtonWithTitle(&NSString::from_str("Allow Once"));
+            let _ = alert.addButtonWithTitle(&NSString::from_str(t!("Deny")));
+            let _ = alert.addButtonWithTitle(&NSString::from_str(t!("Allow Once")));
             if can_remember {
-                let _ = alert.addButtonWithTitle(&NSString::from_str("Always Allow"));
+                let _ = alert.addButtonWithTitle(&NSString::from_str(t!("Always Allow")));
             }
             let response = alert.runModal();
             if response == NSAlertSecondButtonReturn {
@@ -841,15 +841,17 @@ pub fn request_clipboard_permission(
                 "--text",
                 message,
                 "--ok-label",
-                "Allow Once",
+                t!("Allow Once"),
                 "--cancel-label",
-                "Deny",
+                t!("Deny"),
             ]);
             if can_remember {
-                command.arg("--extra-button=Always Allow");
+                command.arg(format!("--extra-button={}", t!("Always Allow")));
             }
             return match command.output() {
-                Ok(output) if String::from_utf8_lossy(&output.stdout).trim() == "Always Allow" => {
+                Ok(output)
+                    if String::from_utf8_lossy(&output.stdout).trim() == t!("Always Allow") =>
+                {
                     ClipboardPermission::AllowAlways
                 }
                 Ok(output) if output.status.success() => ClipboardPermission::AllowOnce,
@@ -865,11 +867,11 @@ pub fn request_clipboard_permission(
                         "--title",
                         title,
                         "--yes-label",
-                        "Allow Once",
+                        t!("Allow Once"),
                         "--no-label",
-                        "Always Allow",
+                        t!("Always Allow"),
                         "--cancel-label",
-                        "Deny",
+                        t!("Deny"),
                     ])
                     .status();
                 return match status.ok().and_then(|status| status.code()) {
@@ -895,9 +897,9 @@ pub fn request_clipboard_permission(
     #[cfg(target_os = "windows")]
     {
         let message = if can_remember {
-            format!("{message}\n\nYes: Allow Once\nNo: Always Allow\nCancel: Deny")
+            t!("{message}\n\nYes: Allow Once\nNo: Always Allow\nCancel: Deny", message = message)
         } else {
-            format!("{message}\n\nYes: Allow Once\nNo: Deny")
+            t!("{message}\n\nYes: Allow Once\nNo: Deny", message = message)
         };
         let result = unsafe {
             MessageBoxW(

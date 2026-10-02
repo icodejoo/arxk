@@ -313,7 +313,7 @@ impl SettingsWindow {
         let runtime = self.plugin_runtime.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let folder = rfd::AsyncFileDialog::new()
-                .set_title("Install Termy Plugin")
+                .set_title(t!("Install Termy Plugin"))
                 .pick_folder()
                 .await;
             let Some(folder) = folder else {
@@ -330,11 +330,12 @@ impl SettingsWindow {
             let folder_name = path
                 .file_name()
                 .and_then(|name| name.to_str())
-                .unwrap_or("this plugin");
-            let message = format!(
-                "Install \"{folder_name}\"? Plugins are trusted local code and run with your user permissions."
+                .unwrap_or(t!("this plugin"));
+            let message = t!(
+                "Install \"{folder_name}\"? Plugins are trusted local code and run with your user permissions.",
+                folder_name = folder_name
             );
-            if !crate::native_sdk::confirm("Install Plugin", &message) {
+            if !crate::native_sdk::confirm(t!("Install Plugin"), &message) {
                 let _ = cx.update(|cx| {
                     this.update(cx, |view, cx| {
                         view.plugin_operation_in_flight = false;
@@ -354,9 +355,9 @@ impl SettingsWindow {
                 this.update(cx, |view, cx| {
                     view.apply_plugin_settings_snapshot(snapshot);
                     match result {
-                        Ok(plugin) => crate::ui::toast::success(format!(
-                            "Installed {}. Open the command menu to use it.",
-                            plugin.name
+                        Ok(plugin) => crate::ui::toast::success(t!(
+                            "Installed {name}. Open the command menu to use it.",
+                            name = plugin.name
                         )),
                         Err(error) => crate::ui::toast::error(error),
                     }
@@ -392,8 +393,8 @@ impl SettingsWindow {
                 this.update(cx, |view, cx| {
                     view.apply_plugin_settings_snapshot(snapshot);
                     match result {
-                        Ok(()) if enabled => crate::ui::toast::success("Plugin enabled"),
-                        Ok(()) => crate::ui::toast::success("Plugin disabled"),
+                        Ok(()) if enabled => crate::ui::toast::success(t!("Plugin enabled")),
+                        Ok(()) => crate::ui::toast::success(t!("Plugin disabled")),
                         Err(error) => crate::ui::toast::error(error),
                     }
                     cx.notify();
@@ -411,10 +412,11 @@ impl SettingsWindow {
         cx.notify();
         let runtime = self.plugin_runtime.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
-            let message = format!(
-                "Uninstall \"{name}\"? Its copied plugin directory will be permanently removed."
+            let message = t!(
+                "Uninstall \"{name}\"? Its copied plugin directory will be permanently removed.",
+                name = name
             );
-            if !crate::native_sdk::confirm("Uninstall Plugin", &message) {
+            if !crate::native_sdk::confirm(t!("Uninstall Plugin"), &message) {
                 let _ = cx.update(|cx| {
                     this.update(cx, |view, cx| {
                         view.plugin_operation_in_flight = false;
@@ -436,7 +438,7 @@ impl SettingsWindow {
                 this.update(cx, |view, cx| {
                     view.apply_plugin_settings_snapshot(snapshot);
                     match result {
-                        Ok(()) => crate::ui::toast::success("Plugin uninstalled"),
+                        Ok(()) => crate::ui::toast::success(t!("Plugin uninstalled")),
                         Err(error) => crate::ui::toast::error(error),
                     }
                     cx.notify();
@@ -452,7 +454,7 @@ impl SettingsWindow {
             return;
         }
         let Some(path) = self.plugin_runtime.plugins_directory() else {
-            crate::ui::toast::error("Termy config path is unavailable");
+            crate::ui::toast::error(t!("Termy config path is unavailable"));
             return;
         };
 
@@ -479,9 +481,10 @@ impl SettingsWindow {
             .spawn();
 
         if let Err(error) = result {
-            crate::ui::toast::error(format!(
-                "Failed to open plugin folder {}: {error}",
-                path.display()
+            crate::ui::toast::error(t!(
+                "Failed to open plugin folder {path}: {error}",
+                path = path.display(),
+                error = error
             ));
         }
     }
@@ -532,10 +535,10 @@ impl SettingsWindow {
             if configured {
                 "••••••••".to_string()
             } else {
-                placeholder.unwrap_or_else(|| "Not configured".to_string())
+                placeholder.unwrap_or_else(|| t!("Not configured").to_string())
             }
         } else if value.is_empty() {
-            placeholder.unwrap_or_else(|| "Empty".to_string())
+            placeholder.unwrap_or_else(|| t!("Empty").to_string())
         } else {
             value.clone()
         };
@@ -791,11 +794,11 @@ impl SettingsWindow {
         let title = setting.definition.title().to_string();
         let description = setting.definition.description().map_or_else(
             || match &setting.definition {
-                PluginSetting::Toggle { .. } => "Enable or disable this behavior.".to_string(),
-                PluginSetting::Text { .. } => "Text used by this plugin.".to_string(),
-                PluginSetting::Select { .. } => "Choose how this plugin behaves.".to_string(),
+                PluginSetting::Toggle { .. } => t!("Enable or disable this behavior.").to_string(),
+                PluginSetting::Text { .. } => t!("Text used by this plugin.").to_string(),
+                PluginSetting::Select { .. } => t!("Choose how this plugin behaves.").to_string(),
                 PluginSetting::Secret { .. } => {
-                    "Stored securely in the operating-system credential store.".to_string()
+                    t!("Stored securely in the operating-system credential store.").to_string()
                 }
             },
             str::to_string,
@@ -924,13 +927,13 @@ impl SettingsWindow {
                 cx,
             ))
             .child(self.render_settings_group(
-                "Runtime",
+                t!("Runtime"),
                 vec![
                     self.render_plugin_runtime_row(),
                     self.render_plugin_actions_row(cx),
                 ],
             ))
-            .child(self.render_settings_group("Installed plugins", installed_rows));
+            .child(self.render_settings_group(t!("Installed plugins"), installed_rows));
 
         for (plugin_id, settings) in self.plugin_settings.clone() {
             if settings.is_empty() {
@@ -946,7 +949,7 @@ impl SettingsWindow {
                 .map(|setting| self.render_plugin_setting_row(plugin_id.clone(), setting, cx))
                 .collect();
             section = section.child(self.render_settings_group(
-                SharedString::from(format!("{plugin_name} settings")),
+                SharedString::from(t!("{name} settings", name = plugin_name)),
                 rows,
             ));
         }
@@ -960,9 +963,13 @@ impl SettingsWindow {
 
     fn render_plugin_runtime_row(&self) -> AnyElement {
         let ready = self.plugin_bun_path.is_some();
-        let status = if ready { "Ready" } else { "Bun not found" };
+        let status = if ready {
+            t!("Ready")
+        } else {
+            t!("Bun not found")
+        };
         let detail = self.plugin_bun_path.as_ref().map_or_else(
-            || "Install Bun to load plugins".to_string(),
+            || t!("Install Bun to load plugins").to_string(),
             |path| path.display().to_string(),
         );
         let status_color = if ready {
@@ -989,7 +996,7 @@ impl SettingsWindow {
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(self.text_primary())
-                            .child("Bun runtime"),
+                            .child(t!("Bun runtime")),
                     )
                     .child(div().text_xs().text_color(self.text_muted()).child(detail)),
             )
@@ -1037,9 +1044,9 @@ impl SettingsWindow {
                     }))
             })
             .child(if busy {
-                "Working..."
+                t!("Working...")
             } else {
-                "Install from folder"
+                t!("Install from folder")
             });
 
         let open_button = div()
@@ -1058,7 +1065,7 @@ impl SettingsWindow {
             .items_center()
             .justify_center()
             .hover(move |style| style.bg(hover).text_color(text_primary))
-            .child("Open folder")
+            .child(t!("Open folder"))
             .on_click(cx.listener(|view, _, _, _| view.open_plugins_directory()));
 
         let refresh_button = div()
@@ -1079,7 +1086,7 @@ impl SettingsWindow {
                     .hover(move |style| style.bg(hover).text_color(text_primary))
                     .on_click(cx.listener(|view, _, _, cx| view.refresh_plugin_settings(cx)))
             })
-            .child("Refresh");
+            .child(t!("Refresh"));
 
         div()
             .w_full()
@@ -1099,13 +1106,13 @@ impl SettingsWindow {
                             .text_sm()
                             .font_weight(gpui_kit::FontWeight::MEDIUM)
                             .text_color(self.text_primary())
-                            .child("Local plugins"),
+                            .child(t!("Local plugins")),
                     )
                     .child(
                         div()
                             .text_xs()
                             .text_color(muted)
-                            .child("Choose a folder containing plugin.json and plugin.ts"),
+                            .child(t!("Choose a folder containing plugin.json and plugin.ts")),
                     ),
             )
             .child(
@@ -1134,13 +1141,13 @@ impl SettingsWindow {
                     .text_sm()
                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                     .text_color(self.text_primary())
-                    .child("No plugins installed"),
+                    .child(t!("No plugins installed")),
             )
             .child(
                 div()
                     .text_xs()
                     .text_color(self.text_muted())
-                    .child("Install a local plugin folder to get started."),
+                    .child(t!("Install a local plugin folder to get started.")),
             )
             .into_any_element()
     }
@@ -1160,11 +1167,11 @@ impl SettingsWindow {
         let has_error = plugin.error.is_some();
         let enabled = plugin.enabled && !has_error;
         let status = if has_error {
-            "Invalid"
+            t!("Invalid")
         } else if plugin.enabled {
-            "Enabled"
+            t!("Enabled")
         } else {
-            "Disabled"
+            t!("Disabled")
         };
         let status_color = if has_error {
             self.colors.ansi[1]
@@ -1210,7 +1217,11 @@ impl SettingsWindow {
                         );
                     }))
             })
-            .child(if plugin.enabled { "Disable" } else { "Enable" });
+            .child(if plugin.enabled {
+                t!("Disable")
+            } else {
+                t!("Enable")
+            });
 
         let uninstall_button = div()
             .id(SharedString::from(format!(
@@ -1239,7 +1250,7 @@ impl SettingsWindow {
                         );
                     }))
             })
-            .child("Uninstall");
+            .child(t!("Uninstall"));
 
         div()
             .w_full()
@@ -1312,7 +1323,7 @@ impl SettingsWindow {
                     .text_sm()
                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                     .text_color(error_color)
-                    .child("Plugin runtime needs attention"),
+                    .child(t!("Plugin runtime needs attention")),
             );
         for message in messages {
             content = content.child(div().text_xs().text_color(self.text_muted()).child(message));
@@ -1337,10 +1348,10 @@ impl SettingsWindow {
                     .text_sm()
                     .font_weight(gpui_kit::FontWeight::MEDIUM)
                     .text_color(self.text_primary())
-                    .child("Trusted local code"),
+                    .child(t!("Trusted local code")),
             )
             .child(div().text_xs().text_color(self.text_muted()).child(
-                "Plugins run through Bun with your user permissions. Install only code you trust.",
+                t!("Plugins run through Bun with your user permissions. Install only code you trust."),
             ))
             .into_any_element()
     }

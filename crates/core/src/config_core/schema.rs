@@ -1,5 +1,5 @@
 use crate::config_core::types::{
-    AppConfig, AppIcon, AppearanceMode, CursorStyle, PaneFocusEffect, TabBarPosition,
+    AppConfig, AppIcon, AppLanguage, AppearanceMode, CursorStyle, PaneFocusEffect, TabBarPosition,
     TabCloseVisibility, TabTitleMode, TabWidthMode, TerminalScrollbarStyle,
     TerminalScrollbarVisibility, WindowsShell, WorkingDirFallback,
 };
@@ -273,6 +273,21 @@ pub const APP_ICON_ENUM_CHOICES: &[EnumChoice] = &[
     },
 ];
 
+pub const LANGUAGE_ENUM_CHOICES: &[EnumChoice] = &[
+    EnumChoice {
+        value: "auto",
+        label: "Auto",
+    },
+    EnumChoice {
+        value: "en",
+        label: "English",
+    },
+    EnumChoice {
+        value: "zh",
+        label: "中文",
+    },
+];
+
 pub const TAB_WIDTH_MODE_ENUM_CHOICES: &[EnumChoice] = &[
     EnumChoice {
         value: "uniform",
@@ -357,6 +372,7 @@ define_root_settings! {
     (ThemeMode, "theme_mode", [], Appearance, "THEME", "Theme Mode", "Use a single theme or switch with system appearance", ["theme", "mode", "system", "auto", "dark", "light"], RootSettingValueKind::Enum, false),
     (ThemeLight, "theme_light", [], Appearance, "THEME", "Light Theme", "Theme applied when system appearance is light", ["theme", "light", "system", "appearance"], RootSettingValueKind::Special, false),
     (ThemeDark, "theme_dark", [], Appearance, "THEME", "Dark Theme", "Theme applied when system appearance is dark", ["theme", "dark", "system", "appearance"], RootSettingValueKind::Special, false),
+    (Language, "language", [], Appearance, "LANGUAGE", "Language", "Interface language: follow the system, or force English or Chinese", ["language", "locale", "english", "chinese", "中文", "语言", "i18n"], RootSettingValueKind::Enum, false),
     (AppIcon, "app_icon", [], Appearance, "APP", "App Icon", "macOS app icon shown in the Dock and app switcher", ["app", "icon", "dock", "macos", "old"], RootSettingValueKind::Enum, false),
     (ChromeContrast, "chrome_contrast", [], Appearance, "CHROME", "Increase Chrome Contrast", "Increase contrast of non-terminal UI surfaces", ["chrome", "contrast", "sidebar", "titlebar", "panel", "overlay", "tab strip"], RootSettingValueKind::Boolean, false),
     (AutoUpdate, "auto_update", [], Advanced, "UPDATES", "Auto Update", "Enable automatic update checks", ["update", "check", "upgrade", "version"], RootSettingValueKind::Boolean, false),
@@ -468,6 +484,7 @@ pub fn root_setting_enum_choices(id: RootSettingId) -> Option<&'static [EnumChoi
         RootSettingId::TabWidthMode => Some(TAB_WIDTH_MODE_ENUM_CHOICES),
         RootSettingId::TabBarPosition => Some(TAB_BAR_POSITION_ENUM_CHOICES),
         RootSettingId::ThemeMode => Some(THEME_MODE_ENUM_CHOICES),
+        RootSettingId::Language => Some(LANGUAGE_ENUM_CHOICES),
         RootSettingId::AppIcon => Some(APP_ICON_ENUM_CHOICES),
         RootSettingId::WindowsShell => Some(WINDOWS_SHELL_ENUM_CHOICES),
         RootSettingId::CursorStyle => Some(CURSOR_STYLE_ENUM_CHOICES),
@@ -488,6 +505,11 @@ pub fn root_setting_default_value(config: &AppConfig, id: RootSettingId) -> Opti
         }),
         RootSettingId::ThemeLight => Some(config.theme_light.clone()),
         RootSettingId::ThemeDark => Some(config.theme_dark.clone()),
+        RootSettingId::Language => Some(match config.language {
+            AppLanguage::Auto => "auto".to_string(),
+            AppLanguage::English => "en".to_string(),
+            AppLanguage::Chinese => "zh".to_string(),
+        }),
         RootSettingId::AppIcon => Some(match config.app_icon {
             AppIcon::TermyDefault => "default".to_string(),
             AppIcon::TermyOld => "old".to_string(),

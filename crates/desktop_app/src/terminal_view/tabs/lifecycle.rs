@@ -68,6 +68,7 @@ impl TerminalView {
                 self.begin_rename_tab(self.session.active_tab, cx);
                 true
             }
+            CommandAction::RenamePane => self.begin_rename_pane(cx),
             CommandAction::NewTab => {
                 self.add_tab(cx);
                 true
@@ -426,7 +427,7 @@ impl TerminalView {
             RuntimeKind::Tmux => {
                 if matches!(launch, Some(TerminalLaunch::Program { .. })) {
                     crate::ui::toast::error(
-                        "Structured program launches are not supported in tmux tabs",
+                        t!("Structured program launches are not supported in tmux tabs"),
                     );
                     return false;
                 }
@@ -437,7 +438,7 @@ impl TerminalView {
                         input.push(b'\n');
                         if !self.send_input_to_active_pane(&input) {
                             crate::ui::toast::error(
-                                "Failed to send the plugin command to the new tmux tab",
+                                t!("Failed to send the plugin command to the new tmux tab"),
                             );
                             return false;
                         }
@@ -468,7 +469,7 @@ impl TerminalView {
                 ) {
                     Ok(terminal) => terminal,
                     Err(error) => {
-                        crate::ui::toast::error(format!("Failed to create tab: {error}"));
+                        crate::ui::toast::error(t!("Failed to create tab: {error}", error = error));
                         return false;
                     }
                 };
@@ -490,7 +491,7 @@ impl TerminalView {
     pub(crate) fn add_ssh_tab(&mut self, host_id: &str, cx: &mut Context<Self>) -> bool {
         if self.runtime_kind() != RuntimeKind::Native {
             crate::ui::toast::error(
-                "SSH hosts can only be opened from the native terminal runtime",
+                t!("SSH hosts can only be opened from the native terminal runtime"),
             );
             return false;
         }
@@ -502,15 +503,16 @@ impl TerminalView {
             .find(|host| host.id == host_id)
             .cloned()
         else {
-            crate::ui::toast::error("That saved SSH host no longer exists");
+            crate::ui::toast::error(t!("That saved SSH host no longer exists"));
             return false;
         };
         let process = match termy_core::ssh_core::openssh_launch(&host) {
             Ok(process) => process,
             Err(error) => {
-                crate::ui::toast::error(format!(
-                    "Invalid SSH host “{}”: {error}",
-                    host.display_name
+                crate::ui::toast::error(t!(
+                    "Invalid SSH host “{name}”: {error}",
+                    name = host.display_name,
+                    error = error
                 ));
                 return false;
             }
@@ -522,16 +524,17 @@ impl TerminalView {
         {
             Ok(available) => available,
             Err(error) => {
-                crate::ui::toast::warning(format!(
-                    "Could not read the saved credential for “{}”; SSH will prompt in the terminal: {error}",
-                    host.display_name
+                crate::ui::toast::warning(t!(
+                    "Could not read the saved credential for “{name}”; SSH will prompt in the terminal: {error}",
+                    name = host.display_name,
+                    error = error
                 ));
                 false
             }
         };
         if saved_secret_available {
             let askpass = std::env::current_exe()
-                .map_err(|error| format!("Unable to locate the Termy executable: {error}"))
+                .map_err(|error| t!("Unable to locate the Termy executable: {error}", error = error))
                 .and_then(|executable| {
                     termy_core::ssh_core::askpass_environment(
                         &executable,
@@ -542,9 +545,10 @@ impl TerminalView {
             match askpass {
                 Ok(environment) => runtime_config.environment.extend(environment),
                 Err(error) => {
-                    crate::ui::toast::warning(format!(
-                        "Could not prepare the saved credential for “{}”; SSH will prompt in the terminal: {error}",
-                        host.display_name
+                    crate::ui::toast::warning(t!(
+                        "Could not prepare the saved credential for “{name}”; SSH will prompt in the terminal: {error}",
+                        name = host.display_name,
+                        error = error
                     ));
                 }
             }
@@ -569,9 +573,10 @@ impl TerminalView {
         ) {
             Ok(terminal) => terminal,
             Err(error) => {
-                crate::ui::toast::error(format!(
-                    "Could not start SSH session “{}”: {error}. Check that OpenSSH is installed and ssh is on PATH.",
-                    host.display_name
+                crate::ui::toast::error(t!(
+                    "Could not start SSH session “{name}”: {error}. Check that OpenSSH is installed and ssh is on PATH.",
+                    name = host.display_name,
+                    error = error
                 ));
                 return false;
             }
@@ -642,7 +647,7 @@ impl TerminalView {
                 self.sync_plugin_lifecycle_state(true, cx);
                 return;
             }
-            RuntimeKind::Native => {}
+            RuntimeKind::Native => self.forget_pane_manual_titles(&removed_pane_ids),
         };
 
         self.push_closing_tab_overlay(
@@ -879,7 +884,7 @@ impl TerminalView {
             RuntimeKind::Tmux => {
                 if matches!(launch, Some(TerminalLaunch::Program { .. })) {
                     crate::ui::toast::error(
-                        "Structured program launches are not supported in tmux panes",
+                        t!("Structured program launches are not supported in tmux panes"),
                     );
                     return false;
                 }
@@ -906,7 +911,7 @@ impl TerminalView {
             RuntimeKind::Tmux => {
                 if matches!(launch, Some(TerminalLaunch::Program { .. })) {
                     crate::ui::toast::error(
-                        "Structured program launches are not supported in tmux panes",
+                        t!("Structured program launches are not supported in tmux panes"),
                     );
                     return false;
                 }
@@ -936,11 +941,33 @@ impl TerminalView {
         }
         match self.runtime_kind() {
             RuntimeKind::Tmux => self.tmux_close_active_pane(cx),
-            RuntimeKind::Native => self.native_close_active_pane(cx),
+            RuntimeKind::Native => {
+                let closed_pane_id = self.active_pane_id().map(str::to_string);
+                let closed = self.native_close_active_pane(cx);
+                if closed && let Some(pane_id) = closed_pane_id {
+                    self.forget_pane_manual_titles(&[pane_id]);
+                }
+                closed
+            }
         }
     }
 
+    /// 按 id 关闭原生窗格；成功关闭后同步清理其手动窗格名。
     pub(crate) fn close_native_pane_by_id(
+        &mut self,
+        tab_id: TabId,
+        pane_id: &str,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let closed = self.close_native_pane_by_id_inner(tab_id, pane_id, cx);
+        if closed {
+            self.forget_pane_manual_titles(&[pane_id.to_string()]);
+        }
+        closed
+    }
+
+    /// `close_native_pane_by_id` 的实际关闭逻辑。
+    fn close_native_pane_by_id_inner(
         &mut self,
         tab_id: TabId,
         pane_id: &str,
@@ -1378,7 +1405,7 @@ impl TerminalView {
             launch.as_ref(),
             multiplexer.as_ref(),
         )
-        .map_err(|error| format!("Failed to split pane: {error}"))
+        .map_err(|error| t!("Failed to split pane: {error}", error = error))
     }
 
     fn dispose_native_terminals(terminals: Vec<Terminal>, cx: &mut Context<Self>) {
@@ -1444,9 +1471,9 @@ impl TerminalView {
                 let min_width =
                     NativeLayout::native_pane_min_extent_for_axis(PaneResizeAxis::Horizontal);
                 if width < min_width.saturating_mul(2) {
-                    return Err(format!(
-                        "Pane needs at least {} columns to split vertically",
-                        min_width.saturating_mul(2)
+                    return Err(t!(
+                        "Pane needs at least {count} columns to split vertically",
+                        count = min_width.saturating_mul(2)
                     ));
                 }
                 let current_width = (width / 2).max(min_width);
@@ -1470,9 +1497,9 @@ impl TerminalView {
                 let min_height =
                     NativeLayout::native_pane_min_extent_for_axis(PaneResizeAxis::Vertical);
                 if height < min_height.saturating_mul(2) {
-                    return Err(format!(
-                        "Pane needs at least {} rows to split horizontally",
-                        min_height.saturating_mul(2)
+                    return Err(t!(
+                        "Pane needs at least {count} rows to split horizontally",
+                        count = min_height.saturating_mul(2)
                     ));
                 }
                 let current_height = (height / 2).max(min_height);

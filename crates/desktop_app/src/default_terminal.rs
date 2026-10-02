@@ -44,11 +44,11 @@ fn application_bundle_url() -> Result<CFURL, String> {
         .find(CFString::new("CFBundleIdentifier"))
         .and_then(|value| value.downcast::<CFString>());
     if identifier.as_ref().map(ToString::to_string).as_deref() != Some(BUNDLE_ID) {
-        return Err("Open the installed Termy.app to set it as your default terminal.".into());
+        return Err(t!("Open the installed Termy.app to set it as your default terminal.").into());
     }
     bundle
         .bundle_url()
-        .ok_or_else(|| "Could not locate the Termy app bundle.".into())
+        .ok_or_else(|| t!("Could not locate the Termy app bundle.").into())
 }
 
 pub(crate) fn set_default() -> Result<(), String> {
@@ -56,8 +56,9 @@ pub(crate) fn set_default() -> Result<(), String> {
     // SAFETY: the bundle URL remains live throughout registration.
     let status = unsafe { LSRegisterURL(url.as_concrete_TypeRef(), 1) };
     if status != 0 {
-        return Err(format!(
-            "Could not register Termy with macOS (error {status})."
+        return Err(t!(
+            "Could not register Termy with macOS (error {status}).",
+            status = status
         ));
     }
     let content_type = CFString::new("public.unix-executable");
@@ -71,12 +72,13 @@ pub(crate) fn set_default() -> Result<(), String> {
         )
     };
     if status != 0 {
-        return Err(format!(
-            "Could not change the default terminal (macOS error {status})."
+        return Err(t!(
+            "Could not change the default terminal (macOS error {status}).",
+            status = status
         ));
     }
     if !is_default() {
-        return Err("macOS did not apply the default terminal change. Try again.".into());
+        return Err(t!("macOS did not apply the default terminal change. Try again.").into());
     }
     Ok(())
 }

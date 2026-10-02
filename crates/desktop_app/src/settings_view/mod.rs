@@ -454,7 +454,7 @@ impl SettingsWindow {
     fn install_theme_store_theme(&mut self, theme: ThemeStoreTheme, cx: &mut Context<Self>) {
         let installed_slug = theme.slug.trim().to_ascii_lowercase();
         let installed_version = theme.latest_version.clone().unwrap_or_default();
-        let loading_id = crate::ui::toast::loading(format!("Installing {}...", theme.name));
+        let loading_id = crate::ui::toast::loading(t!("Installing {name}...", name = theme.name));
 
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let result = cx
@@ -494,10 +494,10 @@ impl SettingsWindow {
         theme: ThemeStoreTheme,
         cx: &mut Context<Self>,
     ) {
-        let title = "Install Theme";
-        let message = format!(
-            "Install theme \"{}\" into your local theme library?",
-            theme.name
+        let title = t!("Install Theme");
+        let message = t!(
+            "Install theme \"{name}\" into your local theme library?",
+            name = theme.name
         );
 
         cx.spawn(async move |this, cx: &mut AsyncApp| {
@@ -526,7 +526,7 @@ impl SettingsWindow {
                 Ok(reset) => reset,
                 Err(error) => {
                     log::error!("Failed to reset theme references during uninstall: {error}");
-                    crate::ui::toast::error("Failed to reset selected theme");
+                    crate::ui::toast::error(t!("Failed to reset selected theme"));
                     return;
                 }
             };
@@ -547,12 +547,12 @@ impl SettingsWindow {
                 let _ = self.reload_config_if_changed(cx);
                 self.reload_theme_assets(cx);
                 crate::app_actions::refresh_open_terminal_theme_assets(cx);
-                crate::ui::toast::success("Theme uninstalled");
+                crate::ui::toast::success(t!("Theme uninstalled"));
             }
             Ok(false) => {
                 self.reload_theme_assets(cx);
                 crate::app_actions::refresh_open_terminal_theme_assets(cx);
-                crate::ui::toast::info("Theme is not installed");
+                crate::ui::toast::info(t!("Theme is not installed"));
             }
             Err(error) => {
                 log::error!("Failed to uninstall theme: {error}");
@@ -607,7 +607,7 @@ impl SettingsWindow {
                         Ok(()) => {
                             view.theme_store_auth_session = None;
                             view.theme_store_auth_error = None;
-                            crate::ui::toast::success("Logged out from theme store");
+                            crate::ui::toast::success(t!("Logged out from theme store"));
                         }
                         Err(error) => {
                             log::error!("Failed to logout from theme store: {error}");
@@ -681,7 +681,7 @@ impl SettingsWindow {
             return Ok(());
         }
 
-        Err(format!("Failed to open URL: {url}"))
+        Err(t!("Failed to open URL: {url}", url = url))
     }
 
     fn apply_runtime_config(&mut self, config: AppConfig) -> bool {

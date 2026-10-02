@@ -1,5 +1,9 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
+// 引入库导出的 `t!` 界面文案翻译宏，让整个可执行程序都能直接写 `t!("...")`。
+#[macro_use]
+extern crate termy;
+
 mod app_actions;
 mod app_icon;
 mod asset_source;
@@ -182,7 +186,7 @@ fn preflight_tmux_runtime(config: &config::AppConfig) -> Result<(), StartupBlock
         3,
         3,
     )
-    .map_err(|error| StartupBlocker::TmuxPreflight(format!("tmux preflight failed: {error}")))
+    .map_err(|error| StartupBlocker::TmuxPreflight(t!("tmux preflight failed: {error}", error = error)))
 }
 
 #[cfg(target_os = "windows")]
@@ -195,7 +199,7 @@ fn preflight_tmux_runtime(config: &config::AppConfig) -> Result<(), StartupBlock
     }
 
     TmuxClient::verify_tmux_version(&command_prefix, config.tmux_binary.as_str(), 3, 3)
-        .map_err(|error| StartupBlocker::TmuxPreflight(format!("tmux preflight failed: {error}")))
+        .map_err(|error| StartupBlocker::TmuxPreflight(t!("tmux preflight failed: {error}", error = error)))
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
@@ -205,7 +209,7 @@ fn preflight_tmux_runtime(config: &config::AppConfig) -> Result<(), StartupBlock
     }
 
     Err(StartupBlocker::TmuxPreflight(
-        "tmux runtime is unsupported on this platform".to_string(),
+        t!("tmux runtime is unsupported on this platform").to_string(),
     ))
 }
 
@@ -269,6 +273,8 @@ pub(crate) fn open_terminal_window(
     startup_config: config::AppConfig,
     empty: bool,
 ) -> Result<WindowHandle<TerminalView>, String> {
+    // 先设好界面语言，再创建窗口，避免第一帧先闪出英文。
+    termy::i18n::set_language(startup_config.language);
     multiplexer::initialize(&startup_config, cx)?;
     let window_background = initial_window_background_appearance(&startup_config);
     let startup_window_size = normalized_startup_window_size(&startup_config);
@@ -281,10 +287,12 @@ pub(crate) fn open_terminal_window(
         appears_transparent: true,
         traffic_light_position: Some(gpui_kit::point(px(12.0), px(10.0))),
     });
+    // Windows：去掉系统标题栏，标签栏并入顶栏；窗口控制按钮和拖动区由
+    // 标签栏右侧留白带自绘（见 tab_strip/render_window_controls.rs）。
     #[cfg(target_os = "windows")]
     let titlebar = Some(gpui_kit::TitlebarOptions {
         title: Some("Termy".into()),
-        appears_transparent: false,
+        appears_transparent: true,
         traffic_light_position: None,
     });
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
@@ -316,7 +324,8 @@ pub(crate) fn open_terminal_window(
             // Dock-overlay behavior. The macOS content-view bridge below
             // disables automatic background dragging; hit-tested titlebar
             // presses explicitly start a native AppKit drag.
-            is_movable: cfg!(target_os = "macos"),
+            // Windows 自绘标题栏时，GPUI 要求 is_movable 为真才认 Drag 区域。
+            is_movable: cfg!(any(target_os = "macos", target_os = "windows")),
             is_resizable: true,
             window_min_size: Some(size(px(MIN_WINDOW_WIDTH), px(MIN_WINDOW_HEIGHT))),
             ..Default::default()
@@ -413,7 +422,7 @@ pub(crate) fn open_terminal_window(
             view
         },
     )
-    .map_err(|error| format!("Failed to open main window: {error}"))
+    .map_err(|error| t!("Failed to open main window: {error}", error = error))
 }
 
 fn reopen_if_no_windows(cx: &mut App, mut reopen: impl FnMut(&mut App)) -> bool {
@@ -474,7 +483,7 @@ fn focus_or_open_main_window<V: 'static>(
 }
 
 fn start_theme_install_from_deeplink(cx: &mut App, slug: String) {
-    let loading_id = crate::ui::toast::loading(format!("Fetching theme \"{slug}\"..."));
+    let loading_id = crate::ui::toast::loading(t!("Fetching theme \"{slug}\"...", slug = slug));
 
     cx.spawn(async move |cx: &mut AsyncApp| {
         let fetch_result = cx
@@ -486,17 +495,17 @@ fn start_theme_install_from_deeplink(cx: &mut App, slug: String) {
 
         match fetch_result {
             Ok(theme) => {
-                let title = "Install Theme";
-                let message = format!(
-                    "Install theme \"{}\" into your local theme library?",
-                    theme.name
+                let title = t!("Install Theme");
+                let message = t!(
+                    "Install theme \"{name}\" into your local theme library?",
+                    name = theme.name
                 );
                 if !crate::native_sdk::confirm(title, &message) {
                     return;
                 }
 
                 let install_loading_id =
-                    crate::ui::toast::loading(format!("Installing {}...", theme.name));
+                    crate::ui::toast::loading(t!("Installing {name}...", name = theme.name));
                 let install_result = cx
                     .background_executor()
                     .spawn(async move { theme_store::install_theme_from_store_blocking(theme) })
@@ -560,7 +569,7 @@ fn dispatch_deeplink(
                     DeepLinkArgument::NewTab(_) => None,
                 })
                 .filter(|value| !value.trim().is_empty())
-                .ok_or_else(|| "Theme install deeplink requires a slug".to_string())?;
+                .ok_or_else(|| t!("Theme install deeplink requires a slug").to_string())?;
             start_theme_install_from_deeplink(cx, slug);
             Ok(())
         }

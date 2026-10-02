@@ -20,9 +20,9 @@ impl TerminalView {
         let (descriptor, current_revision) = self
             .plugin_runtime
             .view_with_revision(plugin_id, view_id)
-            .ok_or_else(|| format!("Plugin view {plugin_id}.{view_id} is unavailable"))?;
+            .ok_or_else(|| t!("Plugin view {plugin_id}.{view_id} is unavailable", plugin_id = plugin_id, view_id = view_id))?;
         if current_revision != revision {
-            return Err("Plugin changed before its view could open; try again".to_string());
+            return Err(t!("Plugin changed before its view could open; try again").to_string());
         }
         let context = self.plugin_context(cx);
         match target {
@@ -81,16 +81,16 @@ impl TerminalView {
             .plugin_ui
             .as_ref()
             .cloned()
-            .ok_or_else(|| "Plugin returned view.replace without an open view".to_string())?;
+            .ok_or_else(|| t!("Plugin returned view.replace without an open view").to_string())?;
         if plugin_ui.read(cx).descriptor.plugin_id != plugin_id {
-            return Err("Plugin cannot replace another plugin's view".to_string());
+            return Err(t!("Plugin cannot replace another plugin's view").to_string());
         }
         let (descriptor, current_revision) = self
             .plugin_runtime
             .view_with_revision(plugin_id, view_id)
-            .ok_or_else(|| format!("Plugin view {plugin_id}.{view_id} is unavailable"))?;
+            .ok_or_else(|| t!("Plugin view {plugin_id}.{view_id} is unavailable", plugin_id = plugin_id, view_id = view_id))?;
         if current_revision != revision {
-            return Err("Plugin changed before its view could be replaced".to_string());
+            return Err(t!("Plugin changed before its view could be replaced").to_string());
         }
         let context = self.plugin_context(cx);
         plugin_ui.update(cx, |view, cx| {

@@ -326,7 +326,7 @@ impl TerminalView {
                 true
             }
             Err(error) => {
-                crate::ui::toast::error(format!("tmux sync failed: {error}"));
+                crate::ui::toast::error(t!("tmux sync failed: {error}", error = error));
                 false
             }
         }

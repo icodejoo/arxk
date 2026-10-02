@@ -12,10 +12,10 @@ pub(crate) fn hosts_path(config_path: Option<&Path>) -> Result<PathBuf, String> 
     let config_path = config_path
         .map(Path::to_path_buf)
         .or_else(termy_core::config_core::config_path)
-        .ok_or_else(|| "Unable to resolve the Termy configuration directory".to_string())?;
+        .ok_or_else(|| t!("Unable to resolve the Termy configuration directory").to_string())?;
     let parent = config_path
         .parent()
-        .ok_or_else(|| "The Termy configuration path has no parent directory".to_string())?;
+        .ok_or_else(|| t!("The Termy configuration path has no parent directory").to_string())?;
     Ok(parent.join(HOSTS_FILE_NAME))
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn run_askpass_if_requested(cli_args: &[String]) -> Option<i32> {
             }
         }
         AskpassPromptKind::HostKeyConfirmation => {
-            let confirmed = crate::native_sdk::confirm("Verify SSH Host Key", prompt);
+            let confirmed = crate::native_sdk::confirm(t!("Verify SSH Host Key"), prompt);
             if confirmed {
                 "yes".to_string()
             } else {

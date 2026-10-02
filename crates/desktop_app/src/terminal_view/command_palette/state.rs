@@ -24,6 +24,8 @@ pub(in super::super) enum CommandPaletteMode {
     PluginInputs,
     AppInfo,
     Releases,
+    /// 重命名窗格的单行输入模式。
+    PaneRename,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -45,6 +47,7 @@ impl CommandPaletteMode {
             | Self::Layouts
             | Self::Tasks
             | Self::PluginInputs
+            | Self::PaneRename
             | Self::Releases => CommandPaletteRanking::PreserveOrder,
         }
     }
@@ -134,6 +137,11 @@ pub(super) enum CommandPaletteItemKind {
     SavedLayoutDelete {
         layout_name: String,
     },
+    /// 确认重命名窗格：`name` 为空表示清除手动名。
+    PaneRenameApply {
+        pane_id: String,
+        name: String,
+    },
     TaskOpenCreateGlobalMode,
     TaskOpenCreateLayoutMode {
         layout_name: String,
@@ -204,7 +212,7 @@ impl CommandPaletteItem {
             title: format!("{label}: {truncated}"),
             keywords,
             enabled: true,
-            status_hint: Some("Copy".to_string()),
+            status_hint: Some(t!("Copy").to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::AppInfoEntry { label, value },
         }
@@ -212,7 +220,7 @@ impl CommandPaletteItem {
 
     pub(super) fn ssh_host(host: &termy_core::ssh_core::SshHost, enabled: bool) -> Self {
         Self {
-            title: format!("Connect to {}", host.display_name),
+            title: t!("Connect to {name}", name = host.display_name),
             keywords: format!(
                 "ssh connect remote host server {} {} {} {}",
                 host.display_name, host.hostname, host.username, host.port
@@ -221,7 +229,7 @@ impl CommandPaletteItem {
             status_hint: if enabled {
                 Some(format!("{}@{}", host.username, host.hostname))
             } else {
-                Some("native runtime required".to_string())
+                Some(t!("native runtime required").to_string())
             },
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::SshHost {
@@ -232,7 +240,7 @@ impl CommandPaletteItem {
 
     pub(super) fn manage_ssh_hosts() -> Self {
         Self {
-            title: "Manage SSH Hosts…".to_string(),
+            title: t!("Manage SSH Hosts…").to_string(),
             keywords: "ssh manage hosts add edit remove settings remote server".to_string(),
             enabled: true,
             status_hint: None,
@@ -243,10 +251,10 @@ impl CommandPaletteItem {
 
     pub(super) fn app_info_copy_all(payload: String) -> Self {
         Self {
-            title: "Copy all to clipboard".to_string(),
+            title: t!("Copy all to clipboard").to_string(),
             keywords: "copy all info clipboard".to_string(),
             enabled: true,
-            status_hint: Some("Copy".to_string()),
+            status_hint: Some(t!("Copy").to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::AppInfoCopyAll { payload },
         }
@@ -322,6 +330,29 @@ impl CommandPaletteItem {
     }
 }
 
+impl CommandPaletteItem {
+    /// 构造“重命名窗格”确认项；`name` 去除首尾空白后为空表示清除手动名。
+    pub(super) fn pane_rename_apply(pane_id: &str, name: &str) -> Self {
+        let name = name.trim().to_string();
+        let title = if name.is_empty() {
+            t!("Clear pane name").to_string()
+        } else {
+            t!("Rename pane to \"{name}\"", name = name)
+        };
+        Self {
+            title,
+            keywords: "rename pane name".to_string(),
+            enabled: true,
+            status_hint: None,
+            tmux_status_hint: None,
+            kind: CommandPaletteItemKind::PaneRenameApply {
+                pane_id: pane_id.to_string(),
+                name,
+            },
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(in super::super) struct CommandPaletteState {
     open: bool,
@@ -333,6 +364,8 @@ pub(in super::super) struct CommandPaletteState {
     pub(super) tmux_rename_source_session: Option<String>,
     pub(super) tmux_rename_source_socket: Option<TmuxSocketTarget>,
     pub(super) saved_layout_rename_source: Option<String>,
+    /// 正在重命名的窗格 id（仅 PaneRename 模式有效）。
+    pane_rename_target: Option<String>,
     input: InlineInputState,
     items: Vec<CommandPaletteItem>,
     filtered: Vec<CommandPaletteMatch>,
@@ -374,6 +407,7 @@ impl CommandPaletteState {
             tmux_rename_source_session: None,
             tmux_rename_source_socket: None,
             saved_layout_rename_source: None,
+            pane_rename_target: None,
             input: InlineInputState::new(String::new()),
             items: Vec::new(),
             filtered: Vec::new(),
@@ -402,6 +436,23 @@ impl CommandPaletteState {
 
     pub(super) fn is_open(&self) -> bool {
         self.open
+    }
+
+    /// 设置要重命名的窗格 id（需在打开 PaneRename 模式前调用）。
+    pub(super) fn set_pane_rename_target(&mut self, pane_id: Option<String>) {
+        self.pane_rename_target = pane_id;
+    }
+
+    /// 生成 PaneRename 模式的候选项：单行输入，只有一条“确认”项。
+    ///
+    /// - `query`：当前输入框内容（空串表示清除手动名）。
+    ///
+    /// 返回候选项列表；没有目标窗格时为空。
+    pub(super) fn pane_rename_items_for_query(&self, query: &str) -> Vec<CommandPaletteItem> {
+        match self.pane_rename_target.as_deref() {
+            Some(pane_id) => vec![CommandPaletteItem::pane_rename_apply(pane_id, query)],
+            None => Vec::new(),
+        }
     }
 
     pub(in super::super) fn mode(&self) -> CommandPaletteMode {
@@ -730,6 +781,9 @@ impl CommandPaletteState {
         }
         if self.mode != CommandPaletteMode::Tasks {
             self.task_intent = TaskIntent::Browse;
+        }
+        if self.mode != CommandPaletteMode::PaneRename {
+            self.pane_rename_target = None;
         }
         if self.mode != CommandPaletteMode::PluginInputs {
             self.plugin_input_session = None;

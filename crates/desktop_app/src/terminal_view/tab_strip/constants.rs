@@ -9,6 +9,10 @@ pub(crate) const TOP_STRIP_TERMY_BRANDING_TEXT: &str = "termy";
 pub(crate) const TOP_STRIP_TERMY_BRANDING_FONT_SIZE: f32 = 12.0;
 pub(crate) const TOP_STRIP_TERMY_BRANDING_SIDE_PADDING: f32 = 10.0;
 pub(crate) const TOP_STRIP_TERMY_BRANDING_TAB_GAP: f32 = 8.0;
+/// Windows 顶栏左侧 logo 的边长（同原生标题栏图标大小）。
+pub(crate) const WINDOWS_TITLEBAR_ICON_SIZE: f32 = 16.0;
+/// Windows 顶栏左侧 logo 两侧的留白。
+pub(crate) const WINDOWS_TITLEBAR_ICON_SIDE_PADDING: f32 = 4.0;
 pub(crate) const TAB_HORIZONTAL_PADDING: f32 = 6.0;
 pub(crate) const TAB_ITEM_HEIGHT: f32 = 26.0;
 pub(crate) const TAB_ITEM_GAP: f32 = 4.0;
@@ -53,7 +57,10 @@ pub(crate) const TAB_DROP_MARKER_WIDTH: f32 = 3.0;
 pub(crate) const TAB_DROP_MARKER_INSET_Y: f32 = 3.0;
 pub(crate) const TAB_DRAG_AUTOSCROLL_EDGE_WIDTH: f32 = 32.0;
 pub(crate) const TAB_DRAG_AUTOSCROLL_MAX_STEP: f32 = 24.0;
-pub(crate) const TABBAR_ACTION_RAIL_WIDTH: f32 = 28.0;
+/// 操作区里单个按钮槽的宽度。
+pub(crate) const TABBAR_ACTION_SLOT_WIDTH: f32 = 28.0;
+/// 操作区（“+” 新建标签）总宽度。
+pub(crate) const TABBAR_ACTION_RAIL_WIDTH: f32 = TABBAR_ACTION_SLOT_WIDTH;
 pub(crate) const TABBAR_NEW_TAB_BUTTON_SIZE: f32 = TAB_ITEM_HEIGHT;
 // Dropdown under the "+" button for platform-specific tab and shell choices.
 pub(crate) const NEW_TAB_MENU_WIDTH: f32 = 230.0;

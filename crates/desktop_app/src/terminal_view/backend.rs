@@ -195,14 +195,16 @@ impl TerminalReplyHost for GpuiClipboardReplyHost<'_, '_> {
         let remember_permission = if request.permission_granted || request.mime_types.is_empty() {
             false
         } else {
-            let name = request.name.as_deref().unwrap_or("A terminal application");
+            let name = request.name.as_deref().unwrap_or(t!("A terminal application"));
             let formats = request.mime_types.join(", ");
-            let message = format!(
-                "{name} wants to read {formats} from your {}.",
-                clipboard_location_name(request.location)
+            let message = t!(
+                "{name} wants to read {formats} from your {location}.",
+                name = name,
+                formats = formats,
+                location = clipboard_location_name(request.location)
             );
             match crate::native_sdk::request_clipboard_permission(
-                "Allow clipboard access?",
+                t!("Allow clipboard access?"),
                 &message,
                 request.can_remember_permission,
             ) {
@@ -265,8 +267,8 @@ impl TerminalReplyHost for GpuiClipboardReplyHost<'_, '_> {
 
 fn clipboard_location_name(location: TerminalClipboardLocation) -> &'static str {
     match location {
-        TerminalClipboardLocation::Clipboard => "clipboard",
-        TerminalClipboardLocation::Primary => "primary selection",
+        TerminalClipboardLocation::Clipboard => t!("clipboard"),
+        TerminalClipboardLocation::Primary => t!("primary selection"),
     }
 }
 

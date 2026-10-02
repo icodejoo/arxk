@@ -762,6 +762,22 @@ define_commands!(
         ))
     ),
     (
+        RenamePane,
+        TERMINAL_CONTEXT,
+        Some(palette(
+            "Rename Pane",
+            "pane title name label",
+            CommandPaletteVisibility::Always
+        )),
+        Some(menu(
+            MenuRoot::File,
+            0,
+            "Rename Pane",
+            MenuVisibility::Always,
+            MenuActionRole::Normal
+        ))
+    ),
+    (
         AppInfo,
         TERMINAL_CONTEXT,
         Some(palette(

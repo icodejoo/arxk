@@ -85,7 +85,7 @@ impl TerminalView {
     fn tmux_socket_target_display_name(socket_target: &TmuxSocketTarget) -> String {
         match socket_target {
             TmuxSocketTarget::DedicatedTermy => "termy".to_string(),
-            TmuxSocketTarget::Default => "default".to_string(),
+            TmuxSocketTarget::Default => t!("default").to_string(),
             TmuxSocketTarget::Named(name) => name.clone(),
         }
     }
@@ -108,7 +108,7 @@ impl TerminalView {
         } else {
             let loaded = config::load_runtime_config(
                 &mut self.last_config_error_message,
-                "Failed to read config for tmux session listing",
+                t!("Failed to read config for tmux session listing"),
             );
             let loaded_binary = loaded.config.tmux_binary.trim().to_string();
             self.cached_tmux_binary = (!loaded_binary.is_empty()).then_some(loaded_binary.clone());
@@ -117,7 +117,7 @@ impl TerminalView {
             (loaded_prefix, loaded_binary)
         };
         if binary.is_empty() {
-            return Err("tmux_binary must not be empty".to_string());
+            return Err(t!("tmux_binary must not be empty").to_string());
         }
         Ok((command_prefix, binary))
     }
@@ -144,9 +144,10 @@ impl TerminalView {
                 Err(error) => {
                     if !Self::tmux_session_list_error_is_ignorable(&error) {
                         let error_text = format!("{error:#}");
-                        failures.push(format!(
-                            "{} socket: {error_text}",
-                            Self::tmux_socket_target_display_name(&socket_target)
+                        failures.push(t!(
+                            "{socket} socket: {error}",
+                            socket = Self::tmux_socket_target_display_name(&socket_target),
+                            error = error_text
                         ));
                     }
                 }
@@ -168,13 +169,13 @@ impl TerminalView {
     ) -> &'static str {
         match status_hint {
             Some(TmuxSessionStatusHint::ActiveSession) => {
-                "Detach or switch tmux session before renaming or killing the active session"
+                t!("Detach or switch tmux session before renaming or killing the active session")
             }
-            Some(TmuxSessionStatusHint::NameRequired) => "tmux session name cannot be empty",
+            Some(TmuxSessionStatusHint::NameRequired) => t!("tmux session name cannot be empty"),
             Some(TmuxSessionStatusHint::NameUnchanged) => {
-                "New tmux session name must differ from current name"
+                t!("New tmux session name must differ from current name")
             }
-            _ => "tmux session action is unavailable",
+            _ => t!("tmux session action is unavailable"),
         }
     }
 
@@ -196,7 +197,7 @@ impl TerminalView {
 
         let session_name = session_name.trim();
         if session_name.is_empty() {
-            crate::ui::toast::error("tmux session name cannot be empty");
+            crate::ui::toast::error(t!("tmux session name cannot be empty"));
             self.notify_overlay(cx);
             return;
         }
@@ -265,7 +266,7 @@ impl TerminalView {
                 Vec::new(),
                 self.tmux_primary_socket_target_for_session_palette(),
             );
-            crate::ui::toast::error(format!("Failed to list tmux sessions: {error}"));
+            crate::ui::toast::error(t!("Failed to list tmux sessions: {error}", error = error));
         }
         self.refresh_command_palette_matches(false, cx);
         self.notify_overlay(cx);
@@ -304,7 +305,7 @@ impl TerminalView {
             current_session_name,
             next_session_name,
         ) {
-            crate::ui::toast::error(format!("Failed to rename tmux session: {error}"));
+            crate::ui::toast::error(t!("Failed to rename tmux session: {error}", error = error));
             self.notify_overlay(cx);
             return;
         }
@@ -333,19 +334,20 @@ impl TerminalView {
 
         let session_name = session_name.trim().to_string();
         if session_name.is_empty() {
-            crate::ui::toast::error("tmux session name cannot be empty");
+            crate::ui::toast::error(t!("tmux session name cannot be empty"));
             self.notify_overlay(cx);
             return;
         }
 
-        let confirmation_message = format!(
-            "Kill tmux session \"{session_name}\"? This will close all windows and panes in that session."
+        let confirmation_message = t!(
+            "Kill tmux session \"{session_name}\"? This will close all windows and panes in that session.",
+            session_name = session_name
         );
         // Native confirm dialogs can run nested modal loops; invoking them while GPUI
         // is mutably updating this view can re-enter and trip RefCell borrow checks.
         // Run confirm out-of-band, then re-enter through AsyncApp for the mutation.
         cx.spawn(async move |this, cx: &mut AsyncApp| {
-            let confirmed = crate::native_sdk::confirm("Kill tmux Session", &confirmation_message);
+            let confirmed = crate::native_sdk::confirm(t!("Kill tmux Session"), &confirmation_message);
             if !confirmed {
                 return;
             }
@@ -368,7 +370,7 @@ impl TerminalView {
                         socket_target,
                         session_name.as_str(),
                     ) {
-                        crate::ui::toast::error(format!("Failed to kill tmux session: {error}"));
+                        crate::ui::toast::error(t!("Failed to kill tmux session: {error}", error = error));
                         view.notify_overlay(cx);
                         return;
                     }

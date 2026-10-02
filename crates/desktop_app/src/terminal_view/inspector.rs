@@ -41,12 +41,12 @@ impl InspectorTab {
 
     fn label(self) -> &'static str {
         match self {
-            Self::Terminal => "Terminal",
-            Self::Runtime => "Runtime",
-            Self::Input => "Input",
-            Self::Config => "Config",
-            Self::Keyboard => "Keyboard",
-            Self::Render => "Render",
+            Self::Terminal => t!("Terminal"),
+            Self::Runtime => t!("Runtime"),
+            Self::Input => t!("Input"),
+            Self::Config => t!("Config"),
+            Self::Keyboard => t!("Keyboard"),
+            Self::Render => t!("Render"),
         }
     }
 }
@@ -580,10 +580,10 @@ impl TerminalView {
 
         for pane in panes {
             let header_color = if pane.is_active { accent } else { text_muted };
-            let header = format!(
-                "Pane {}{}",
-                pane.id,
-                if pane.is_active { "  (active)" } else { "" }
+            let header = t!(
+                "Pane {id}{suffix}",
+                id = pane.id,
+                suffix = if pane.is_active { t!("  (active)") } else { "" }
             );
             content = content.child(
                 div()
@@ -1035,10 +1035,10 @@ impl TerminalView {
             .text_color(text_muted)
             .font_weight(FontWeight::SEMIBOLD)
             .child(div().flex_none().w(px(48.0)).child("#"))
-            .child(div().flex_none().w(px(140.0)).child("Key"))
-            .child(div().flex_none().w(px(80.0)).child("Mods"))
-            .child(div().flex_none().w(px(80.0)).child("Char"))
-            .child(div().flex_1().child("Routed To"));
+            .child(div().flex_none().w(px(140.0)).child(t!("Key")))
+            .child(div().flex_none().w(px(80.0)).child(t!("Mods")))
+            .child(div().flex_none().w(px(80.0)).child(t!("Char")))
+            .child(div().flex_1().child(t!("Routed To")));
 
         let mut list = div().flex().flex_col().child(header);
         if self.inspector.key_log.is_empty() {
@@ -1049,7 +1049,7 @@ impl TerminalView {
                     .flex()
                     .items_center()
                     .text_color(text_muted)
-                    .child("Press keys to record events…"),
+                    .child(t!("Press keys to record events…")),
             );
         }
         for entry in &self.inspector.key_log {
@@ -1224,7 +1224,7 @@ impl TerminalView {
                     .flex_none()
                     .mt(px(8.0))
                     .text_color(text_muted)
-                    .child("Cache and dirty-span counters require a debug build."),
+                    .child(t!("Cache and dirty-span counters require a debug build.")),
             );
         }
         content = content.child(
@@ -1232,9 +1232,9 @@ impl TerminalView {
                 .flex_none()
                 .mt(px(8.0))
                 .text_color(text_muted)
-                .child(
-                    "Callback interval is idle/activity cadence, not latency; ~500 ms can be healthy while idle. CPU view build excludes GPUI layout/paint, GPU work, and presentation.",
-                ),
+                .child(t!(
+                    "Callback interval is idle/activity cadence, not latency; ~500 ms can be healthy while idle. CPU view build excludes GPUI layout/paint, GPU work, and presentation."
+                )),
         );
         content.into_any_element()
     }
@@ -1335,7 +1335,7 @@ impl TerminalView {
                     .text_color(text_muted)
                     .hover(move |s| s.bg(hover_tab_bg).text_color(text_primary))
                     .cursor_pointer()
-                    .child("Clear")
+                    .child(t!("Clear"))
                     .on_mouse_down(
                         MouseButton::Left,
                         cx.listener(|this, _event: &MouseDownEvent, _window, cx| {

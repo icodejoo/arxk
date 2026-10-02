@@ -109,13 +109,13 @@ pub(crate) fn effective_terminal_font_family(
 
     let Some(candidate) = canonical_available_font_family(requested, &available) else {
         let fallback = fallback();
-        notify_fallback(requested.trim(), "is not installed", &fallback);
+        notify_fallback(requested.trim(), t!("is not installed"), &fallback);
         return fallback;
     };
 
     if !font_has_fixed_ascii_advances(text_system, &candidate) {
         let fallback = fallback();
-        notify_fallback(&candidate, "resolved to a proportional font", &fallback);
+        notify_fallback(&candidate, t!("resolved to a proportional font"), &fallback);
         return fallback;
     }
 
@@ -178,7 +178,7 @@ fn select_fixed_pitch_family<'a>(
         .map(String::as_str)
 }
 
-fn notify_fallback(requested: &str, reason: &str, fallback: &str) {
+fn notify_fallback(requested: &str, reason: &'static str, fallback: &str) {
     let mut last = LAST_FALLBACK_NOTIFICATION
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -186,7 +186,12 @@ fn notify_fallback(requested: &str, reason: &str, fallback: &str) {
         return;
     }
     log::warn!("Configured terminal font '{requested}' {reason}; using '{fallback}'");
-    crate::ui::toast::warning(format!("Font \"{requested}\" {reason}; using {fallback}"));
+    crate::ui::toast::warning(t!(
+        "Font \"{requested}\" {reason}; using {fallback}",
+        requested = requested,
+        reason = termy::i18n::tr(reason),
+        fallback = fallback
+    ));
 }
 
 fn clear_fallback_notification() {

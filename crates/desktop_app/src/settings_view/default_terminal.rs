@@ -35,10 +35,10 @@ impl SettingsWindow {
         let description = match &self.default_terminal_state {
             Some(Err(error)) => error.clone(),
             Some(Ok(true)) => {
-                "Termy is your default terminal. Apps may have their own terminal preference."
+                t!("Termy is your default terminal. Apps may have their own terminal preference.")
                     .into()
             }
-            _ => "Use Termy when macOS requests the default terminal.".into(),
+            _ => t!("Use Termy when macOS requests the default terminal.").into(),
         };
         let accent = self.accent();
         let row = div()
@@ -56,7 +56,7 @@ impl SettingsWindow {
                         div()
                             .text_sm()
                             .text_color(self.text_primary())
-                            .child("Default terminal"),
+                            .child(t!("Default terminal")),
                     )
                     .child(
                         div()
@@ -75,11 +75,11 @@ impl SettingsWindow {
                     .text_sm()
                     .text_color(accent)
                     .child(if busy {
-                        "Checking…"
+                        t!("Checking…")
                     } else if is_default {
-                        "Default"
+                        t!("Default")
                     } else {
-                        "Set as default"
+                        t!("Set as default")
                     })
                     .when(!busy && !is_default, |button| {
                         button
@@ -91,6 +91,6 @@ impl SettingsWindow {
             )
             .into_any_element();
         let row = self.wrap_setting_with_scroll_anchor("default_terminal", row);
-        self.render_settings_group("System integration", vec![row])
+        self.render_settings_group(t!("System integration"), vec![row])
     }
 }

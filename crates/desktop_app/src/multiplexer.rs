@@ -42,25 +42,25 @@ pub(crate) fn initialize(config: &AppConfig, cx: &mut App) -> Result<(), String>
     let path = crate::config::ensure_config_file().map_err(|error| error.to_string())?;
     let root = path
         .parent()
-        .ok_or("config directory is missing")?
+        .ok_or(t!("config directory is missing"))?
         .join("multiplexer");
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
     let client = connect_or_start(&root, &executable)
-        .map_err(|error| format!("Cannot start the built-in multiplexer: {error}"))?;
+        .map_err(|error| t!("Cannot start the built-in multiplexer: {error}", error = error))?;
     install(client, cx)
 }
 
 fn install(client: SessionClient, cx: &mut App) -> Result<(), String> {
     let mut saved = match client.layout().map_err(|error| error.to_string())? {
         Some(json) => serde_json::from_str::<SavedState>(&json)
-            .map_err(|error| format!("Cannot restore multiplexer layout: {error}"))?,
+            .map_err(|error| t!("Cannot restore multiplexer layout: {error}", error = error))?,
         None => SavedState {
             version: 1,
             windows: Vec::new(),
         },
     };
     if saved.version != 1 {
-        return Err("Unsupported multiplexer layout version".into());
+        return Err(t!("Unsupported multiplexer layout version").into());
     }
     let published_windows = saved
         .windows
@@ -194,7 +194,7 @@ impl WindowSession {
                     },
                 };
                 if remote.version != 1 {
-                    return Err("Unsupported multiplexer layout version".into());
+                    return Err(t!("Unsupported multiplexer layout version").into());
                 }
                 if let Some(window) = remote
                     .windows
@@ -209,7 +209,7 @@ impl WindowSession {
                         )
                         .map_err(str::to_owned)?,
                         None if window.session == session => session.clone(),
-                        None => return Err("This window was created by another client".into()),
+                        None => return Err(t!("This window was created by another client").into()),
                     };
                 } else {
                     if self
@@ -221,7 +221,7 @@ impl WindowSession {
                         .contains(&self.id)
                         && expected.is_some()
                     {
-                        return Err("This window was removed by another client".into());
+                        return Err(t!("This window was removed by another client").into());
                     }
                     remote.windows.push(SavedWindow {
                         id: self.id.clone(),
@@ -241,7 +241,7 @@ impl WindowSession {
                 }
             }
             if !published {
-                return Err("The session layout is changing; try saving again".into());
+                return Err(t!("The session layout is changing; try saving again").into());
             }
         } else {
             // Older hosts cannot accept CLI layout edits. Keep their
@@ -388,6 +388,9 @@ fn reconcile(saved: &mut SavedState, live: &[termy_core::multiplexer::PaneInfo])
             active_pane: 0,
             layout_tree_json: None,
             panes: vec![StoredPane {
+                manual_title: None,
+                cwd: None,
+                reported_title: None,
                 session_id: Some(pane.id.clone()),
                 left: 0,
                 top: 0,

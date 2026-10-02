@@ -28,17 +28,17 @@ pub(crate) enum DeepLinkArgument {
 
 impl DeepLinkRoute {
     pub(crate) fn parse(raw: &str) -> Result<(Self, Option<DeepLinkArgument>), String> {
-        let url = Url::parse(raw).map_err(|error| format!("Invalid Termy deeplink: {error}"))?;
+        let url = Url::parse(raw).map_err(|error| t!("Invalid Termy deeplink: {error}", error = error))?;
 
         if url.scheme() != "termy" {
-            return Err(format!(
-                "Unsupported deeplink scheme \"{}\"; expected termy://",
-                url.scheme()
+            return Err(t!(
+                "Unsupported deeplink scheme \"{scheme}\"; expected termy://",
+                scheme = url.scheme()
             ));
         }
 
         if !url.username().is_empty() || url.password().is_some() || url.port().is_some() {
-            return Err("Termy deeplinks do not support user info or ports".to_string());
+            return Err(t!("Termy deeplinks do not support user info or ports").to_string());
         }
 
         let mut segments = Vec::new();
@@ -85,13 +85,13 @@ impl DeepLinkRoute {
                             .then(|| value.into_owned())
                     })
                     .ok_or_else(|| {
-                        "Theme install deeplink requires ?slug=<theme-slug>".to_string()
+                        t!("Theme install deeplink requires ?slug=<theme-slug>").to_string()
                     })?;
                 Ok((Self::ThemeInstall, Some(DeepLinkArgument::Value(slug))))
             }
-            _ => Err(format!(
-                "Unsupported Termy deeplink route: {}",
-                segments.join("/")
+            _ => Err(t!(
+                "Unsupported Termy deeplink route: {route}",
+                route = segments.join("/")
             )),
         }
     }
@@ -155,11 +155,12 @@ fn directory_path_for_open(path: &Path) -> String {
 
 fn validate_deeplink_text(value: String, name: &str, max_len: usize) -> Result<String, String> {
     if value.len() > max_len {
-        return Err(format!("Termy deeplink {name} value is too long"));
+        return Err(t!("Termy deeplink {name} value is too long", name = name));
     }
     if value.bytes().any(|byte| byte.is_ascii_control()) {
-        return Err(format!(
-            "Termy deeplink {name} value contains unsupported control characters"
+        return Err(t!(
+            "Termy deeplink {name} value contains unsupported control characters",
+            name = name
         ));
     }
     Ok(value)

@@ -838,7 +838,7 @@ impl TerminalView {
             if self.copy_on_select_toast {
                 crate::ui::toast::enqueue_toast(
                     crate::ui::toast::ToastKind::Success,
-                    "Copied",
+                    t!("Copied"),
                     Some(std::time::Duration::from_millis(1500)),
                 );
             }
@@ -1085,7 +1085,7 @@ impl TerminalView {
             && let Some(link) = self.link_at_cell(cell)
         {
             if !Self::open_link(&link.target) {
-                crate::ui::toast::error("Failed to open link");
+                crate::ui::toast::error(t!("Failed to open link"));
             }
             if self.clear_hovered_link() || image_selection_changed {
                 cx.notify();

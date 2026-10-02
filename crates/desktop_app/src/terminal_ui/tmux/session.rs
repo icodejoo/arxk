@@ -79,13 +79,13 @@ pub(crate) fn run_tmux_command_with_socket(
         let stderr = String::from_utf8_lossy(&output.stderr);
         let stderr = stderr.trim();
         if stderr.is_empty() {
-            return Err(anyhow!(
-                "tmux command exited with status {}",
-                output
+            return Err(anyhow!(t!(
+                "tmux command exited with status {status}",
+                status = output
                     .status
                     .code()
-                    .map_or_else(|| "signal".to_string(), |code| code.to_string())
-            ));
+                    .map_or_else(|| t!("signal").to_string(), |code| code.to_string())
+            )));
         }
         return Err(anyhow!("{stderr}"));
     }
@@ -103,23 +103,32 @@ pub(crate) fn verify_tmux_version(
     let output = command
         .arg("-V")
         .output()
-        .with_context(|| format!("failed to execute '{binary}' -V"))?;
+        .with_context(|| t!("failed to execute '{binary}' -V", binary = binary))?;
     if !output.status.success() {
-        return Err(anyhow!("'{binary} -V' failed"));
+        return Err(anyhow!(t!("'{binary} -V' failed", binary = binary)));
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let version = stdout
         .split_whitespace()
         .nth(1)
-        .ok_or_else(|| anyhow!("unable to parse tmux version output: '{}'", stdout.trim()))?;
+        .ok_or_else(|| anyhow!(t!(
+                "unable to parse tmux version output: '{output}'",
+                output = stdout.trim()
+            )))?;
 
     let (major, minor) = parse_version_prefix(version)
-        .ok_or_else(|| anyhow!("unsupported tmux version format: '{version}'"))?;
+        .ok_or_else(|| anyhow!(t!(
+                "unsupported tmux version format: '{version}'",
+                version = version
+            )))?;
     if (major, minor) < (minimum_major, minimum_minor) {
-        return Err(anyhow!(
-            "tmux {minimum_major}.{minimum_minor}+ required, found {version}"
-        ));
+        return Err(anyhow!(t!(
+            "tmux {major}.{minor}+ required, found {version}",
+            major = minimum_major,
+            minor = minimum_minor,
+            version = version
+        )));
     }
 
     Ok(())
@@ -156,12 +165,12 @@ pub(crate) fn rename_session(
 ) -> Result<()> {
     let current_session_name = current_session_name.trim();
     if current_session_name.is_empty() {
-        return Err(anyhow!("tmux current session name cannot be empty"));
+        return Err(anyhow!(t!("tmux current session name cannot be empty")));
     }
 
     let next_session_name = next_session_name.trim();
     if next_session_name.is_empty() {
-        return Err(anyhow!("tmux new session name cannot be empty"));
+        return Err(anyhow!(t!("tmux new session name cannot be empty")));
     }
 
     run_tmux_command_with_socket(
@@ -197,7 +206,7 @@ pub(crate) fn kill_session(
 ) -> Result<()> {
     let session_name = session_name.trim();
     if session_name.is_empty() {
-        return Err(anyhow!("tmux session name cannot be empty"));
+        return Err(anyhow!(t!("tmux session name cannot be empty")));
     }
 
     run_tmux_command_with_socket(

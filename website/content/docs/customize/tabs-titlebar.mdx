@@ -28,4 +28,15 @@ description: Tab titles, tab strip behavior, and title bar.
 
 | Key | Default | Description |
 | --- | ------- | ----------- |
-| `show_termy_in_titlebar` | `true` | Show or hide Termy branding in the titlebar. |
+| `show_termy_in_titlebar` | `true` | Show or hide Termy branding in the titlebar: the logo on Windows, the name on macOS. Click it to open the [keyboard shortcuts popup](/docs/using-termy/keyboard-shortcuts). |
+
+### Windows title bar
+
+On Windows Termy draws its own title bar. Tabs sit in the title bar row, with
+minimize, maximize, and close buttons at the right edge, and there is no
+separate system title bar above them.
+
+- Drag the empty area to the right of the tabs to move the window.
+- The title bar stays visible even when `auto_hide_tabbar` hides the tab strip,
+  so the window can always be moved and closed.
+- With `auto_hide_tabbar = false` a single tab also appears in the title bar.
