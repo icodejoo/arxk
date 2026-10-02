@@ -22,7 +22,7 @@ description: Tab titles, tab strip behavior, and title bar.
 | `tab_close_visibility` | `active_hover` | `active_hover` \| `hover` \| `always`. |
 | `tab_width_mode` | `active_grow_sticky` | `stable` \| `active_grow` \| `active_grow_sticky`. |
 | `tab_switch_modifier_hints` | `true` | Show secondary+1..9 badges on first nine tabs. |
-| `auto_hide_tabbar` | `true` | Hide tab bar when only one tab is open. |
+| `auto_hide_tabbar` | `false` | Hide tab bar when only one tab is open. |
 
 ## Title Bar
 
@@ -39,4 +39,4 @@ separate system title bar above them.
 - Drag the empty area to the right of the tabs to move the window.
 - The title bar stays visible even when `auto_hide_tabbar` hides the tab strip,
   so the window can always be moved and closed.
-- With `auto_hide_tabbar = false` a single tab also appears in the title bar.
+- With `auto_hide_tabbar = false` (the default) a single tab also appears in the title bar.

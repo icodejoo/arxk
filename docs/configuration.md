@@ -281,7 +281,7 @@ Platform note: the Agent Sidebar/Workspace is currently unavailable on Windows b
 - Group: `TAB STRIP`
 
 `auto_hide_tabbar`
-- Default: `true`
+- Default: `false`
 - Hide the tab bar when only one tab is open
 - Group: `TAB STRIP`
 
@@ -308,7 +308,7 @@ Platform note: the Agent Sidebar/Workspace is currently unavailable on Windows b
 - Group: `UPDATES`
 
 `native_tab_persistence`
-- Default: `false`
+- Default: `true`
 - Restore native tabs and pane splits across app restarts
 - Group: `STARTUP`
 

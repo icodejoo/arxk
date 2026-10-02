@@ -17,7 +17,8 @@ fn parse_report(input: &str) -> ConfigParseReport {
 fn defaults_enable_tmux_persistence_and_raise_pane_focus_strength() {
     let defaults = parse("");
     assert!(defaults.tmux_persistence);
-    assert!(!defaults.native_tab_persistence);
+    assert!(defaults.native_tab_persistence);
+    assert!(!defaults.auto_hide_tabbar);
     assert!(!defaults.background_opacity_cells);
     assert!(!defaults.chrome_contrast);
     assert!((defaults.pane_focus_strength - 0.6).abs() < f32::EPSILON);

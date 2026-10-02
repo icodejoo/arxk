@@ -828,6 +828,50 @@ fn login_shell_args(shell_path: &str) -> Vec<String> {
     }
 }
 
+/// 注入 PowerShell 的启动脚本：包住用户已有的 prompt，在其输出前追加 OSC 9;9，
+/// 让 termy 的窗格标签无需用户改 `$PROFILE` 就能拿到当前目录。
+const POWERSHELL_CWD_REPORT_SCRIPT: &str = r#"if (-not $global:__TermyPromptWrapped) {
+    $global:__TermyPromptWrapped = $true
+    $global:__TermyOrigPrompt = (Get-Command prompt -CommandType Function).ScriptBlock
+    function global:prompt {
+        $text = & $global:__TermyOrigPrompt
+        $loc = $ExecutionContext.SessionState.Path.CurrentLocation
+        if ($loc.Provider.Name -eq 'FileSystem') {
+            $esc = [char]27
+            return "$esc]9;9;`"$($loc.ProviderPath)`"$esc\" + $text
+        }
+        return $text
+    }
+}"#;
+
+/// 判断给定的 shell 路径是不是 PowerShell（`pwsh` / `powershell`，忽略大小写与 `.exe`）。
+fn is_powershell_program(shell_path: &str) -> bool {
+    std::path::Path::new(shell_path.trim_matches('"'))
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .is_some_and(|stem| {
+            stem.eq_ignore_ascii_case("pwsh") || stem.eq_ignore_ascii_case("powershell")
+        })
+}
+
+/// 构造带路径上报脚本的 PowerShell 交互启动参数。
+///
+/// 脚本用 `-EncodedCommand`（UTF-16LE 的 base64）传入，避开命令行引号转义；
+/// `-NoExit` 保证跑完脚本后仍是交互式 shell，且用户的 `$PROFILE` 照常加载。
+fn powershell_interactive_args() -> Vec<String> {
+    use base64::Engine as _;
+    let utf16_le = POWERSHELL_CWD_REPORT_SCRIPT
+        .encode_utf16()
+        .flat_map(u16::to_le_bytes)
+        .collect::<Vec<u8>>();
+    vec![
+        "-NoLogo".to_string(),
+        "-NoExit".to_string(),
+        "-EncodedCommand".to_string(),
+        base64::engine::general_purpose::STANDARD.encode(utf16_le),
+    ]
+}
+
 /// The executable and argument vector selected for a terminal PTY.
 ///
 /// All terminal engines must use [`resolve_terminal_launch`] instead of
@@ -915,11 +959,11 @@ fn windows_shell_launch(windows_shell: WindowsShell) -> ResolvedTerminalLaunch {
         },
         WindowsShell::PowerShell => ResolvedTerminalLaunch {
             program: "powershell.exe".to_string(),
-            args: vec!["-NoLogo".to_string()],
+            args: powershell_interactive_args(),
         },
         WindowsShell::PowerShellCore => ResolvedTerminalLaunch {
             program: "pwsh.exe".to_string(),
-            args: vec!["-NoLogo".to_string()],
+            args: powershell_interactive_args(),
         },
         WindowsShell::GitBash => ResolvedTerminalLaunch {
             program: windows_git_bash_path(),
@@ -971,9 +1015,14 @@ fn configured_shell_launch(configured_shell: Option<&str>) -> Option<ResolvedTer
     let shell_path = configured_shell
         .map(str::trim)
         .filter(|shell| !shell.is_empty())?;
+    let args = if is_powershell_program(shell_path) {
+        powershell_interactive_args()
+    } else {
+        login_shell_args(shell_path)
+    };
     Some(ResolvedTerminalLaunch {
         program: shell_path.to_string(),
-        args: login_shell_args(shell_path),
+        args,
     })
 }
 
@@ -2713,6 +2762,8 @@ fn terminal_event_from_osc(event: OscEvent) -> TerminalEvent {
 #[cfg(test)]
 mod tests {
     use super::{
+        POWERSHELL_CWD_REPORT_SCRIPT, configured_shell_launch, is_powershell_program,
+        login_shell_args, powershell_interactive_args,
         DEFAULT_TERM, EVENT_QUEUE_HARD_CAP, EVENT_QUEUE_SOFT_CAP, GHOSTTY_COMPAT_TERM_PROGRAM,
         GHOSTTY_COMPAT_TERM_PROGRAM_VERSION, JsonEventListener, KittyGraphicsCursorTracker,
         MAX_TERMINAL_COLS, MAX_TERMINAL_ROWS, MAX_TERMINAL_SCROLLBACK_HISTORY, RuntimeEvent,
@@ -4821,6 +4872,49 @@ mod tests {
         );
     }
 
+    #[test]
+    fn powershell_launch_injects_cwd_report_script() {
+        use base64::Engine as _;
+        let args = powershell_interactive_args();
+        assert_eq!(&args[..3], ["-NoLogo", "-NoExit", "-EncodedCommand"]);
+
+        // 解码后应还原出完整脚本，且包含 OSC 9;9 上报与对原 prompt 的包装。
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(&args[3])
+            .expect("valid base64");
+        let units = bytes
+            .chunks_exact(2)
+            .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+            .collect::<Vec<_>>();
+        let script = String::from_utf16(&units).expect("valid utf-16");
+        assert_eq!(script, POWERSHELL_CWD_REPORT_SCRIPT);
+        assert!(script.contains("]9;9;"));
+        assert!(script.contains("__TermyOrigPrompt"));
+    }
+
+    #[test]
+    fn configured_powershell_shell_gets_cwd_report_args() {
+        for shell in [
+            "pwsh",
+            "pwsh.exe",
+            r"C:\Program Files\PowerShell\pwsh.exe",
+            "/usr/bin/pwsh",
+            "POWERSHELL.EXE",
+        ] {
+            let launch = configured_shell_launch(Some(shell)).expect("configured shell");
+            assert_eq!(launch.program, shell);
+            assert_eq!(launch.args, powershell_interactive_args(), "{shell}");
+        }
+    }
+
+    #[test]
+    fn non_powershell_shell_keeps_login_shell_args() {
+        let launch = configured_shell_launch(Some("/bin/bash")).expect("configured shell");
+        assert_eq!(launch.args, login_shell_args("/bin/bash"));
+        assert!(!is_powershell_program("/bin/bash"));
+        assert!(!is_powershell_program("cmd.exe"));
+    }
+
     #[cfg(target_os = "windows")]
     #[test]
     fn windows_shell_setting_selects_powershell() {
@@ -4830,7 +4924,7 @@ mod tests {
         });
 
         assert_eq!(launch.program, "powershell.exe");
-        assert_eq!(launch.args, vec!["-NoLogo".to_string()]);
+        assert_eq!(launch.args, powershell_interactive_args());
     }
 
     #[cfg(target_os = "windows")]
@@ -4842,7 +4936,7 @@ mod tests {
         });
 
         assert_eq!(launch.program, "pwsh.exe");
-        assert_eq!(launch.args, vec!["-NoLogo".to_string()]);
+        assert_eq!(launch.args, powershell_interactive_args());
     }
 
     #[cfg(target_os = "windows")]
@@ -4853,12 +4947,12 @@ mod tests {
             (
                 WindowsShell::PowerShell,
                 "powershell.exe".to_string(),
-                vec!["-NoLogo".to_string()],
+                powershell_interactive_args(),
             ),
             (
                 WindowsShell::PowerShellCore,
                 "pwsh.exe".to_string(),
-                vec!["-NoLogo".to_string()],
+                powershell_interactive_args(),
             ),
             (
                 WindowsShell::GitBash,
