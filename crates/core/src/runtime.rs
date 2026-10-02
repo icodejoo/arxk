@@ -872,6 +872,68 @@ fn powershell_interactive_args() -> Vec<String> {
     ]
 }
 
+/// cmd 的 `PROMPT` 前缀：`$E` 是 ESC，`$P` 是当前路径，输出 `ESC]9;9;"路径"ESC\`。
+const CMD_PROMPT_CWD_REPORT: &str = "$E]9;9;\"$P\"$E\\";
+/// cmd 默认的提示符格式（用户没设 `PROMPT` 时沿用）。
+const CMD_DEFAULT_PROMPT: &str = "$P$G";
+/// bash 每次出提示符前执行的路径上报命令（`$PWD` 在 Git Bash 下是 `/c/...` 形式）。
+const BASH_PROMPT_COMMAND_CWD_REPORT: &str = r#"printf '\033]9;9;"%s"\033\\' "$PWD""#;
+/// 路径上报序列的标志，用来判断用户自己是否已经在上报，避免重复注入。
+const CWD_REPORT_MARKER: &str = "9;9;";
+
+/// 取 shell 程序的小写文件名（不含扩展名），例如 `C:\Windows\System32\cmd.exe` -> `cmd`。
+fn shell_program_stem(shell_path: &str) -> String {
+    std::path::Path::new(shell_path.trim_matches('"'))
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default()
+}
+
+/// 按实际启动的 shell 注入"每次出提示符时上报当前目录"的环境变量，让窗格标签开箱即用。
+///
+/// - `env_overrides`：待传给子进程的环境变量覆盖表，会被原地追加。
+/// - `launch`：已解析的启动程序；只看程序名，不看参数。
+/// - `lookup`：读取父进程环境变量的函数，用于保留用户已有的 `PROMPT` / `PROMPT_COMMAND`。
+///
+/// 目前覆盖 cmd（`PROMPT`）和 bash/Git Bash（`PROMPT_COMMAND`）；PowerShell 走启动参数，
+/// WSL 自己会上报，其余 shell 不处理。用户自己已在上报（含 `9;9;`）时保持原样。
+fn apply_cwd_report_env(
+    env_overrides: &mut HashMap<String, String>,
+    launch: &ResolvedTerminalLaunch,
+    lookup: impl Fn(&str) -> Option<String>,
+) {
+    let existing = |key: &str| {
+        env_overrides
+            .get(key)
+            .cloned()
+            .or_else(|| lookup(key))
+            .filter(|value| !value.trim().is_empty())
+    };
+    match shell_program_stem(&launch.program).as_str() {
+        "cmd" => {
+            let current = existing("PROMPT");
+            if current.as_deref().is_some_and(|v| v.contains(CWD_REPORT_MARKER)) {
+                return;
+            }
+            let base = current.unwrap_or_else(|| CMD_DEFAULT_PROMPT.to_string());
+            env_overrides.insert("PROMPT".to_string(), format!("{CMD_PROMPT_CWD_REPORT}{base}"));
+        }
+        "bash" => {
+            let current = existing("PROMPT_COMMAND");
+            if current.as_deref().is_some_and(|v| v.contains(CWD_REPORT_MARKER)) {
+                return;
+            }
+            let command = match current {
+                Some(existing) => format!("{BASH_PROMPT_COMMAND_CWD_REPORT};{existing}"),
+                None => BASH_PROMPT_COMMAND_CWD_REPORT.to_string(),
+            };
+            env_overrides.insert("PROMPT_COMMAND".to_string(), command);
+        }
+        _ => {}
+    }
+}
+
 /// The executable and argument vector selected for a terminal PTY.
 ///
 /// All terminal engines must use [`resolve_terminal_launch`] instead of
@@ -2762,8 +2824,9 @@ fn terminal_event_from_osc(event: OscEvent) -> TerminalEvent {
 #[cfg(test)]
 mod tests {
     use super::{
-        POWERSHELL_CWD_REPORT_SCRIPT, configured_shell_launch, is_powershell_program,
-        login_shell_args, powershell_interactive_args,
+        POWERSHELL_CWD_REPORT_SCRIPT, apply_cwd_report_env, configured_shell_launch,
+        is_powershell_program,
+        BASH_PROMPT_COMMAND_CWD_REPORT, ResolvedTerminalLaunch, login_shell_args, powershell_interactive_args,
         DEFAULT_TERM, EVENT_QUEUE_HARD_CAP, EVENT_QUEUE_SOFT_CAP, GHOSTTY_COMPAT_TERM_PROGRAM,
         GHOSTTY_COMPAT_TERM_PROGRAM_VERSION, JsonEventListener, KittyGraphicsCursorTracker,
         MAX_TERMINAL_COLS, MAX_TERMINAL_ROWS, MAX_TERMINAL_SCROLLBACK_HISTORY, RuntimeEvent,
@@ -4904,6 +4967,61 @@ mod tests {
             let launch = configured_shell_launch(Some(shell)).expect("configured shell");
             assert_eq!(launch.program, shell);
             assert_eq!(launch.args, powershell_interactive_args(), "{shell}");
+        }
+    }
+
+    /// 构造只有程序名的启动描述，供环境注入测试使用。
+    fn launch_of(program: &str) -> ResolvedTerminalLaunch {
+        ResolvedTerminalLaunch {
+            program: program.to_string(),
+            args: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn cmd_gets_prompt_prefix_that_reports_cwd() {
+        let mut env = HashMap::new();
+        apply_cwd_report_env(&mut env, &launch_of(r"C:\Windows\System32\cmd.exe"), |_| None);
+        assert_eq!(env["PROMPT"], r#"$E]9;9;"$P"$E\$P$G"#);
+    }
+
+    #[test]
+    fn cmd_keeps_user_prompt_and_never_injects_twice() {
+        let mut env = HashMap::new();
+        apply_cwd_report_env(&mut env, &launch_of("cmd.exe"), |key| {
+            (key == "PROMPT").then(|| "$T$G".to_string())
+        });
+        assert_eq!(env["PROMPT"], r#"$E]9;9;"$P"$E\$T$G"#);
+
+        let mut env = HashMap::new();
+        apply_cwd_report_env(&mut env, &launch_of("cmd.exe"), |key| {
+            (key == "PROMPT").then(|| r#"$E]9;9;"$P"$E\$P$G"#.to_string())
+        });
+        assert!(!env.contains_key("PROMPT"), "已在上报时不应改动");
+    }
+
+    #[test]
+    fn bash_gets_prompt_command_and_keeps_existing_hook() {
+        let mut env = HashMap::new();
+        apply_cwd_report_env(&mut env, &launch_of("C:/Program Files/Git/bin/bash.exe"), |_| None);
+        assert_eq!(env["PROMPT_COMMAND"], BASH_PROMPT_COMMAND_CWD_REPORT);
+
+        let mut env = HashMap::new();
+        apply_cwd_report_env(&mut env, &launch_of("bash"), |key| {
+            (key == "PROMPT_COMMAND").then(|| "history -a".to_string())
+        });
+        assert_eq!(
+            env["PROMPT_COMMAND"],
+            format!("{BASH_PROMPT_COMMAND_CWD_REPORT};history -a")
+        );
+    }
+
+    #[test]
+    fn other_shells_get_no_cwd_report_env() {
+        for program in ["pwsh.exe", "powershell.exe", "wsl.exe", "/bin/zsh", "fish"] {
+            let mut env = HashMap::new();
+            apply_cwd_report_env(&mut env, &launch_of(program), |_| None);
+            assert!(env.is_empty(), "{program} 不应被注入环境变量");
         }
     }
 

@@ -1,25 +1,22 @@
 name: Release (fork)
 
 # fork 专用发布流程：不依赖 Apple 签名/公证 secrets，macOS 产出未签名 DMG。
-# 触发方式：推送 v* tag（如 v0.2.81 / v0.2.81.1），或在 Actions 页面手动运行并填写版本号。
-# 版本号只能是 v + 数字和点：rpm 的 Version 字段不允许连字符。
+# 版本号唯一来源是 crates/desktop_app/Cargo.toml 的 version：
+#   应用内显示、安装包文件名、Git tag（v + 版本号）都由它派生，不再手填。
+# 触发方式：在 Actions 页面手动运行（自动创建 tag），或推送与 Cargo 版本一致的 v* tag。
+# 版本号只能是数字和点：rpm 的 Version 字段不允许连字符。
 
 on:
   push:
     tags:
       - "v*"
   workflow_dispatch:
-    inputs:
-      version:
-        description: "版本号（如 v0.2.81 或 v0.2.81.1），将作为 tag 与文件名里的版本"
-        required: true
-        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-fork-${{ github.ref }}-${{ inputs.version }}
+  group: release-fork-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -35,21 +32,48 @@ jobs:
     outputs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
-      - name: Resolve and validate version
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Resolve version from Cargo.toml
         id: resolve
         env:
-          INPUT_VERSION: ${{ inputs.version }}
           REF_NAME: ${{ github.ref_name }}
           EVENT_NAME: ${{ github.event_name }}
+          SHA: ${{ github.sha }}
         run: |
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            version="$INPUT_VERSION"
-          else
-            version="$REF_NAME"
-          fi
-          if [[ ! "$version" =~ ^v[0-9]+(\.[0-9]+)+$ ]]; then
-            echo "版本号 '$version' 不合法：必须形如 v0.2.81 或 v0.2.81.1（rpm 不允许连字符）" >&2
+          read_version() {
+            awk '
+              /^\[package\]$/ { in_package = 1; next }
+              /^\[/ && in_package { exit }
+              in_package && $1 == "version" { gsub(/"/, "", $3); print $3; exit }
+            ' "$1"
+          }
+          app_version="$(read_version crates/desktop_app/Cargo.toml)"
+          cli_version="$(read_version crates/cli/Cargo.toml)"
+          if [[ "$app_version" != "$cli_version" ]]; then
+            echo "desktop_app($app_version) 与 cli($cli_version) 的 Cargo 版本不一致" >&2
             exit 1
+          fi
+          if [[ ! "$app_version" =~ ^[0-9]+(\.[0-9]+)+$ ]]; then
+            echo "Cargo 版本 '$app_version' 不合法：只能是数字和点（rpm 不允许连字符）" >&2
+            exit 1
+          fi
+          version="v$app_version"
+
+          # 推 tag 触发时，tag 必须和 Cargo 版本一致，否则安装包里的版本号会对不上 tag。
+          if [[ "$EVENT_NAME" == "push" && "$REF_NAME" != "$version" ]]; then
+            echo "tag '$REF_NAME' 与 Cargo 版本 '$version' 不一致，请先修改 Cargo.toml 再打 tag" >&2
+            exit 1
+          fi
+
+          # 手动触发时，如果同名 tag 已存在且不在当前提交上，说明忘了升版本号。
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag_sha="$(git ls-remote origin "refs/tags/$version^{}" "refs/tags/$version" | awk 'NR==1 {print $1}')"
+            if [[ -n "$tag_sha" && "$tag_sha" != "$SHA" ]]; then
+              echo "tag $version 已存在且指向 ${tag_sha:0:8}（当前提交 ${SHA:0:8}），请先升高 Cargo 版本号" >&2
+              exit 1
+            fi
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 

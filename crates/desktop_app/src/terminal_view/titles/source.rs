@@ -270,7 +270,11 @@ impl TerminalView {
     /// 记录某个窗格的当前目录（来自 shell 上报的 OSC 7 / OSC 9;9），
     /// 返回显示内容是否发生变化。
     pub(crate) fn record_pane_cwd(&mut self, pane_id: &str, raw: &str) -> bool {
-        let cwd = Self::truncate_tab_title(raw.trim().trim_matches('"'));
+        let raw = raw.trim().trim_matches('"');
+        // Windows 上 Git Bash / MSYS2 / Cygwin 报的是 `/c/...`，转回盘符路径才能显示与恢复。
+        #[cfg(target_os = "windows")]
+        let raw = Self::normalize_msys_cwd(raw);
+        let cwd = Self::truncate_tab_title(&raw);
         if cwd.is_empty() || self.pane_cwds.get(pane_id) == Some(&cwd) {
             return false;
         }
@@ -327,6 +331,29 @@ impl TerminalView {
         for pane_id in pane_ids {
             self.pane_manual_titles.remove(pane_id.as_str());
         }
+    }
+
+    /// 把 Git Bash / MSYS2 / Cygwin 上报的 `/c/Users/x`、`/cygdrive/c/Users/x`
+    /// 转成 `C:\Users\x`；不是这种形式的路径原样返回。
+    ///
+    /// - `raw`：shell 上报的路径文本。
+    pub(crate) fn normalize_msys_cwd(raw: &str) -> String {
+        let rest = raw.strip_prefix("/cygdrive").unwrap_or(raw);
+        let Some(after) = rest.strip_prefix('/') else {
+            return raw.to_string();
+        };
+        let mut chars = after.chars();
+        let Some(drive) = chars.next().filter(char::is_ascii_alphabetic) else {
+            return raw.to_string();
+        };
+        let tail = chars.as_str();
+        if tail.is_empty() {
+            return format!("{}:\\", drive.to_ascii_uppercase());
+        }
+        if !tail.starts_with('/') {
+            return raw.to_string();
+        }
+        format!("{}:{}", drive.to_ascii_uppercase(), tail.replace('/', "\\"))
     }
 
     /// 比较两段文字是否指向同一路径：忽略首尾空白、末尾分隔符、`/` 与 `\` 的差别和大小写。
@@ -842,6 +869,30 @@ mod tests {
         assert_eq!(manual["p1"].chars().count(), MAX_TAB_TITLE_CHARS);
         assert!(TerminalView::apply_manual_pane_title(&mut manual, "p2", "a\nb"));
         assert_eq!(manual["p2"], "a b");
+    }
+
+    #[test]
+    fn msys_cwd_is_converted_to_windows_drive_path() {
+        let cases = [
+            ("/c/Users/jelon", r"C:\Users\jelon"),
+            ("/d", r"D:\"),
+            ("/cygdrive/e/work/api", r"E:\work\api"),
+            ("/C/Program Files", r"C:\Program Files"),
+        ];
+        for (raw, expected) in cases {
+            assert_eq!(TerminalView::normalize_msys_cwd(raw), expected, "{raw}");
+        }
+        // 不是盘符形式的路径保持原样：Windows 路径、UNC、WSL 内部路径、相对路径。
+        for raw in [
+            r"C:\Users\jelon",
+            r"\wsl.localhost\Ubuntu\home",
+            "/home/jelon",
+            "/usr/bin",
+            "relative/x",
+            "",
+        ] {
+            assert_eq!(TerminalView::normalize_msys_cwd(raw), raw, "{raw}");
+        }
     }
 
     #[test]

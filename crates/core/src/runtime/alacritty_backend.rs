@@ -91,7 +91,10 @@ impl AlacrittyBackend {
         let size = size.clamped();
         let (events_tx, events_rx) = unbounded();
         let runtime_config = runtime_config.cloned().unwrap_or_default();
-        let shell = launch_to_shell(resolve_terminal_launch(&runtime_config, launch)?);
+        let resolved_launch = resolve_terminal_launch(&runtime_config, launch)?;
+        let mut env = terminal_environment_overrides(tab_title_shell_integration, &runtime_config);
+        apply_cwd_report_env(&mut env, &resolved_launch, |key| env::var(key).ok());
+        let shell = launch_to_shell(resolved_launch);
 
         let working_directory = resolve_launch_working_directory(
             configured_working_dir,
@@ -101,7 +104,7 @@ impl AlacrittyBackend {
         let pty_options = PtyOptions {
             shell: Some(shell),
             working_directory,
-            env: terminal_environment_overrides(tab_title_shell_integration, &runtime_config),
+            env,
             drain_on_exit: true,
             #[cfg(target_os = "windows")]
             escape_args: true,
