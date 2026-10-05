@@ -70,9 +70,9 @@ fn config_file_for_update() -> Result<PathBuf, ConfigIoError> {
 fn update_config_contents<R>(
     updater: impl FnOnce(&str) -> Result<(String, R), String>,
 ) -> Result<R, String> {
-    let _process_guard = CONFIG_UPDATE_LOCK
-        .lock()
-        .map_err(|_| t!("Config update lock was poisoned by a previous failed update").to_string())?;
+    let _process_guard = CONFIG_UPDATE_LOCK.lock().map_err(|_| {
+        t!("Config update lock was poisoned by a previous failed update").to_string()
+    })?;
     let config_path = config_file_for_update().map_err(|error| error.to_string())?;
     let lock_path = config_path.with_extension("lock");
     let lock_path_display = lock_path.display().to_string();
@@ -250,7 +250,11 @@ pub fn import_colors_from_json(json_path: &Path) -> Result<String, String> {
         };
 
         if Rgb8::from_hex(&hex).is_none() {
-            return Err(t!("Invalid hex color for '{key}': {hex}", key = key, hex = hex));
+            return Err(t!(
+                "Invalid hex color for '{key}': {hex}",
+                key = key,
+                hex = hex
+            ));
         }
 
         let is_canonical_key = key.eq_ignore_ascii_case(color_setting_spec(id).key);

@@ -186,7 +186,9 @@ fn preflight_tmux_runtime(config: &config::AppConfig) -> Result<(), StartupBlock
         3,
         3,
     )
-    .map_err(|error| StartupBlocker::TmuxPreflight(t!("tmux preflight failed: {error}", error = error)))
+    .map_err(|error| {
+        StartupBlocker::TmuxPreflight(t!("tmux preflight failed: {error}", error = error))
+    })
 }
 
 #[cfg(target_os = "windows")]
@@ -198,8 +200,9 @@ fn preflight_tmux_runtime(config: &config::AppConfig) -> Result<(), StartupBlock
         return Ok(());
     }
 
-    TmuxClient::verify_tmux_version(&command_prefix, config.tmux_binary.as_str(), 3, 3)
-        .map_err(|error| StartupBlocker::TmuxPreflight(t!("tmux preflight failed: {error}", error = error)))
+    TmuxClient::verify_tmux_version(&command_prefix, config.tmux_binary.as_str(), 3, 3).map_err(
+        |error| StartupBlocker::TmuxPreflight(t!("tmux preflight failed: {error}", error = error)),
+    )
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
@@ -786,10 +789,10 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        DeepLinkArgument, DeepLinkRoute, MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH, StartupArguments,
+        DeepLinkArgument, DeepLinkRoute, MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH,
         absorb_pending_open_urls, focus_or_open_main_window, fold_startup_new_tab_into_working_dir,
-        guard_tmux_startup, handle_open_urls_with_main_window, normalized_startup_window_size,
-        parse_startup_arguments, reopen_if_no_windows,
+        handle_open_urls_with_main_window, normalized_startup_window_size, parse_startup_arguments,
+        reopen_if_no_windows,
     };
     #[cfg(target_os = "windows")]
     use super::{
@@ -1167,9 +1170,11 @@ mod tests {
     #[cfg(target_os = "windows")]
     #[test]
     fn normalized_startup_window_size_migrates_legacy_windows_default() {
-        let mut config = AppConfig::default();
-        config.window_width = LEGACY_DEFAULT_WINDOW_WIDTH;
-        config.window_height = LEGACY_DEFAULT_WINDOW_HEIGHT;
+        let config = AppConfig {
+            window_width: LEGACY_DEFAULT_WINDOW_WIDTH,
+            window_height: LEGACY_DEFAULT_WINDOW_HEIGHT,
+            ..AppConfig::default()
+        };
 
         assert_eq!(
             normalized_startup_window_size(&config),

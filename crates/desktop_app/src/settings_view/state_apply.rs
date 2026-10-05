@@ -139,10 +139,9 @@ impl SettingsWindow {
                 Ok(())
             }
             EditableField::BackgroundOpacity => {
-                let parsed = value
-                    .trim_end_matches('%')
-                    .parse::<f32>()
-                    .map_err(|_| t!("Background opacity must be a number from 0 to 100").to_string())?;
+                let parsed = value.trim_end_matches('%').parse::<f32>().map_err(|_| {
+                    t!("Background opacity must be a number from 0 to 100").to_string()
+                })?;
                 let opacity = (parsed / 100.0).clamp(0.0, 1.0);
                 self.clear_background_opacity_preview();
                 self.persist_background_opacity(opacity)?;
@@ -270,7 +269,8 @@ impl SettingsWindow {
                     }
                     _ => {
                         return Err(
-                            t!("Windows shell must be cmd, powershell, pwsh, or git_bash").to_string()
+                            t!("Windows shell must be cmd, powershell, pwsh, or git_bash")
+                                .to_string(),
                         );
                     }
                 };
@@ -353,7 +353,9 @@ impl SettingsWindow {
             EditableField::InactiveTabScrollback => {
                 let parsed = value
                     .parse::<usize>()
-                    .map_err(|_| t!("Inactive tab scrollback must be a positive integer").to_string())?
+                    .map_err(|_| {
+                        t!("Inactive tab scrollback must be a positive integer").to_string()
+                    })?
                     .min(100_000);
                 self.config.inactive_tab_scrollback = Some(parsed);
                 config::set_root_setting(
@@ -399,9 +401,8 @@ impl SettingsWindow {
                         termy_core::config_core::TerminalScrollbarVisibility::OnScroll
                     }
                     _ => {
-                        return Err(
-                            t!("Scrollbar visibility must be off, always, or on_scroll").to_string()
-                        );
+                        return Err(t!("Scrollbar visibility must be off, always, or on_scroll")
+                            .to_string());
                     }
                 };
                 self.config.terminal_scrollbar_visibility = parsed;
@@ -423,9 +424,8 @@ impl SettingsWindow {
                     }
                     "theme" => termy_core::config_core::TerminalScrollbarStyle::Theme,
                     _ => {
-                        return Err(
-                            t!("Scrollbar style must be neutral, muted_theme, or theme").to_string()
-                        );
+                        return Err(t!("Scrollbar style must be neutral, muted_theme, or theme")
+                            .to_string());
                     }
                 };
                 self.config.terminal_scrollbar_style = parsed;
@@ -448,10 +448,10 @@ impl SettingsWindow {
                         }
                         "cinematic" => termy_core::config_core::PaneFocusEffect::Cinematic,
                         "minimal" => termy_core::config_core::PaneFocusEffect::Minimal,
-                        _ => return Err(
-                            t!("Pane focus effect must be off, soft_spotlight, cinematic, or minimal")
-                                .to_string(),
-                        ),
+                        _ => return Err(t!(
+                            "Pane focus effect must be off, soft_spotlight, cinematic, or minimal"
+                        )
+                        .to_string()),
                     };
                 self.config.pane_focus_effect = parsed;
                 let canonical = match parsed {
@@ -538,7 +538,8 @@ impl SettingsWindow {
                     "static" => termy_core::config_core::TabTitleMode::Static,
                     _ => {
                         return Err(
-                            t!("Tab title mode must be smart, shell, explicit, or static").to_string()
+                            t!("Tab title mode must be smart, shell, explicit, or static")
+                                .to_string(),
                         );
                     }
                 };
@@ -592,10 +593,10 @@ impl SettingsWindow {
                     "hover" => termy_core::config_core::TabCloseVisibility::Hover,
                     "always" => termy_core::config_core::TabCloseVisibility::Always,
                     _ => {
-                        return Err(
-                            t!("Tab close visibility must be active_hover, hover, or always")
-                                .to_string(),
-                        );
+                        return Err(t!(
+                            "Tab close visibility must be active_hover, hover, or always"
+                        )
+                        .to_string());
                     }
                 };
                 self.config.tab_close_visibility = parsed;

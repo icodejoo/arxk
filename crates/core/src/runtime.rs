@@ -791,7 +791,7 @@ fn quote_shell_program_if_needed(shell_path: &str) -> String {
     // Escape any embedded double-quotes inside the path, then wrap in outer quotes.
     // (Windows file names cannot legally contain '"', but we handle it defensively.)
     let escaped = shell_path.replace('"', "\\\"");
-    format!("\"{}\"", escaped)
+    format!("\"{escaped}\"")
 }
 
 fn login_shell_args(shell_path: &str) -> Vec<String> {
@@ -846,7 +846,10 @@ const POWERSHELL_CWD_REPORT_SCRIPT: &str = r#"if (-not $global:__TermyPromptWrap
 
 /// 判断给定的 shell 路径是不是 PowerShell（`pwsh` / `powershell`，忽略大小写与 `.exe`）。
 fn is_powershell_program(shell_path: &str) -> bool {
-    matches!(shell_program_stem(shell_path).as_str(), "pwsh" | "powershell")
+    matches!(
+        shell_program_stem(shell_path).as_str(),
+        "pwsh" | "powershell"
+    )
 }
 
 /// 构造带路径上报脚本的 PowerShell 交互启动参数。
@@ -912,15 +915,24 @@ fn apply_cwd_report_env(
     match shell_program_stem(&launch.program).as_str() {
         "cmd" => {
             let current = existing("PROMPT");
-            if current.as_deref().is_some_and(|v| v.contains(CWD_REPORT_MARKER)) {
+            if current
+                .as_deref()
+                .is_some_and(|v| v.contains(CWD_REPORT_MARKER))
+            {
                 return;
             }
             let base = current.unwrap_or_else(|| CMD_DEFAULT_PROMPT.to_string());
-            env_overrides.insert("PROMPT".to_string(), format!("{CMD_PROMPT_CWD_REPORT}{base}"));
+            env_overrides.insert(
+                "PROMPT".to_string(),
+                format!("{CMD_PROMPT_CWD_REPORT}{base}"),
+            );
         }
         "bash" => {
             let current = existing("PROMPT_COMMAND");
-            if current.as_deref().is_some_and(|v| v.contains(CWD_REPORT_MARKER)) {
+            if current
+                .as_deref()
+                .is_some_and(|v| v.contains(CWD_REPORT_MARKER))
+            {
                 return;
             }
             let command = match current {
@@ -2823,19 +2835,18 @@ fn terminal_event_from_osc(event: OscEvent) -> TerminalEvent {
 #[cfg(test)]
 mod tests {
     use super::{
-        POWERSHELL_CWD_REPORT_SCRIPT, apply_cwd_report_env, configured_shell_launch,
-        is_powershell_program,
-        BASH_PROMPT_COMMAND_CWD_REPORT, ResolvedTerminalLaunch, login_shell_args, powershell_interactive_args,
-        DEFAULT_TERM, EVENT_QUEUE_HARD_CAP, EVENT_QUEUE_SOFT_CAP, GHOSTTY_COMPAT_TERM_PROGRAM,
-        GHOSTTY_COMPAT_TERM_PROGRAM_VERSION, JsonEventListener, KittyGraphicsCursorTracker,
-        MAX_TERMINAL_COLS, MAX_TERMINAL_ROWS, MAX_TERMINAL_SCROLLBACK_HISTORY, RuntimeEvent,
-        TERMY_TERM_PROGRAM, Terminal, TerminalCursorState, TerminalCursorStyle,
+        BASH_PROMPT_COMMAND_CWD_REPORT, DEFAULT_TERM, EVENT_QUEUE_HARD_CAP, EVENT_QUEUE_SOFT_CAP,
+        GHOSTTY_COMPAT_TERM_PROGRAM, GHOSTTY_COMPAT_TERM_PROGRAM_VERSION, JsonEventListener,
+        KittyGraphicsCursorTracker, MAX_TERMINAL_COLS, MAX_TERMINAL_ROWS,
+        MAX_TERMINAL_SCROLLBACK_HISTORY, POWERSHELL_CWD_REPORT_SCRIPT, ResolvedTerminalLaunch,
+        RuntimeEvent, TERMY_TERM_PROGRAM, Terminal, TerminalCursorState, TerminalCursorStyle,
         TerminalDamageSnapshot, TerminalEvent, TerminalLaunch, TerminalOptions,
         TerminalRuntimeConfig, TerminalSize, TerminalWakeupNotifier, WindowsShell,
-        WorkingDirFallback, advance_terminal_text, capture_viewport_ranges_at_generation,
-        drain_runtime_events, normalize_working_directory_candidate,
-        resolve_launch_working_directory, resolve_shell_path, resolve_terminal_launch,
-        search_term_buffer, should_drop_event, stop_synchronized_update,
+        WorkingDirFallback, advance_terminal_text, apply_cwd_report_env,
+        capture_viewport_ranges_at_generation, configured_shell_launch, drain_runtime_events,
+        is_powershell_program, login_shell_args, normalize_working_directory_candidate,
+        powershell_interactive_args, resolve_launch_working_directory, resolve_shell_path,
+        resolve_terminal_launch, search_term_buffer, should_drop_event, stop_synchronized_update,
         terminal_environment_overrides, terminal_event_from_osc, user_home_dir,
     };
     #[cfg(target_os = "windows")]
@@ -4980,7 +4991,9 @@ mod tests {
     #[test]
     fn cmd_gets_prompt_prefix_that_reports_cwd() {
         let mut env = HashMap::new();
-        apply_cwd_report_env(&mut env, &launch_of(r"C:\Windows\System32\cmd.exe"), |_| None);
+        apply_cwd_report_env(&mut env, &launch_of(r"C:\Windows\System32\cmd.exe"), |_| {
+            None
+        });
         assert_eq!(env["PROMPT"], r#"$E]9;9;"$P"$E\$P$G"#);
     }
 
@@ -5002,7 +5015,11 @@ mod tests {
     #[test]
     fn bash_gets_prompt_command_and_keeps_existing_hook() {
         let mut env = HashMap::new();
-        apply_cwd_report_env(&mut env, &launch_of("C:/Program Files/Git/bin/bash.exe"), |_| None);
+        apply_cwd_report_env(
+            &mut env,
+            &launch_of("C:/Program Files/Git/bin/bash.exe"),
+            |_| None,
+        );
         assert_eq!(env["PROMPT_COMMAND"], BASH_PROMPT_COMMAND_CWD_REPORT);
 
         let mut env = HashMap::new();

@@ -33,7 +33,10 @@ fn build_menu(root: MenuRoot, capabilities: CommandCapabilities, simple_mode: bo
 
     #[cfg(target_os = "macos")]
     if root == MenuRoot::App {
-        items.push(MenuItem::os_submenu(termy::i18n::tr("Services"), SystemMenuType::Services));
+        items.push(MenuItem::os_submenu(
+            termy::i18n::tr("Services"),
+            SystemMenuType::Services,
+        ));
         if !entries.is_empty() {
             items.push(MenuItem::separator());
         }
@@ -317,9 +320,9 @@ mod tests {
                 "<separator>",
                 "Close Pane or Tab",
             ]
-                .into_iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
+            .into_iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
         );
     }
 

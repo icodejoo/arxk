@@ -466,40 +466,40 @@ impl TerminalView {
             }))
             .child(
                 div().flex_none().w(px(TABBAR_ACTION_SLOT_WIDTH)).child(
-                div()
-                    .id("tabbar-new-tab-button")
-                    .w_full()
-                    .h(px(TABBAR_NEW_TAB_BUTTON_SIZE.min(TABBAR_HEIGHT)))
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .rounded(px(TAB_ITEM_RADIUS_HORIZONTAL))
-                    .bg(button_bg)
-                    .text_color(icon_color)
-                    .hover(move |style| style.bg(button_hover_bg))
-                    .cursor_pointer()
-                    .on_mouse_down(
-                        MouseButton::Left,
-                        cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
-                            window.prevent_default();
-                            this.handle_new_tab_button_primary(cx);
-                            cx.stop_propagation();
-                        }),
-                    )
-                    .on_mouse_down(
-                        MouseButton::Right,
-                        cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
-                            window.prevent_default();
-                            this.handle_new_tab_button(menu_anchor, cx);
-                            cx.stop_propagation();
-                        }),
-                    )
-                    .child(
-                        gpui_kit::svg()
-                            .path(gpui_kit::SharedString::from("icons/tab_strip/plus.svg"))
-                            .size(px(13.0))
-                            .text_color(icon_color),
-                    ),
+                    div()
+                        .id("tabbar-new-tab-button")
+                        .w_full()
+                        .h(px(TABBAR_NEW_TAB_BUTTON_SIZE.min(TABBAR_HEIGHT)))
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .rounded(px(TAB_ITEM_RADIUS_HORIZONTAL))
+                        .bg(button_bg)
+                        .text_color(icon_color)
+                        .hover(move |style| style.bg(button_hover_bg))
+                        .cursor_pointer()
+                        .on_mouse_down(
+                            MouseButton::Left,
+                            cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
+                                window.prevent_default();
+                                this.handle_new_tab_button_primary(cx);
+                                cx.stop_propagation();
+                            }),
+                        )
+                        .on_mouse_down(
+                            MouseButton::Right,
+                            cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
+                                window.prevent_default();
+                                this.handle_new_tab_button(menu_anchor, cx);
+                                cx.stop_propagation();
+                            }),
+                        )
+                        .child(
+                            gpui_kit::svg()
+                                .path(gpui_kit::SharedString::from("icons/tab_strip/plus.svg"))
+                                .size(px(13.0))
+                                .text_color(icon_color),
+                        ),
                 ),
             )
             .into_any_element()

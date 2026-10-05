@@ -99,7 +99,11 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for color in TabColor::ALL {
             let (r, g, b) = color.rgb();
-            assert!([r, g, b].iter().all(|channel| (0.0..=1.0).contains(channel)));
+            assert!(
+                [r, g, b]
+                    .iter()
+                    .all(|channel| (0.0..=1.0).contains(channel))
+            );
             assert!(seen.insert(color), "重复预设: {color:?}");
         }
         assert_eq!(seen.len(), 8);

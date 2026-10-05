@@ -133,7 +133,11 @@ impl CommandPaletteItem {
         };
 
         Self {
-            title: t!("Rename \"{current}\" -> \"{next}\"", current = current_session_name, next = rendered_next_name),
+            title: t!(
+                "Rename \"{current}\" -> \"{next}\"",
+                current = current_session_name,
+                next = rendered_next_name
+            ),
             keywords: format!(
                 "tmux rename session {} {}",
                 current_session_name.replace('-', " "),

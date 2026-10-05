@@ -129,7 +129,12 @@ pub(crate) fn open_new_tab_in_main_window(
         .update(cx, |view, window, cx| {
             view.open_new_tab_from_deeplink(command.as_deref(), dir.as_deref(), window, cx);
         })
-        .map_err(|error| t!("Failed to open new tab from deeplink: {error}", error = error))?;
+        .map_err(|error| {
+            t!(
+                "Failed to open new tab from deeplink: {error}",
+                error = error
+            )
+        })?;
 
     Ok(())
 }

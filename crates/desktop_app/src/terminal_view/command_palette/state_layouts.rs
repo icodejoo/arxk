@@ -56,7 +56,8 @@ impl CommandPaletteItem {
             title: exists_title,
             keywords: format!("saved layout save {}", trimmed.replace('-', " ")),
             enabled,
-            status_hint: (!enabled).then(|| termy::i18n::tr(SAVED_LAYOUT_NAME_REQUIRED_HINT).to_string()),
+            status_hint: (!enabled)
+                .then(|| termy::i18n::tr(SAVED_LAYOUT_NAME_REQUIRED_HINT).to_string()),
             tmux_status_hint: None,
             kind: CommandPaletteItemKind::SavedLayoutSaveAs {
                 layout_name: trimmed.to_string(),
@@ -109,7 +110,11 @@ impl CommandPaletteItem {
             next_layout_name.as_str()
         };
         Self {
-            title: t!("Rename \"{current}\" -> \"{next}\"", current = current_layout_name, next = rendered_next),
+            title: t!(
+                "Rename \"{current}\" -> \"{next}\"",
+                current = current_layout_name,
+                next = rendered_next
+            ),
             keywords: format!(
                 "saved layout rename {} {}",
                 current_layout_name.replace('-', " "),

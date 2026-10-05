@@ -195,7 +195,10 @@ impl TerminalReplyHost for GpuiClipboardReplyHost<'_, '_> {
         let remember_permission = if request.permission_granted || request.mime_types.is_empty() {
             false
         } else {
-            let name = request.name.as_deref().unwrap_or(t!("A terminal application"));
+            let name = request
+                .name
+                .as_deref()
+                .unwrap_or(t!("A terminal application"));
             let formats = request.mime_types.join(", ");
             let message = t!(
                 "{name} wants to read {formats} from your {location}.",

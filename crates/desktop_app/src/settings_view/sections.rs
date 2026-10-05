@@ -1581,12 +1581,9 @@ impl SettingsWindow {
             .flex()
             .flex_col()
             .gap_2()
-            .child(
-                div()
-                    .text_sm()
-                    .text_color(text_muted)
-                    .child(t!("Edit the config file directly for settings not shown here:")),
-            )
+            .child(div().text_sm().text_color(text_muted).child(t!(
+                "Edit the config file directly for settings not shown here:"
+            )))
             .child(
                 div()
                     .text_xs()

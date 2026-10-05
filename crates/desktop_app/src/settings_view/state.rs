@@ -840,12 +840,8 @@ impl SettingsWindow {
         else {
             return raw_value.to_string();
         };
-        Self::dropdown_option_for_enum_choice(
-            setting,
-            choice.value,
-            termy::i18n::tr(choice.label),
-        )
-        .display_text()
+        Self::dropdown_option_for_enum_choice(setting, choice.value, termy::i18n::tr(choice.label))
+            .display_text()
     }
 
     pub(super) fn apply_dropdown_selection(

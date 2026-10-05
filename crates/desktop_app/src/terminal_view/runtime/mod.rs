@@ -31,7 +31,11 @@ pub(super) enum RuntimeKind {
 
 fn tmux_startup_fallback_message(reason: &str, error: &anyhow::Error) -> String {
     let error = format!("{error:#}");
-    t!("tmux is unavailable ({reason}: {error}); starting in native mode", reason = reason, error = error)
+    t!(
+        "tmux is unavailable ({reason}: {error}); starting in native mode",
+        reason = reason,
+        error = error
+    )
 }
 
 impl RuntimeKind {

@@ -455,10 +455,10 @@ fn extract_local_path_from_file_url(raw_path: &str) -> Option<String> {
 
 #[cfg(windows)]
 fn extract_local_path_from_file_url(raw_path: &str) -> Option<String> {
-    if let Some(stripped) = raw_path.strip_prefix('/') {
-        if has_windows_drive_prefix(stripped) {
-            return Some(stripped.to_string());
-        }
+    if let Some(stripped) = raw_path.strip_prefix('/')
+        && has_windows_drive_prefix(stripped)
+    {
+        return Some(stripped.to_string());
     }
 
     if has_windows_drive_prefix(raw_path) || Path::new(raw_path).is_absolute() {
@@ -470,10 +470,10 @@ fn extract_local_path_from_file_url(raw_path: &str) -> Option<String> {
         return None;
     }
 
-    if let Some(stripped) = path.strip_prefix('/') {
-        if has_windows_drive_prefix(stripped) {
-            return Some(stripped.to_string());
-        }
+    if let Some(stripped) = path.strip_prefix('/')
+        && has_windows_drive_prefix(stripped)
+    {
+        return Some(stripped.to_string());
     }
 
     if has_windows_drive_prefix(path) || Path::new(path).is_absolute() {
@@ -534,10 +534,10 @@ fn canonicalize_path_to_file_url_uncached(token: &str) -> Option<String> {
         return None;
     }
 
-    if let Some(stripped) = raw_path.strip_prefix('/') {
-        if has_windows_drive_prefix(stripped) {
-            raw_path = stripped;
-        }
+    if let Some(stripped) = raw_path.strip_prefix('/')
+        && has_windows_drive_prefix(stripped)
+    {
+        raw_path = stripped;
     }
 
     if !has_windows_drive_prefix(raw_path) && !Path::new(raw_path).is_absolute() {

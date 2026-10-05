@@ -245,7 +245,8 @@ impl TerminalView {
             tab_colors::TAB_TINT_IDLE_ALPHA
         };
         if let Some(tint) = tab_tint {
-            tab_bg = tint.with_alpha(tint_base_alpha + tab_colors::TAB_TINT_HOVER_BOOST * hover_progress);
+            tab_bg = tint
+                .with_alpha(tint_base_alpha + tab_colors::TAB_TINT_HOVER_BOOST * hover_progress);
             tab_bg.a *= anim;
         }
 

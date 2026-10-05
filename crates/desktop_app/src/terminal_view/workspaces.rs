@@ -594,7 +594,10 @@ impl TerminalView {
                 .filter_map(|pane| pane.session_id.as_deref())
             {
                 if let Err(error) = client.close(id) {
-                    crate::ui::toast::error(t!("Could not close workspace session: {error}", error = error));
+                    crate::ui::toast::error(t!(
+                        "Could not close workspace session: {error}",
+                        error = error
+                    ));
                     return false;
                 }
             }

@@ -45,8 +45,12 @@ pub(crate) fn initialize(config: &AppConfig, cx: &mut App) -> Result<(), String>
         .ok_or(t!("config directory is missing"))?
         .join("multiplexer");
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
-    let client = connect_or_start(&root, &executable)
-        .map_err(|error| t!("Cannot start the built-in multiplexer: {error}", error = error))?;
+    let client = connect_or_start(&root, &executable).map_err(|error| {
+        t!(
+            "Cannot start the built-in multiplexer: {error}",
+            error = error
+        )
+    })?;
     install(client, cx)
 }
 
@@ -426,6 +430,7 @@ fn reconcile(saved: &mut SavedState, live: &[termy_core::multiplexer::PaneInfo])
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 pub(crate) fn install_for_test(client: SessionClient, cx: &mut App) -> Result<(), String> {
     install(client, cx)
 }

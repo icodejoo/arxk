@@ -40,7 +40,11 @@ impl TerminalView {
         }
 
         if let Err(error) = action(&self.tmux_runtime().client) {
-            crate::ui::toast::error(t!("{prefix}: {error}", prefix = error_prefix, error = error));
+            crate::ui::toast::error(t!(
+                "{prefix}: {error}",
+                prefix = error_prefix,
+                error = error
+            ));
             return false;
         }
 
@@ -263,7 +267,9 @@ impl TerminalView {
             .get(self.session.active_tab)
             .map(|tab| tab.window_id.clone())
         else {
-            crate::ui::toast::error(t!("Failed to create tab: active tmux window is unavailable"));
+            crate::ui::toast::error(t!(
+                "Failed to create tab: active tmux window is unavailable"
+            ));
             return false;
         };
         let working_dir = self.preferred_working_dir_for_new_session(working_dir, cx);

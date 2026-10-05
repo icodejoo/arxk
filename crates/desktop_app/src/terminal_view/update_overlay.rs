@@ -967,7 +967,11 @@ impl TerminalView {
         style: &MarkdownStyle,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let fallback = if alt.trim().is_empty() { t!("Image") } else { alt };
+        let fallback = if alt.trim().is_empty() {
+            t!("Image")
+        } else {
+            alt
+        };
         match self.release_notes_images.get(url) {
             Some(MarkdownImageState::Ready(source)) => gpui_kit::img(source.clone())
                 .id(gpui_kit::ElementId::from(gpui_kit::SharedString::from(

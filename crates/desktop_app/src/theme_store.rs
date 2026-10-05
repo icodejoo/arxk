@@ -130,7 +130,10 @@ pub(crate) fn fetch_theme_store_themes_blocking(
                 }
                 return Ok((cache.themes, false));
             }
-            Err(t!("Server returned 304 Not Modified but no matching local cache exists").to_string())
+            Err(
+                t!("Server returned 304 Not Modified but no matching local cache exists")
+                    .to_string(),
+            )
         }
         Ok(response) => {
             let etag = response.header("etag").map(|s| s.to_string());
@@ -241,7 +244,12 @@ pub(crate) fn fetch_theme_for_deeplink_blocking(slug: &str) -> Result<ThemeStore
     themes
         .into_iter()
         .find(|theme| theme.slug.eq_ignore_ascii_case(&slug))
-        .ok_or_else(|| t!("Theme '{slug}' was not found in the theme registry", slug = slug))
+        .ok_or_else(|| {
+            t!(
+                "Theme '{slug}' was not found in the theme registry",
+                slug = slug
+            )
+        })
 }
 
 pub(crate) fn logout_auth_session_blocking(
@@ -257,7 +265,10 @@ pub(crate) fn logout_auth_session_blocking(
     match response {
         Ok(_) => Ok(()),
         Err(ureq::Error::Status(401, _)) => Ok(()),
-        Err(error) => Err(t!("Failed to logout from theme store: {error}", error = error)),
+        Err(error) => Err(t!(
+            "Failed to logout from theme store: {error}",
+            error = error
+        )),
     }
 }
 
@@ -347,8 +358,12 @@ pub(crate) fn persist_installed_theme_versions(
     let Some(parent) = path.parent() else {
         return Err(t!("Invalid installed-theme metadata path").to_string());
     };
-    std::fs::create_dir_all(parent)
-        .map_err(|error| t!("Failed to create metadata directory: {error}", error = error))?;
+    std::fs::create_dir_all(parent).map_err(|error| {
+        t!(
+            "Failed to create metadata directory: {error}",
+            error = error
+        )
+    })?;
 
     let mut sorted_entries: Vec<(String, String)> = versions
         .iter()
@@ -356,31 +371,56 @@ pub(crate) fn persist_installed_theme_versions(
         .collect();
     sorted_entries.sort_unstable_by(|left, right| left.0.cmp(&right.0));
     let normalized: HashMap<String, String> = sorted_entries.into_iter().collect();
-    let contents = serde_json::to_string_pretty(&normalized)
-        .map_err(|error| t!("Failed to serialize installed themes: {error}", error = error))?;
-    std::fs::write(&path, contents)
-        .map_err(|error| t!("Failed to write installed themes metadata: {error}", error = error))?;
+    let contents = serde_json::to_string_pretty(&normalized).map_err(|error| {
+        t!(
+            "Failed to serialize installed themes: {error}",
+            error = error
+        )
+    })?;
+    std::fs::write(&path, contents).map_err(|error| {
+        t!(
+            "Failed to write installed themes metadata: {error}",
+            error = error
+        )
+    })?;
     Ok(())
 }
 
 pub(crate) fn install_theme_from_store_blocking(
     theme: ThemeStoreTheme,
 ) -> Result<InstalledTheme, String> {
-    let file_url = theme
-        .file_url
-        .clone()
-        .ok_or_else(|| t!("Theme '{slug}' has no downloadable file URL", slug = theme.slug))?;
+    let file_url = theme.file_url.clone().ok_or_else(|| {
+        t!(
+            "Theme '{slug}' has no downloadable file URL",
+            slug = theme.slug
+        )
+    })?;
 
     let response = ureq::get(&file_url)
         .set("Accept", "application/json")
         .call()
-        .map_err(|error| t!("Failed to download theme '{slug}': {error}", slug = theme.slug, error = error))?;
-    let contents = response
-        .into_string()
-        .map_err(|error| t!("Failed to read theme '{slug}': {error}", slug = theme.slug, error = error))?;
+        .map_err(|error| {
+            t!(
+                "Failed to download theme '{slug}': {error}",
+                slug = theme.slug,
+                error = error
+            )
+        })?;
+    let contents = response.into_string().map_err(|error| {
+        t!(
+            "Failed to read theme '{slug}': {error}",
+            slug = theme.slug,
+            error = error
+        )
+    })?;
 
-    parse_theme_colors_json(&contents)
-        .map_err(|error| t!("Failed to validate theme '{name}': {error}", name = theme.name, error = error))?;
+    parse_theme_colors_json(&contents).map_err(|error| {
+        t!(
+            "Failed to validate theme '{name}': {error}",
+            name = theme.name,
+            error = error
+        )
+    })?;
 
     let normalized_slug = theme.slug.trim().to_ascii_lowercase();
     let installed_version = theme.latest_version.clone().unwrap_or_default();
@@ -390,10 +430,18 @@ pub(crate) fn install_theme_from_store_blocking(
     let Some(parent) = path.parent() else {
         return Err(t!("Invalid installed theme path").to_string());
     };
-    std::fs::create_dir_all(parent)
-        .map_err(|error| t!("Failed to create installed theme directory: {error}", error = error))?;
-    std::fs::write(&path, contents)
-        .map_err(|error| t!("Failed to write installed theme file: {error}", error = error))?;
+    std::fs::create_dir_all(parent).map_err(|error| {
+        t!(
+            "Failed to create installed theme directory: {error}",
+            error = error
+        )
+    })?;
+    std::fs::write(&path, contents).map_err(|error| {
+        t!(
+            "Failed to write installed theme file: {error}",
+            error = error
+        )
+    })?;
 
     let mut installed_versions = load_installed_theme_versions();
     installed_versions.insert(normalized_slug.clone(), installed_version.clone());
@@ -437,8 +485,12 @@ pub(crate) fn uninstall_installed_theme(slug: &str) -> Result<bool, String> {
     if let Some(path) = installed_theme_file_path(&key)
         && path.exists()
     {
-        std::fs::remove_file(&path)
-            .map_err(|error| t!("Failed to remove installed theme file: {error}", error = error))?;
+        std::fs::remove_file(&path).map_err(|error| {
+            t!(
+                "Failed to remove installed theme file: {error}",
+                error = error
+            )
+        })?;
     }
 
     persist_installed_theme_versions(&installed_versions)?;

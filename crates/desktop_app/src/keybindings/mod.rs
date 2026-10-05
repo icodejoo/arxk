@@ -400,9 +400,15 @@ fn report_warnings(warnings: &[KeybindWarning]) {
 
     if keybind_warning_count > 0 {
         let message = if keybind_warning_count == 1 {
-            t!("Ignored {count} keybind line", count = keybind_warning_count)
+            t!(
+                "Ignored {count} keybind line",
+                count = keybind_warning_count
+            )
         } else {
-            t!("Ignored {count} keybind lines", count = keybind_warning_count)
+            t!(
+                "Ignored {count} keybind lines",
+                count = keybind_warning_count
+            )
         };
         crate::ui::toast::warning(message);
     }

@@ -97,7 +97,10 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Find in terminal", "在终端中查找"),
     ("Case", "区分大小写"),
     ("Regex", "正则"),
-    ("↵ next  ·  ⇧↵ prev  ·  esc", "↵ 下一个  ·  ⇧↵ 上一个  ·  esc"),
+    (
+        "↵ next  ·  ⇧↵ prev  ·  esc",
+        "↵ 下一个  ·  ⇧↵ 上一个  ·  esc",
+    ),
     // 更新浮层与发行说明
     ("Restart failed: {error}", "重启失败：{error}"),
     ("Version {version}", "版本 {version}"),
@@ -176,8 +179,14 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "无法创建 macOS 文件拖放浮层视图。",
     ),
     // tmux 运行时
-    ("failed to start tmux control runtime", "无法启动 tmux 控制运行时"),
-    ("failed to fetch initial tmux snapshot", "无法获取初始 tmux 快照"),
+    (
+        "failed to start tmux control runtime",
+        "无法启动 tmux 控制运行时",
+    ),
+    (
+        "failed to fetch initial tmux snapshot",
+        "无法获取初始 tmux 快照",
+    ),
     ("{prefix}: {error}", "{prefix}：{error}"),
     ("Input write failed: {error}", "写入输入失败：{error}"),
     ("Failed to resize pane", "调整窗格大小失败"),
@@ -268,7 +277,10 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "tmux reconnect failed while cleaning previous client: {error}; failed to cleanup new client: {cleanup_error}",
         "tmux 重新连接失败，清理旧客户端时出错：{error}；清理新客户端也失败了：{cleanup_error}",
     ),
-    ("tmux reconnect failed: {error}", "tmux 重新连接失败：{error}"),
+    (
+        "tmux reconnect failed: {error}",
+        "tmux 重新连接失败：{error}",
+    ),
     ("tmux resize failed: {error}", "tmux 调整大小失败：{error}"),
     // 标签页与窗格生命周期
     (

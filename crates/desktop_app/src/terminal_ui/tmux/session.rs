@@ -109,19 +109,19 @@ pub(crate) fn verify_tmux_version(
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let version = stdout
-        .split_whitespace()
-        .nth(1)
-        .ok_or_else(|| anyhow!(t!(
-                "unable to parse tmux version output: '{output}'",
-                output = stdout.trim()
-            )))?;
+    let version = stdout.split_whitespace().nth(1).ok_or_else(|| {
+        anyhow!(t!(
+            "unable to parse tmux version output: '{output}'",
+            output = stdout.trim()
+        ))
+    })?;
 
-    let (major, minor) = parse_version_prefix(version)
-        .ok_or_else(|| anyhow!(t!(
-                "unsupported tmux version format: '{version}'",
-                version = version
-            )))?;
+    let (major, minor) = parse_version_prefix(version).ok_or_else(|| {
+        anyhow!(t!(
+            "unsupported tmux version format: '{version}'",
+            version = version
+        ))
+    })?;
     if (major, minor) < (minimum_major, minimum_minor) {
         return Err(anyhow!(t!(
             "tmux {major}.{minor}+ required, found {version}",

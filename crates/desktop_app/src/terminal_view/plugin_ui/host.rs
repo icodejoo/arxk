@@ -20,7 +20,13 @@ impl TerminalView {
         let (descriptor, current_revision) = self
             .plugin_runtime
             .view_with_revision(plugin_id, view_id)
-            .ok_or_else(|| t!("Plugin view {plugin_id}.{view_id} is unavailable", plugin_id = plugin_id, view_id = view_id))?;
+            .ok_or_else(|| {
+                t!(
+                    "Plugin view {plugin_id}.{view_id} is unavailable",
+                    plugin_id = plugin_id,
+                    view_id = view_id
+                )
+            })?;
         if current_revision != revision {
             return Err(t!("Plugin changed before its view could open; try again").to_string());
         }
@@ -77,18 +83,23 @@ impl TerminalView {
         params: serde_json::Value,
         cx: &mut Context<Self>,
     ) -> Result<(), String> {
-        let plugin_ui = self
-            .plugin_ui
-            .as_ref()
-            .cloned()
-            .ok_or_else(|| t!("Plugin returned view.replace without an open view").to_string())?;
+        let plugin_ui =
+            self.plugin_ui.as_ref().cloned().ok_or_else(|| {
+                t!("Plugin returned view.replace without an open view").to_string()
+            })?;
         if plugin_ui.read(cx).descriptor.plugin_id != plugin_id {
             return Err(t!("Plugin cannot replace another plugin's view").to_string());
         }
         let (descriptor, current_revision) = self
             .plugin_runtime
             .view_with_revision(plugin_id, view_id)
-            .ok_or_else(|| t!("Plugin view {plugin_id}.{view_id} is unavailable", plugin_id = plugin_id, view_id = view_id))?;
+            .ok_or_else(|| {
+                t!(
+                    "Plugin view {plugin_id}.{view_id} is unavailable",
+                    plugin_id = plugin_id,
+                    view_id = view_id
+                )
+            })?;
         if current_revision != revision {
             return Err(t!("Plugin changed before its view could be replaced").to_string());
         }

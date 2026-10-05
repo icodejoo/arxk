@@ -343,7 +343,11 @@ impl TerminalView {
             (t!("Host"), host_name),
             (
                 t!("CPU"),
-                t!("{cpu_brand} ({cpu_count} cores)", cpu_brand = cpu_brand, cpu_count = cpu_count),
+                t!(
+                    "{cpu_brand} ({cpu_count} cores)",
+                    cpu_brand = cpu_brand,
+                    cpu_count = cpu_count
+                ),
             ),
             (
                 t!("Memory"),
@@ -513,7 +517,10 @@ impl TerminalView {
                         items.insert(
                             2.min(items.len()),
                             CommandPaletteItem {
-                                title: t!("New Task for \"{layout_name}\"…", layout_name = layout_name),
+                                title: t!(
+                                    "New Task for \"{layout_name}\"…",
+                                    layout_name = layout_name
+                                ),
                                 keywords: format!(
                                     "task new create add layout {}",
                                     layout_name.replace('-', " ")
@@ -529,7 +536,10 @@ impl TerminalView {
                         items.insert(
                             3.min(items.len()),
                             CommandPaletteItem {
-                                title: t!("Save Current Command for \"{layout_name}\"…", layout_name = layout_name),
+                                title: t!(
+                                    "Save Current Command for \"{layout_name}\"…",
+                                    layout_name = layout_name
+                                ),
                                 keywords: format!(
                                     "task save current command active layout {}",
                                     layout_name.replace('-', " ")
@@ -588,7 +598,11 @@ impl TerminalView {
 
         CommandPaletteItem {
             title: match layout_name.as_deref() {
-                Some(layout_name) => t!("Save Task \"{task_name}\" for \"{layout_name}\"", task_name = task_name, layout_name = layout_name),
+                Some(layout_name) => t!(
+                    "Save Task \"{task_name}\" for \"{layout_name}\"",
+                    task_name = task_name,
+                    layout_name = layout_name
+                ),
                 None => t!("Save Task \"{task_name}\"", task_name = task_name),
             },
             keywords: format!(
@@ -1425,7 +1439,10 @@ impl TerminalView {
     ) {
         let command = command.trim();
         if command.is_empty() {
-            crate::ui::toast::error(t!("Task \"{task_name}\" has no command", task_name = task_name));
+            crate::ui::toast::error(t!(
+                "Task \"{task_name}\" has no command",
+                task_name = task_name
+            ));
             self.notify_overlay(cx);
             return;
         }

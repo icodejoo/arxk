@@ -271,7 +271,7 @@ mod tests {
         // 不同区域各自翻译了同一个词是允许的，但译文必须一致。
         let mut seen: HashMap<&str, &str> = HashMap::new();
         for table in ZH_TABLES {
-            for (english, chinese) in table.iter() {
+            for (english, chinese) in *table {
                 assert!(!english.is_empty(), "空的原文 key");
                 assert!(!chinese.trim().is_empty(), "译文为空: {english}");
                 if let Some(previous) = seen.insert(*english, *chinese) {
@@ -284,7 +284,7 @@ mod tests {
     #[test]
     fn translations_keep_exactly_the_same_placeholders() {
         for table in ZH_TABLES {
-            for (english, chinese) in table.iter() {
+            for (english, chinese) in *table {
                 assert_eq!(
                     placeholders(english),
                     placeholders(chinese),

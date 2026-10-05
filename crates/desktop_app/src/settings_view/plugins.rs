@@ -1350,9 +1350,9 @@ impl SettingsWindow {
                     .text_color(self.text_primary())
                     .child(t!("Trusted local code")),
             )
-            .child(div().text_xs().text_color(self.text_muted()).child(
-                t!("Plugins run through Bun with your user permissions. Install only code you trust."),
-            ))
+            .child(div().text_xs().text_color(self.text_muted()).child(t!(
+                "Plugins run through Bun with your user permissions. Install only code you trust."
+            )))
             .into_any_element()
     }
 }

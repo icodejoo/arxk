@@ -87,12 +87,12 @@ mod runtime;
 mod scrollbar;
 mod search;
 mod session;
+mod shortcuts_popup;
 mod surface;
+mod tab_colors;
 pub(crate) mod tab_strip;
 mod tabs;
 mod titles;
-mod shortcuts_popup;
-mod tab_colors;
 mod update_overlay;
 mod update_toasts;
 mod workspaces;
@@ -2997,9 +2997,9 @@ impl TerminalView {
             && !self.warned_blur_unsupported_once
         {
             self.warned_blur_unsupported_once = true;
-            crate::ui::toast::warning(
-                t!("Background blur is unsupported in this session; using transparency"),
-            );
+            crate::ui::toast::warning(t!(
+                "Background blur is unsupported in this session; using transparency"
+            ));
         }
     }
 
@@ -3497,7 +3497,10 @@ impl TerminalView {
                 Ok(()) => true,
                 Err(error) => {
                     log::error!("Failed to restore multiplexer tabs: {error}");
-                    crate::ui::toast::error(t!("Could not restore multiplexer tabs: {error}", error = error));
+                    crate::ui::toast::error(t!(
+                        "Could not restore multiplexer tabs: {error}",
+                        error = error
+                    ));
                     false
                 }
             }
@@ -3835,15 +3838,15 @@ impl TerminalView {
         let tmux_enabled_changed = config.tmux_enabled != self.tmux_enabled_config;
         #[cfg(not(target_os = "windows"))]
         if next_runtime_kind != self.runtime_kind() && tmux_enabled_changed {
-            crate::ui::toast::info(
-                t!("tmux startup default saved. Use Tmux Sessions to switch runtime now."),
-            );
+            crate::ui::toast::info(t!(
+                "tmux startup default saved. Use Tmux Sessions to switch runtime now."
+            ));
         }
         if self.multiplexer_enabled_config != config.multiplexer_enabled {
             self.multiplexer_enabled_config = config.multiplexer_enabled;
-            crate::ui::toast::info(
-                t!("Built-in multiplexer setting saved. Restart Termy to apply it."),
-            );
+            crate::ui::toast::info(t!(
+                "Built-in multiplexer setting saved. Restart Termy to apply it."
+            ));
         }
         self.tmux_enabled_config = config.tmux_enabled;
         let native_tab_persistence_changed =

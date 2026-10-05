@@ -2508,7 +2508,11 @@ impl TerminalView {
                 a: 1.0,
             };
             let hover_bg = overlay_style.chrome_panel_cursor(0.22);
-            let pin_label = if state.pinned { t!("Unpin Tab") } else { t!("Pin Tab") };
+            let pin_label = if state.pinned {
+                t!("Unpin Tab")
+            } else {
+                t!("Pin Tab")
+            };
             // 标签颜色色块：第一个空心圈是“恢复默认”，其后是各预设色；当前色带高亮描边。
             let current_tab_color = self.tab_colors.get(&state.tab_id).copied();
             let mut tab_color_swatches = Vec::<AnyElement>::new();
@@ -2516,10 +2520,10 @@ impl TerminalView {
                 let tab_id = state.tab_id;
                 let selected = current_tab_color == color;
                 let ring = if selected { text_active } else { text_disabled };
-                let swatch_id = format!("tab-context-menu-color-{}", color.map_or_else(
-                    || "none".to_string(),
-                    |color| format!("{color:?}"),
-                ));
+                let swatch_id = format!(
+                    "tab-context-menu-color-{}",
+                    color.map_or_else(|| "none".to_string(), |color| format!("{color:?}"),)
+                );
                 tab_color_swatches.push(
                     div()
                         .id(SharedString::from(swatch_id))
@@ -2529,7 +2533,12 @@ impl TerminalView {
                         .rounded_full()
                         .border_1()
                         .border_color(if color.is_some() && !selected {
-                            gpui_kit::Rgba { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }
+                            gpui_kit::Rgba {
+                                r: 0.0,
+                                g: 0.0,
+                                b: 0.0,
+                                a: 0.0,
+                            }
                         } else {
                             ring
                         })

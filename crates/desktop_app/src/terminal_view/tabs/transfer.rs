@@ -201,7 +201,9 @@ impl TerminalView {
                 })
                 .map_err(|error| error.to_string())?;
             if !compatible {
-                return Err(t!("Move this tab into a window using the same terminal runtime").into());
+                return Err(
+                    t!("Move this tab into a window using the same terminal runtime").into(),
+                );
             }
             handle
         } else {

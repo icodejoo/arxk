@@ -17,7 +17,9 @@ impl SettingsWindow {
                 .unwrap_or_else(|poison| poison.into_inner());
             *cache
                 .entry(title)
-                .or_insert_with_key(|key| -> &'static str { Box::leak(key.clone().into_boxed_str()) })
+                .or_insert_with_key(|key| -> &'static str {
+                    Box::leak(key.clone().into_boxed_str())
+                })
         };
         termy::i18n::tr(interned).to_string()
     }

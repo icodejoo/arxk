@@ -4,6 +4,9 @@ use super::render_palette::TabStripPalette;
 use super::render_tab_item::TabItemRenderInput;
 use super::state::TabStripOrientation;
 
+/// 侧边栏图标按钮的右键回调。
+type SidebarRightClick = Box<dyn Fn(&mut TerminalView, &mut Context<TerminalView>)>;
+
 impl TerminalView {
     /// Toggle the right-side tab sidebar between expanded and collapsed (a thin
     /// rail). Marks the layout dirty so the terminal grid re-sizes to reclaim /
@@ -130,7 +133,7 @@ impl TerminalView {
                     cx,
                     |this, cx| this.handle_new_tab_button_primary(cx),
                     Some(Box::new(move |this, cx| {
-                        this.handle_new_tab_button(menu_anchor, cx)
+                        this.handle_new_tab_button(menu_anchor, cx);
                     })),
                 )
             })
@@ -144,7 +147,7 @@ impl TerminalView {
         palette: &TabStripPalette,
         cx: &mut Context<Self>,
         on_click: impl Fn(&mut Self, &mut Context<Self>) + 'static,
-        on_right_click: Option<Box<dyn Fn(&mut Self, &mut Context<Self>)>>,
+        on_right_click: Option<SidebarRightClick>,
     ) -> AnyElement {
         let mut button_bg = palette.hovered_tab_bg;
         button_bg.a = 0.0;

@@ -246,9 +246,11 @@ impl TerminalView {
     pub(crate) fn pane_display_title(&self, raw: &str) -> Option<String> {
         let raw = raw.trim();
         let text = match self.parse_explicit_title(raw) {
-            Some(ExplicitTitlePayload::Prompt { title, .. })
-            | Some(ExplicitTitlePayload::Command { title, .. })
-            | Some(ExplicitTitlePayload::Title(title)) => title,
+            Some(
+                ExplicitTitlePayload::Prompt { title, .. }
+                | ExplicitTitlePayload::Command { title, .. }
+                | ExplicitTitlePayload::Title(title),
+            ) => title,
             None => raw.to_string(),
         };
         let text = Self::truncate_tab_title(text.trim());
@@ -766,6 +768,7 @@ mod tests {
         assert!(title.is_none());
     }
 
+    #[allow(clippy::unnecessary_wraps)]
     fn texts(left: &str, right: Option<&str>) -> Option<PaneLabelTexts> {
         Some(PaneLabelTexts {
             left: left.to_string(),
@@ -845,29 +848,53 @@ mod tests {
     fn clearing_manual_pane_title_falls_back_to_reported_title() {
         let mut manual = HashMap::new();
         let reported = map_of(&[("p1", "zsh")]);
-        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p1", "  build  "));
+        assert!(TerminalView::apply_manual_pane_title(
+            &mut manual,
+            "p1",
+            "  build  "
+        ));
         assert_eq!(
             TerminalView::resolve_pane_title(&manual, &reported, "p1"),
             Some("build")
         );
         // 重复提交相同名字不算变化。
-        assert!(!TerminalView::apply_manual_pane_title(&mut manual, "p1", "build"));
+        assert!(!TerminalView::apply_manual_pane_title(
+            &mut manual,
+            "p1",
+            "build"
+        ));
         // 空串清除手动名，恢复终端标题。
-        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p1", "   "));
+        assert!(TerminalView::apply_manual_pane_title(
+            &mut manual,
+            "p1",
+            "   "
+        ));
         assert_eq!(
             TerminalView::resolve_pane_title(&manual, &reported, "p1"),
             Some("zsh")
         );
-        assert!(!TerminalView::apply_manual_pane_title(&mut manual, "p1", ""));
+        assert!(!TerminalView::apply_manual_pane_title(
+            &mut manual,
+            "p1",
+            ""
+        ));
     }
 
     #[test]
     fn manual_pane_title_is_truncated_and_single_line() {
         let mut manual = HashMap::new();
         let long = "a".repeat(MAX_TAB_TITLE_CHARS + 20);
-        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p1", &long));
+        assert!(TerminalView::apply_manual_pane_title(
+            &mut manual,
+            "p1",
+            &long
+        ));
         assert_eq!(manual["p1"].chars().count(), MAX_TAB_TITLE_CHARS);
-        assert!(TerminalView::apply_manual_pane_title(&mut manual, "p2", "a\nb"));
+        assert!(TerminalView::apply_manual_pane_title(
+            &mut manual,
+            "p2",
+            "a\nb"
+        ));
         assert_eq!(manual["p2"], "a b");
     }
 
@@ -900,6 +927,9 @@ mod tests {
         let manual = map_of(&[("p1", "build")]);
         let reported = HashMap::new();
         let title = TerminalView::resolve_pane_title(&manual, &reported, "p1");
-        assert_eq!(TerminalView::pane_label_texts(title, None), texts("build", None));
+        assert_eq!(
+            TerminalView::pane_label_texts(title, None),
+            texts("build", None)
+        );
     }
 }

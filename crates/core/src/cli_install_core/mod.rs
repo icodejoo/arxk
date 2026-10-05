@@ -472,11 +472,11 @@ fn install_cli_binary() -> Result<PathBuf, String> {
 
     if let Some(parent) = target.parent() {
         std::fs::create_dir_all(parent)
-            .map_err(|error| format!("Failed to create directory: {}", error))?;
+            .map_err(|error| format!("Failed to create directory: {error}"))?;
     }
 
     std::fs::copy(&cli_source, &target)
-        .map_err(|error| format!("Failed to copy CLI binary: {}", error))?;
+        .map_err(|error| format!("Failed to copy CLI binary: {error}"))?;
 
     Ok(target)
 }

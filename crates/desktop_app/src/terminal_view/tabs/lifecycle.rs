@@ -431,9 +431,9 @@ impl TerminalView {
         match self.runtime_kind() {
             RuntimeKind::Tmux => {
                 if matches!(launch, Some(TerminalLaunch::Program { .. })) {
-                    crate::ui::toast::error(
-                        t!("Structured program launches are not supported in tmux tabs"),
-                    );
+                    crate::ui::toast::error(t!(
+                        "Structured program launches are not supported in tmux tabs"
+                    ));
                     return false;
                 }
                 let added = self.tmux_add_tab(working_dir, cx);
@@ -442,9 +442,9 @@ impl TerminalView {
                         let mut input = command.as_bytes().to_vec();
                         input.push(b'\n');
                         if !self.send_input_to_active_pane(&input) {
-                            crate::ui::toast::error(
-                                t!("Failed to send the plugin command to the new tmux tab"),
-                            );
+                            crate::ui::toast::error(t!(
+                                "Failed to send the plugin command to the new tmux tab"
+                            ));
                             return false;
                         }
                     }
@@ -495,9 +495,9 @@ impl TerminalView {
 
     pub(crate) fn add_ssh_tab(&mut self, host_id: &str, cx: &mut Context<Self>) -> bool {
         if self.runtime_kind() != RuntimeKind::Native {
-            crate::ui::toast::error(
-                t!("SSH hosts can only be opened from the native terminal runtime"),
-            );
+            crate::ui::toast::error(t!(
+                "SSH hosts can only be opened from the native terminal runtime"
+            ));
             return false;
         }
 
@@ -539,7 +539,12 @@ impl TerminalView {
         };
         if saved_secret_available {
             let askpass = std::env::current_exe()
-                .map_err(|error| t!("Unable to locate the Termy executable: {error}", error = error))
+                .map_err(|error| {
+                    t!(
+                        "Unable to locate the Termy executable: {error}",
+                        error = error
+                    )
+                })
                 .and_then(|executable| {
                     termy_core::ssh_core::askpass_environment(
                         &executable,
@@ -888,9 +893,9 @@ impl TerminalView {
         match self.runtime_kind() {
             RuntimeKind::Tmux => {
                 if matches!(launch, Some(TerminalLaunch::Program { .. })) {
-                    crate::ui::toast::error(
-                        t!("Structured program launches are not supported in tmux panes"),
-                    );
+                    crate::ui::toast::error(t!(
+                        "Structured program launches are not supported in tmux panes"
+                    ));
                     return false;
                 }
                 let split = self.tmux_split_active_pane_vertical_with_working_dir(working_dir, cx);
@@ -915,9 +920,9 @@ impl TerminalView {
         match self.runtime_kind() {
             RuntimeKind::Tmux => {
                 if matches!(launch, Some(TerminalLaunch::Program { .. })) {
-                    crate::ui::toast::error(
-                        t!("Structured program launches are not supported in tmux panes"),
-                    );
+                    crate::ui::toast::error(t!(
+                        "Structured program launches are not supported in tmux panes"
+                    ));
                     return false;
                 }
                 let split =

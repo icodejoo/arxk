@@ -181,6 +181,7 @@ pub enum AppLanguage {
 }
 
 impl AppLanguage {
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(value: &str) -> Option<Self> {
         match value.trim().to_ascii_lowercase().as_str() {
             "auto" | "system" => Some(Self::Auto),

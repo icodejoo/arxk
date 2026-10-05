@@ -1344,7 +1344,12 @@ impl TerminalView {
         let (canonical_name, snapshot) = self
             .require_workspace_store()?
             .named_layout(layout_name)?
-            .ok_or_else(|| t!("Saved layout \"{layout_name}\" was not found", layout_name = layout_name))?;
+            .ok_or_else(|| {
+                t!(
+                    "Saved layout \"{layout_name}\" was not found",
+                    layout_name = layout_name
+                )
+            })?;
         let value = serde_json::from_str::<Value>(&snapshot)
             .map_err(|error| format!("Invalid saved layout '{canonical_name}': {error}"))?;
         let workspace = Self::parse_persisted_native_workspace_value(&value)?;
@@ -1389,7 +1394,10 @@ impl TerminalView {
             .require_workspace_store()?
             .delete_named_layout(layout_name)?
         {
-            return Err(t!("Saved layout \"{layout_name}\" was not found", layout_name = layout_name));
+            return Err(t!(
+                "Saved layout \"{layout_name}\" was not found",
+                layout_name = layout_name
+            ));
         }
         let clear_current_named_layout = self
             .current_named_layout

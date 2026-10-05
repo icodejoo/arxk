@@ -55,11 +55,17 @@ fn update_toast_effect(state: Option<&UpdateState>) -> UpdateToastEffect {
 fn installed_update_toast_message(version: &str) -> String {
     #[cfg(target_os = "macos")]
     {
-        t!("v{version} installed \u{2014} reopen from /Applications", version = version)
+        t!(
+            "v{version} installed \u{2014} reopen from /Applications",
+            version = version
+        )
     }
     #[cfg(target_os = "windows")]
     {
-        t!("v{version} installed \u{2014} restart to apply", version = version)
+        t!(
+            "v{version} installed \u{2014} restart to apply",
+            version = version
+        )
     }
     #[cfg(target_os = "linux")]
     {
@@ -70,7 +76,10 @@ fn installed_update_toast_message(version: &str) -> String {
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     {
-        t!("v{version} installed \u{2014} restart to apply", version = version)
+        t!(
+            "v{version} installed \u{2014} restart to apply",
+            version = version
+        )
     }
 }
 

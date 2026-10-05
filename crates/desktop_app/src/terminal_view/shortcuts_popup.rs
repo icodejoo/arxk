@@ -7,6 +7,9 @@ use super::*;
 use crate::commands::CommandAction;
 use gpui_kit::FontWeight;
 
+/// 一个分组的快捷键行：（分组标题，[(用途, 命令, 快捷键)]）。
+type ShortcutSectionRows = (&'static str, Vec<(&'static str, CommandAction, String)>);
+
 /// 快捷键文档的一个分组。
 struct ShortcutSection {
     /// 分组标题。
@@ -36,7 +39,10 @@ const SHORTCUT_SECTIONS: &[ShortcutSection] = &[
         title: "Panes",
         items: &[
             ("Split Pane Vertically", CommandAction::SplitPaneVertical),
-            ("Split Pane Horizontally", CommandAction::SplitPaneHorizontal),
+            (
+                "Split Pane Horizontally",
+                CommandAction::SplitPaneHorizontal,
+            ),
             ("Close Current Pane", CommandAction::ClosePane),
             ("Focus Pane Left", CommandAction::FocusPaneLeft),
             ("Focus Pane Right", CommandAction::FocusPaneRight),
@@ -62,7 +68,10 @@ const SHORTCUT_SECTIONS: &[ShortcutSection] = &[
             ("Increase Font Size", CommandAction::ZoomIn),
             ("Decrease Font Size", CommandAction::ZoomOut),
             ("Reset Font Size", CommandAction::ZoomReset),
-            ("Toggle Workspace Sidebar", CommandAction::ToggleWorkspaceSidebar),
+            (
+                "Toggle Workspace Sidebar",
+                CommandAction::ToggleWorkspaceSidebar,
+            ),
             ("Toggle Inspector", CommandAction::ToggleInspector),
         ],
     },
@@ -120,7 +129,9 @@ fn parse_chord(chord: &str) -> Vec<String> {
     let mut keys = Vec::new();
     'strip: loop {
         for (raw, shown) in MODIFIER_NAMES {
-            if let Some(tail) = rest.strip_prefix(raw).and_then(|tail| tail.strip_prefix('-'))
+            if let Some(tail) = rest
+                .strip_prefix(raw)
+                .and_then(|tail| tail.strip_prefix('-'))
                 && !tail.is_empty()
             {
                 keys.push((*shown).to_string());
@@ -170,10 +181,7 @@ impl TerminalView {
     }
 
     /// 取出各分组里当前有绑定的条目：（分组标题，[(用途, 命令, 快捷键)]），空分组不返回。
-    fn shortcut_rows(
-        &self,
-        window: &Window,
-    ) -> Vec<(&'static str, Vec<(&'static str, CommandAction, String)>)> {
+    fn shortcut_rows(&self, window: &Window) -> Vec<ShortcutSectionRows> {
         SHORTCUT_SECTIONS
             .iter()
             .filter_map(|section| {
@@ -345,14 +353,9 @@ impl TerminalView {
                                     .text_color(primary_text)
                                     .child(t!("Keyboard Shortcuts")),
                             )
-                            .child(
-                                div()
-                                    .text_size(px(12.0))
-                                    .text_color(muted_text)
-                                    .child(t!(
-                                        "Click an item to run it · Press Esc or click outside to close"
-                                    )),
-                            ),
+                            .child(div().text_size(px(12.0)).text_color(muted_text).child(t!(
+                                "Click an item to run it · Press Esc or click outside to close"
+                            ))),
                     )
                     .child(
                         div()

@@ -460,7 +460,10 @@ impl WorkspaceStore {
                 .map_err(|error| store_error("Failed to rename saved layout", error))?
                 .rows_affected();
             if updated == 0 {
-                return Err(t!("Saved layout \"{name}\" was not found", name = current_name));
+                return Err(t!(
+                    "Saved layout \"{name}\" was not found",
+                    name = current_name
+                ));
             }
             Ok(())
         })

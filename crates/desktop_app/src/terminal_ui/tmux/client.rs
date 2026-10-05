@@ -435,7 +435,9 @@ impl TmuxClient {
             ));
         }
         if self.session_name == source.session_name {
-            return Err(anyhow!(t!("These windows already share the same tmux session")));
+            return Err(anyhow!(t!(
+                "These windows already share the same tmux session"
+            )));
         }
         let target = format!("{}:", self.session_name);
         self.run_control_status_args(&["move-window", "-d", "-s", window_id, "-t", &target])

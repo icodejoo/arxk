@@ -59,10 +59,7 @@ fn create_key(path: &str) -> Result<RegistryKey, String> {
         )
     };
     if status != ERROR_SUCCESS {
-        return Err(format!(
-            "failed to create Explorer verb {path}: {:?}",
-            status
-        ));
+        return Err(format!("failed to create Explorer verb {path}: {status:?}"));
     }
     Ok(RegistryKey(key))
 }
@@ -94,7 +91,7 @@ fn set_sz(key: &RegistryKey, name: PCWSTR, value: &str) -> Result<(), String> {
     }
     let status = unsafe { RegSetValueExW(key.0, name, None, REG_SZ, Some(bytes)) };
     if status != ERROR_SUCCESS {
-        return Err(format!("failed to write Explorer verb value: {:?}", status));
+        return Err(format!("failed to write Explorer verb value: {status:?}"));
     }
     Ok(())
 }

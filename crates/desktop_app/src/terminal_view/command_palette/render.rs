@@ -308,10 +308,9 @@ impl TerminalView {
             let title_highlights = self.command_palette.filtered_title_highlights(index);
             // An unavailable row always says why on the row itself, instead of
             // only explaining after someone tries to run it.
-            let status_hint = item
-                .status_hint
-                .clone()
-                .or_else(|| (!is_enabled).then(|| termy::i18n::tr(COMMAND_PALETTE_UNAVAILABLE_HINT).to_string()));
+            let status_hint = item.status_hint.clone().or_else(|| {
+                (!is_enabled).then(|| termy::i18n::tr(COMMAND_PALETTE_UNAVAILABLE_HINT).to_string())
+            });
             let text_color = if is_enabled {
                 style.primary_text
             } else {
@@ -584,9 +583,11 @@ impl TerminalView {
                 CommandPaletteMode::Releases => {
                     &[("↵", "View Notes"), ("esc", "Back"), ("↑↓", "Navigate")]
                 }
-                CommandPaletteMode::PaneRename => {
-                    &[("↵", "Rename Pane"), ("esc", "Close"), ("", "Leave empty to clear")]
-                }
+                CommandPaletteMode::PaneRename => &[
+                    ("↵", "Rename Pane"),
+                    ("esc", "Close"),
+                    ("", "Leave empty to clear"),
+                ],
             }
         };
         let style = CommandPaletteStyle::resolve(self);
@@ -886,7 +887,7 @@ impl TerminalView {
                                     .text_size(px(11.0))
                                     .text_color(style.muted_text)
                                     .whitespace_nowrap()
-                                    .child(termy::i18n::tr(*action)),
+                                    .child(termy::i18n::tr(action)),
                             )
                     })),
             )

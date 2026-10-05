@@ -569,7 +569,7 @@ pub fn show_copy_paste_context_menu(
             .0
         };
 
-        return context_menu_action_for_id(result);
+        context_menu_action_for_id(result)
     }
 
     #[cfg(any(
@@ -724,13 +724,13 @@ pub fn show_tab_context_menu(
             .0
         };
 
-        return match result {
+        match result {
             TAB_CONTEXT_MENU_RENAME_ID => Some(TabContextMenuAction::Rename),
             TAB_CONTEXT_MENU_PIN_ID => Some(TabContextMenuAction::Pin),
             TAB_CONTEXT_MENU_UNPIN_ID => Some(TabContextMenuAction::Unpin),
             TAB_CONTEXT_MENU_CLOSE_ID => Some(TabContextMenuAction::Close),
             _ => None,
-        };
+        }
     }
 
     #[cfg(any(
@@ -897,7 +897,10 @@ pub fn request_clipboard_permission(
     #[cfg(target_os = "windows")]
     {
         let message = if can_remember {
-            t!("{message}\n\nYes: Allow Once\nNo: Always Allow\nCancel: Deny", message = message)
+            t!(
+                "{message}\n\nYes: Allow Once\nNo: Always Allow\nCancel: Deny",
+                message = message
+            )
         } else {
             t!("{message}\n\nYes: Allow Once\nNo: Deny", message = message)
         };

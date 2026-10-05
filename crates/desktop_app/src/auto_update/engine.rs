@@ -59,12 +59,11 @@ pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
 #[cfg(target_os = "windows")]
 pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
     let cache_dir = std::env::var("LOCALAPPDATA")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::temp_dir())
+        .map_or_else(|_| std::env::temp_dir(), PathBuf::from)
         .join("Termy")
         .join("Cache");
     let _ = std::fs::create_dir_all(&cache_dir);
-    cache_dir.join(format!("update-{}.{}", version, extension))
+    cache_dir.join(format!("update-{version}.{extension}"))
 }
 
 #[cfg(target_os = "linux")]
@@ -250,7 +249,7 @@ fn file_sha256_hex(path: &Path) -> Result<String> {
 }
 
 #[cfg(target_os = "macos")]
-pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
+pub fn do_install(dmg_path: &Path) -> Result<InstallOutcome> {
     use std::process::Command;
 
     // Mount the DMG
@@ -351,7 +350,7 @@ pub fn do_install(dmg_path: &PathBuf) -> Result<InstallOutcome> {
 }
 
 #[cfg(target_os = "windows")]
-pub fn do_install(installer_path: &PathBuf) -> Result<InstallOutcome> {
+pub fn do_install(installer_path: &Path) -> Result<InstallOutcome> {
     let extension = installer_path
         .extension()
         .and_then(|e| e.to_str())
@@ -476,7 +475,7 @@ fn quote_windows_arg(arg: &str) -> String {
 }
 
 #[cfg(target_os = "linux")]
-pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
+pub fn do_install(tarball_path: &Path) -> Result<InstallOutcome> {
     use std::process::Command;
 
     let home = std::env::var("HOME").context(t!("HOME environment variable not set"))?;
@@ -555,8 +554,10 @@ pub fn do_install(tarball_path: &PathBuf) -> Result<InstallOutcome> {
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
-pub fn do_install(_installer_path: &PathBuf) -> Result<InstallOutcome> {
-    anyhow::bail!(t!("Auto-install is only supported on macOS, Windows, and Linux"))
+pub fn do_install(_installer_path: &Path) -> Result<InstallOutcome> {
+    anyhow::bail!(t!(
+        "Auto-install is only supported on macOS, Windows, and Linux"
+    ))
 }
 
 #[cfg(test)]

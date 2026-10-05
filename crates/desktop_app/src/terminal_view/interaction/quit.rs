@@ -37,9 +37,9 @@ impl TerminalView {
                         self.notify_overlay(cx);
                     }
                     workspaces::WorkspaceDeleteBlocker::PinnedWorkspace => {
-                        crate::ui::toast::info(
-                            t!("Pinned workspaces must be unpinned before deleting"),
-                        );
+                        crate::ui::toast::info(t!(
+                            "Pinned workspaces must be unpinned before deleting"
+                        ));
                         self.notify_overlay(cx);
                     }
                     workspaces::WorkspaceDeleteBlocker::PinnedTab => {

@@ -41,7 +41,11 @@ fn search_counter_label(
         });
     }
     if scan_incomplete {
-        Some(t!("{current} of {total}+", current = current, total = total))
+        Some(t!(
+            "{current} of {total}+",
+            current = current,
+            total = total
+        ))
     } else {
         Some(t!("{current} of {total}", current = current, total = total))
     }

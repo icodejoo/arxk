@@ -28,7 +28,8 @@ pub(crate) enum DeepLinkArgument {
 
 impl DeepLinkRoute {
     pub(crate) fn parse(raw: &str) -> Result<(Self, Option<DeepLinkArgument>), String> {
-        let url = Url::parse(raw).map_err(|error| t!("Invalid Termy deeplink: {error}", error = error))?;
+        let url = Url::parse(raw)
+            .map_err(|error| t!("Invalid Termy deeplink: {error}", error = error))?;
 
         if url.scheme() != "termy" {
             return Err(t!(

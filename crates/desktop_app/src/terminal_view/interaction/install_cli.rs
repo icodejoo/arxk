@@ -55,7 +55,10 @@ impl TerminalView {
                                 dir = parent.display()
                             ));
                         } else {
-                            crate::ui::toast::success(t!("CLI installed to {path}", path = path_str));
+                            crate::ui::toast::success(t!(
+                                "CLI installed to {path}",
+                                path = path_str
+                            ));
                         }
                     }
                     #[cfg(not(target_os = "windows"))]

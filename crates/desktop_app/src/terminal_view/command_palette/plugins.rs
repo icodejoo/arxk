@@ -167,7 +167,11 @@ impl PluginInputSession {
     }
 
     pub(super) fn progress_label(&self) -> String {
-        t!("{current} of {total}", current = self.input_index + 1, total = self.command.inputs.len())
+        t!(
+            "{current} of {total}",
+            current = self.input_index + 1,
+            total = self.command.inputs.len()
+        )
     }
 
     pub(super) fn can_go_back(&self) -> bool {
@@ -614,7 +618,10 @@ impl TerminalView {
                 let (enabled, status_hint) = if *required && value.trim().is_empty() {
                     (false, Some(t!("Required").to_string()))
                 } else if char_count > *max_length {
-                    (false, Some(t!("Max {max_length} characters", max_length = max_length)))
+                    (
+                        false,
+                        Some(t!("Max {max_length} characters", max_length = max_length)),
+                    )
                 } else {
                     (true, None)
                 };
@@ -932,7 +939,9 @@ impl TerminalView {
         }
         let context = self.plugin_context(cx);
         if !command.when.matches(&context) {
-            crate::ui::toast::info(t!("That plugin command is not available in this terminal context"));
+            crate::ui::toast::info(t!(
+                "That plugin command is not available in this terminal context"
+            ));
             self.notify_overlay(cx);
             return;
         }
@@ -1129,10 +1138,23 @@ impl TerminalView {
             while let Ok(progress) = progress_rx.recv_async().await {
                 let detail = match (progress.message, progress.percentage) {
                     (Some(message), Some(percentage)) => {
-                        t!("{title}: {message} ({percentage}%)", title = progress_title, message = message, percentage = percentage)
+                        t!(
+                            "{title}: {message} ({percentage}%)",
+                            title = progress_title,
+                            message = message,
+                            percentage = percentage
+                        )
                     }
-                    (Some(message), None) => t!("{title}: {message}", title = progress_title, message = message),
-                    (None, Some(percentage)) => t!("{title} ({percentage}%)", title = progress_title, percentage = percentage),
+                    (Some(message), None) => t!(
+                        "{title}: {message}",
+                        title = progress_title,
+                        message = message
+                    ),
+                    (None, Some(percentage)) => t!(
+                        "{title} ({percentage}%)",
+                        title = progress_title,
+                        percentage = percentage
+                    ),
                     (None, None) => t!("Running {title}…", title = progress_title),
                 };
                 cx.update(|cx| {
@@ -1225,7 +1247,10 @@ impl TerminalView {
             if let PluginAction::TermyCommand { command } = action
                 && CommandAction::from_config_name(command).is_none()
             {
-                return Err(t!("Plugin returned unknown Termy command `{command}`", command = command));
+                return Err(t!(
+                    "Plugin returned unknown Termy command `{command}`",
+                    command = command
+                ));
             }
         }
 
@@ -1255,7 +1280,9 @@ impl TerminalView {
                         input.push(b'\n');
                     }
                     if !self.send_input_to_pane(&pane_id, &input) {
-                        return Err(t!("Plugin terminal target stopped accepting input").to_string());
+                        return Err(
+                            t!("Plugin terminal target stopped accepting input").to_string()
+                        );
                     }
                 }
                 PluginAction::TerminalOpen {
@@ -1344,8 +1371,9 @@ impl TerminalView {
                     }
                 }
                 PluginAction::TermyCommand { command } => {
-                    let action = CommandAction::from_config_name(&command)
-                        .ok_or_else(|| t!("Unknown Termy command `{command}`", command = command))?;
+                    let action = CommandAction::from_config_name(&command).ok_or_else(|| {
+                        t!("Unknown Termy command `{command}`", command = command)
+                    })?;
                     self.execute_command_action(action, false, window, cx);
                 }
                 PluginAction::ClipboardWrite { text } => {
@@ -1402,7 +1430,9 @@ impl TerminalView {
         let (tab_id, pane_id) = match target {
             PluginTerminalTarget::Named(PluginTerminalTargetKind::Active) => (None, None),
             PluginTerminalTarget::Named(PluginTerminalTargetKind::Origin) => {
-                return Err(t!("Plugin terminal origin was not resolved by the runtime").to_string());
+                return Err(
+                    t!("Plugin terminal origin was not resolved by the runtime").to_string()
+                );
             }
             PluginTerminalTarget::Exact {
                 window_id,
@@ -1420,7 +1450,9 @@ impl TerminalView {
                 .tabs
                 .iter()
                 .position(|tab| tab.id.to_string() == tab_id)
-                .ok_or_else(|| t!("Plugin terminal target tab is no longer available").to_string())?
+                .ok_or_else(|| {
+                    t!("Plugin terminal target tab is no longer available").to_string()
+                })?
         } else {
             self.session.active_tab
         };

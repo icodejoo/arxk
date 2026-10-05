@@ -248,7 +248,9 @@ impl PluginUiView {
             .view_with_revision(&self.descriptor.plugin_id, &self.descriptor.id)
             .ok_or_else(|| t!("Plugin view is no longer available").to_string())?;
         if current_revision != self.revision {
-            return Err(t!("Plugin changed while its view was running; reopen the view").to_string());
+            return Err(
+                t!("Plugin changed while its view was running; reopen the view").to_string(),
+            );
         }
         Ok(())
     }
@@ -516,7 +518,11 @@ impl PluginUiView {
                 continue;
             };
             if value.chars().count() > limit {
-                return Err(t!("Input `{id}` must be at most {limit} characters", id = id, limit = limit));
+                return Err(t!(
+                    "Input `{id}` must be at most {limit} characters",
+                    id = id,
+                    limit = limit
+                ));
             }
         }
         Ok(())

@@ -347,7 +347,8 @@ impl TerminalView {
         // is mutably updating this view can re-enter and trip RefCell borrow checks.
         // Run confirm out-of-band, then re-enter through AsyncApp for the mutation.
         cx.spawn(async move |this, cx: &mut AsyncApp| {
-            let confirmed = crate::native_sdk::confirm(t!("Kill tmux Session"), &confirmation_message);
+            let confirmed =
+                crate::native_sdk::confirm(t!("Kill tmux Session"), &confirmation_message);
             if !confirmed {
                 return;
             }
@@ -370,7 +371,10 @@ impl TerminalView {
                         socket_target,
                         session_name.as_str(),
                     ) {
-                        crate::ui::toast::error(t!("Failed to kill tmux session: {error}", error = error));
+                        crate::ui::toast::error(t!(
+                            "Failed to kill tmux session: {error}",
+                            error = error
+                        ));
                         view.notify_overlay(cx);
                         return;
                     }
