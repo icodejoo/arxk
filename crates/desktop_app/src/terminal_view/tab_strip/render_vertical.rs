@@ -87,6 +87,7 @@ impl TerminalView {
                 palette,
                 cx,
                 |this, cx| this.toggle_sidebar_collapsed(cx),
+                None,
             ))
             .into_any_element()
     }
@@ -113,6 +114,7 @@ impl TerminalView {
                 palette,
                 cx,
                 |this, cx| this.toggle_sidebar_collapsed(cx),
+                None,
             ))
             .child({
                 // Anchor the new-tab kind dropdown just below the header,
@@ -126,7 +128,10 @@ impl TerminalView {
                     "icons/tab_strip/plus.svg",
                     palette,
                     cx,
-                    move |this, cx| this.handle_new_tab_button(menu_anchor, cx),
+                    |this, cx| this.handle_new_tab_button_primary(cx),
+                    Some(Box::new(move |this, cx| {
+                        this.handle_new_tab_button(menu_anchor, cx)
+                    })),
                 )
             })
             .into_any_element()
@@ -139,6 +144,7 @@ impl TerminalView {
         palette: &TabStripPalette,
         cx: &mut Context<Self>,
         on_click: impl Fn(&mut Self, &mut Context<Self>) + 'static,
+        on_right_click: Option<Box<dyn Fn(&mut Self, &mut Context<Self>)>>,
     ) -> AnyElement {
         let mut button_bg = palette.hovered_tab_bg;
         button_bg.a = 0.0;
@@ -147,7 +153,7 @@ impl TerminalView {
         let mut icon_color = palette.inactive_tab_text;
         icon_color.a = icon_color.a.max(0.70);
 
-        div()
+        let mut button = div()
             .id(id)
             .w(px(TABBAR_NEW_TAB_BUTTON_SIZE.min(SIDEBAR_HEADER_HEIGHT)))
             .h(px(TABBAR_NEW_TAB_BUTTON_SIZE.min(SIDEBAR_HEADER_HEIGHT)))
@@ -166,7 +172,18 @@ impl TerminalView {
                     on_click(this, cx);
                     cx.stop_propagation();
                 }),
-            )
+            );
+        if let Some(on_right_click) = on_right_click {
+            button = button.on_mouse_down(
+                MouseButton::Right,
+                cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
+                    window.prevent_default();
+                    on_right_click(this, cx);
+                    cx.stop_propagation();
+                }),
+            );
+        }
+        button
             .child(
                 gpui_kit::svg()
                     .path(gpui_kit::SharedString::from(icon_path))

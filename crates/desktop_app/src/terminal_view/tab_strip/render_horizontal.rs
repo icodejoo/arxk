@@ -482,6 +482,14 @@ impl TerminalView {
                         MouseButton::Left,
                         cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
                             window.prevent_default();
+                            this.handle_new_tab_button_primary(cx);
+                            cx.stop_propagation();
+                        }),
+                    )
+                    .on_mouse_down(
+                        MouseButton::Right,
+                        cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
+                            window.prevent_default();
                             this.handle_new_tab_button(menu_anchor, cx);
                             cx.stop_propagation();
                         }),

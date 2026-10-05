@@ -1996,7 +1996,7 @@ impl TerminalView {
             };
             let row_height = 30.0;
             let row_count =
-                4.0 + if state.buffer_position.is_some() {
+                5.0 + if state.buffer_position.is_some() {
                     1.0
                 } else {
                     0.0
@@ -2103,6 +2103,44 @@ impl TerminalView {
                         }),
                     )
                     .child(t!("Rename Pane"))
+                    .into_any_element()
+            };
+            // 关闭窗格：仅当前标签页有多个窗格时可用，先关菜单再关闭活动窗格。
+            let can_close_pane = self
+                .session
+                .tabs
+                .get(self.session.active_tab)
+                .is_some_and(|tab| tab.panes.len() > 1);
+            let close_pane_item = || {
+                let text_color = if can_close_pane {
+                    text_active
+                } else {
+                    text_disabled
+                };
+                div()
+                    .id("terminal-context-menu-close-pane")
+                    .h(px(row_height))
+                    .px(px(10.0))
+                    .flex()
+                    .items_center()
+                    .overflow_hidden()
+                    .whitespace_nowrap()
+                    .text_ellipsis()
+                    .text_size(px(13.0))
+                    .text_color(text_color)
+                    .when(can_close_pane, |s| s.cursor_pointer())
+                    .when(can_close_pane, |s| s.hover(|style| style.bg(hover_bg)))
+                    .when(can_close_pane, |s| {
+                        s.on_mouse_down(
+                            MouseButton::Left,
+                            cx.listener(move |view, _event: &MouseDownEvent, _window, cx| {
+                                let _ = view.close_terminal_context_menu(cx);
+                                view.close_active_pane(cx);
+                                cx.stop_propagation();
+                            }),
+                        )
+                    })
+                    .child(t!("Close Pane"))
                     .into_any_element()
             };
             let copy_image_item = || {
@@ -2245,6 +2283,7 @@ impl TerminalView {
                             ))
                             .child(open_search_item())
                             .child(rename_pane_item())
+                            .child(close_pane_item())
                             .when(!plugin_commands.is_empty(), |panel| {
                                 panel.child(
                                     div().h(px(1.0)).my(px(3.0)).mx(px(8.0)).bg(panel_border),

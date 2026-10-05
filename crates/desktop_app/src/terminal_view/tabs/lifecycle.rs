@@ -347,8 +347,13 @@ impl TerminalView {
         let _ = self.add_tab_with_working_dir(None, cx);
     }
 
-    /// "+" button entry point: opens a dropdown when the platform has extra
-    /// tab choices; otherwise it creates a terminal tab directly.
+    /// "+" 按钮左键：直接用默认终端新开 tab，不弹菜单。
+    pub(crate) fn handle_new_tab_button_primary(&mut self, cx: &mut Context<Self>) {
+        self.close_new_tab_menu(cx);
+        self.add_tab(cx);
+    }
+
+    /// "+" 按钮右键：平台有额外 tab 选项时弹出菜单，否则直接新建终端 tab。
     pub(crate) fn handle_new_tab_button(&mut self, anchor: (f32, f32), cx: &mut Context<Self>) {
         self.reload_saved_ssh_hosts();
         if should_show_new_tab_menu(
