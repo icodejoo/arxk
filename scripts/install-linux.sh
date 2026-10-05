@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Arxk Linux Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/lassejlv/termy/main/scripts/install-linux.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/icodejoo/arxk/main/scripts/install-linux.sh | bash
 
-REPO="lassejlv/termy"
+REPO="icodejoo/arxk"
 INSTALL_DIR="${TERMY_INSTALL_DIR:-$HOME/.local/bin}"
 
 die() {

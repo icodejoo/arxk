@@ -4,7 +4,7 @@ pkgver=@PKGVER@
 pkgrel=1
 pkgdesc="Minimal GPUI-powered terminal (pre-compiled binary)"
 arch=('x86_64')
-url="https://github.com/lassejlv/termy"
+url="https://github.com/icodejoo/arxk"
 license=('MIT')
 depends=('bash' 'glibc' 'gcc-libs' 'glib2'
          'freetype2' 'fontconfig' 'libxcb' 'wayland' 'libxkbcommon'
@@ -12,12 +12,12 @@ depends=('bash' 'glibc' 'gcc-libs' 'glib2'
 provides=('termy')
 conflicts=('termy')
 source=("arxk.desktop"
-        "LICENSE::https://raw.githubusercontent.com/lassejlv/termy/v${pkgver}/LICENSE"
-        "termy_icon.png::https://raw.githubusercontent.com/lassejlv/termy/v${pkgver}/assets/termy_icon.png")
+        "LICENSE::https://raw.githubusercontent.com/icodejoo/arxk/v${pkgver}/LICENSE"
+        "termy_icon.png::https://raw.githubusercontent.com/icodejoo/arxk/v${pkgver}/assets/termy_icon.png")
 b2sums=('@DESKTOP_B2SUM@'
         '@LICENSE_B2SUM@'
         '@ICON_B2SUM@')
-source_x86_64=("termy-${pkgver}-${CARCH}.tar.gz::https://github.com/lassejlv/termy/releases/download/v${pkgver}/Arxk-v${pkgver}-linux-${CARCH}.tar.gz")
+source_x86_64=("termy-${pkgver}-${CARCH}.tar.gz::https://github.com/icodejoo/arxk/releases/download/v${pkgver}/Arxk-v${pkgver}-linux-${CARCH}.tar.gz")
 b2sums_x86_64=('@TARBALL_B2SUM@')
 
 package() {

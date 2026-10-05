@@ -76,7 +76,7 @@ function DownloadPage() {
     release ? groupReleaseAssets(release.assets) : [],
   );
   const githubUrl =
-    release?.htmlUrl ?? 'https://github.com/lassejlv/termy/releases';
+    release?.htmlUrl ?? 'https://github.com/icodejoo/arxk/releases';
 
   const warnBeforeMacDownload = (name: string, url: string) => {
     setPendingDownload({ name, url });
@@ -244,7 +244,7 @@ function AssetPanel({
     <p className="pb-8 font-mono text-sm text-fd-muted-foreground">
       <span className="text-fd-error">error:</span> could not reach GitHub.{' '}
       <a
-        href="https://github.com/lassejlv/termy/releases/latest"
+        href="https://github.com/icodejoo/arxk/releases/latest"
         target="_blank"
         rel="noreferrer"
         className={marketingLinkClass}

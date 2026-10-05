@@ -86,10 +86,10 @@ tarball_path="$aur_dir/termy-${version}-${carch}.tar.gz"
 pkgbuild_path="$aur_dir/PKGBUILD"
 
 cp "$SCRIPT_DIR/arxk.desktop" "$desktop_path"
-curl -fsSL -o "$license_path" "https://raw.githubusercontent.com/lassejlv/termy/v${version}/LICENSE"
-curl -fsSL -o "$icon_path" "https://raw.githubusercontent.com/lassejlv/termy/v${version}/assets/termy_icon.png"
+curl -fsSL -o "$license_path" "https://raw.githubusercontent.com/icodejoo/arxk/v${version}/LICENSE"
+curl -fsSL -o "$icon_path" "https://raw.githubusercontent.com/icodejoo/arxk/v${version}/assets/termy_icon.png"
 curl -fsSL -o "$tarball_path" \
-  "https://github.com/lassejlv/termy/releases/download/v${version}/Arxk-v${version}-linux-${carch}.tar.gz"
+  "https://github.com/icodejoo/arxk/releases/download/v${version}/Arxk-v${version}-linux-${carch}.tar.gz"
 
 desktop_sum="$(b2sum "$desktop_path" | cut -d' ' -f1)"
 license_sum="$(b2sum "$license_path" | cut -d' ' -f1)"

@@ -59,7 +59,7 @@ or release is recommended:
 [dependencies]
 anyhow = "1"
 flume = "0.11"
-termy_core = { git = "https://github.com/lassejlv/termy", package = "termy_core" }
+termy_core = { git = "https://github.com/icodejoo/arxk", package = "termy_core" }
 ```
 
 Create a terminal, send input, and consume a renderer-neutral update:
@@ -157,7 +157,7 @@ external session owner and feed its resulting output back into libtermy.
 Build the shared library from the repository:
 
 ```bash
-git clone https://github.com/lassejlv/termy
+git clone https://github.com/icodejoo/arxk
 cd termy
 cargo build --release -p termy_core
 ```
@@ -165,7 +165,7 @@ cargo build --release -p termy_core
 The build produces `libtermy_core.dylib` on macOS,
 `libtermy_core.so` on Linux, or `termy_core.dll` on Windows under
 `target/release`. The public header is
-[`crates/core/include/termy.h`](https://github.com/lassejlv/termy/blob/main/crates/core/include/termy.h).
+[`crates/core/include/termy.h`](https://github.com/icodejoo/arxk/blob/main/crates/core/include/termy.h).
 
 ```c
 #include "termy.h"

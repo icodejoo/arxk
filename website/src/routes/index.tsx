@@ -256,7 +256,7 @@ function SiteNav() {
             Sponsors
           </Link>
           <a
-            href="https://github.com/lassejlv/termy"
+            href="https://github.com/icodejoo/arxk"
             target="_blank"
             rel="noreferrer"
             className={navLinkClass}

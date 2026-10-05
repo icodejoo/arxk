@@ -3,15 +3,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/lassejlv/termy/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/lassejlv/termy?style=flat-square&color=7aa2f7&labelColor=16161e" /></a>
-  <a href="https://github.com/lassejlv/termy/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/lassejlv/termy?style=flat-square&color=9ece6a&labelColor=16161e" /></a>
+  <a href="https://github.com/icodejoo/arxk/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/icodejoo/arxk?style=flat-square&color=7aa2f7&labelColor=16161e" /></a>
+  <a href="https://github.com/icodejoo/arxk/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/icodejoo/arxk?style=flat-square&color=9ece6a&labelColor=16161e" /></a>
   <a href="./LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-c0caf5?style=flat-square&labelColor=16161e" /></a>
 </p>
 
 <p align="center">
   <a href="https://termy.sh/download"><strong>Download</strong></a> ·
   <a href="https://termy.sh/docs"><strong>Documentation</strong></a> ·
-  <a href="https://github.com/lassejlv/termy/releases"><strong>Releases</strong></a> ·
+  <a href="https://github.com/icodejoo/arxk/releases"><strong>Releases</strong></a> ·
   <a href="./CONTRIBUTING.md"><strong>Contribute</strong></a>
 </p>
 
@@ -25,7 +25,7 @@ Arxk is a fast, native terminal for macOS, Linux, and Windows. It combines GPU-a
 
 ## Install
 
-Download the latest build from **[termy.sh/download](https://termy.sh/download)** or browse every artifact on **[GitHub Releases](https://github.com/lassejlv/termy/releases)**.
+Download the latest build from **[termy.sh/download](https://termy.sh/download)** or browse every artifact on **[GitHub Releases](https://github.com/icodejoo/arxk/releases)**.
 
 macOS DMGs from v0.2.75 onward are signed and notarized. Open the DMG and drag
 Arxk to `/Applications`. See [macOS troubleshooting](https://termy.sh/docs/getting-started/troubleshooting)

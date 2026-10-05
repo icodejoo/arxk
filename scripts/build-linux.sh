@@ -430,7 +430,7 @@ Installed-Size: $INSTALLED_SIZE
 Depends: bash, libc6, libgcc-s1, libglib2.0-0, libfreetype6, libfontconfig1, libxcb1, libwayland-client0, libxkbcommon0, libxkbcommon-x11-0, libvulkan1
 Section: x11
 Priority: optional
-Homepage: https://github.com/lassejlv/termy
+Homepage: https://github.com/icodejoo/arxk
 Description: Minimal GPUI-powered terminal
  Arxk is a terminal emulator built with GPUI and alacritty_terminal.
 EOF
@@ -473,7 +473,7 @@ Version: $RPM_VERSION
 Release: 1
 Summary: Minimal GPUI-powered terminal
 License: MIT
-URL: https://github.com/lassejlv/termy
+URL: https://github.com/icodejoo/arxk
 AutoReqProv: no
 
 %description
