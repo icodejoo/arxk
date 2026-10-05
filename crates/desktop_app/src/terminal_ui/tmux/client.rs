@@ -1291,10 +1291,6 @@ mod tests {
         let Err(error) = result else {
             panic!("non-unix targets must reject tmux runtime startup");
         };
-        assert!(
-            error
-                .to_string()
-                .contains("tmux control mode is only supported on unix targets")
-        );
+        assert!(error.to_string().contains("requires tmux_command_prefix"));
     }
 }

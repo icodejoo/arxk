@@ -5155,24 +5155,35 @@ mod tests {
             unsafe { termy_terminal_new(size, command.as_ptr(), command.len(), &mut terminal) },
             TermyFfiStatus::Ok
         );
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        // 子进程启动耗时因机器而异（慢机器上要数秒），固定睡眠会误判，改为轮询等输出出现。
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(50));
 
-        let mut update = TermyFfiFrameUpdate::default();
-        assert_eq!(
-            unsafe { termy_terminal_take_frame_update(terminal, true, &mut update) },
-            TermyFfiStatus::Ok
-        );
-        assert_eq!(update.damage_kind, 1);
-        assert_eq!(
-            update.cells_len,
-            usize::from(size.cols) * usize::from(size.rows)
-        );
-        let cells = unsafe { slice::from_raw_parts(update.cells_ptr, update.cells_len) };
-        assert!(cells.iter().any(|cell| cell.codepoint == u32::from(b'a')));
-        assert_eq!(
-            unsafe { termy_frame_update_free(&mut update) },
-            TermyFfiStatus::Ok
-        );
+            let mut update = TermyFfiFrameUpdate::default();
+            assert_eq!(
+                unsafe { termy_terminal_take_frame_update(terminal, true, &mut update) },
+                TermyFfiStatus::Ok
+            );
+            assert_eq!(update.damage_kind, 1);
+            assert_eq!(
+                update.cells_len,
+                usize::from(size.cols) * usize::from(size.rows)
+            );
+            let cells = unsafe { slice::from_raw_parts(update.cells_ptr, update.cells_len) };
+            let has_output = cells.iter().any(|cell| cell.codepoint == u32::from(b'a'));
+            assert_eq!(
+                unsafe { termy_frame_update_free(&mut update) },
+                TermyFfiStatus::Ok
+            );
+            if has_output {
+                break;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "等待 15 秒仍未在帧里看到启动命令的输出"
+            );
+        }
 
         assert_eq!(unsafe { termy_terminal_free(terminal) }, TermyFfiStatus::Ok);
     }
