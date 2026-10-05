@@ -954,6 +954,8 @@ impl SequenceModifiers {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(target_os = "macos")]
+    use super::keystroke_to_input_with_options;
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     use super::pure_text_event_text;
     use super::{

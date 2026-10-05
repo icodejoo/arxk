@@ -113,7 +113,11 @@ fn is_executable_file(path: &Path) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    use super::resolve_executable_path;
     use super::resolve_working_dir;
+    #[cfg(target_os = "macos")]
+    use super::sibling_app_binary_names;
 
     #[test]
     fn open_resolves_existing_directory() {

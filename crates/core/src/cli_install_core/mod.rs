@@ -701,7 +701,7 @@ mod tests {
         let result = install_cli_from_source_for_home(&source, &home, Some("/bin/zsh"))
             .expect("isolated install should succeed");
 
-        assert_eq!(result.install_path, home.join(".local/bin/termy"));
+        assert_eq!(result.install_path, home.join(".local/bin/arxk"));
         assert_eq!(std::fs::read_link(&result.install_path).unwrap(), source);
         assert!(home.join(".zshrc").is_file());
     }

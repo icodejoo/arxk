@@ -788,6 +788,10 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    use super::StartupArguments;
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    use super::guard_tmux_startup;
     use super::{
         DeepLinkArgument, DeepLinkRoute, MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH,
         absorb_pending_open_urls, focus_or_open_main_window, fold_startup_new_tab_into_working_dir,
