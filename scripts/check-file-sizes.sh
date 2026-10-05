@@ -24,6 +24,9 @@ ALLOWLIST=(
   crates/core/src/plugin_runtime/tests.rs
   crates/desktop_app/src/terminal_ui/grid.rs
   crates/cli/src/xtask/benchmark.rs
+  # 以下两个文件在 rustfmt 统一格式化前已贴着 1500 行上限（1498 / 1500 行），格式化拆行后越界；待拆分。
+  crates/desktop_app/src/terminal_view/command_palette/plugins.rs
+  crates/desktop_app/src/terminal_view/plugin_ui.rs
 )
 
 is_allowlisted() {
