@@ -846,12 +846,7 @@ const POWERSHELL_CWD_REPORT_SCRIPT: &str = r#"if (-not $global:__TermyPromptWrap
 
 /// 判断给定的 shell 路径是不是 PowerShell（`pwsh` / `powershell`，忽略大小写与 `.exe`）。
 fn is_powershell_program(shell_path: &str) -> bool {
-    std::path::Path::new(shell_path.trim_matches('"'))
-        .file_stem()
-        .and_then(|stem| stem.to_str())
-        .is_some_and(|stem| {
-            stem.eq_ignore_ascii_case("pwsh") || stem.eq_ignore_ascii_case("powershell")
-        })
+    matches!(shell_program_stem(shell_path).as_str(), "pwsh" | "powershell")
 }
 
 /// 构造带路径上报脚本的 PowerShell 交互启动参数。
@@ -882,8 +877,12 @@ const BASH_PROMPT_COMMAND_CWD_REPORT: &str = r#"printf '\033]9;9;"%s"\033\\' "$P
 const CWD_REPORT_MARKER: &str = "9;9;";
 
 /// 取 shell 程序的小写文件名（不含扩展名），例如 `C:\Windows\System32\cmd.exe` -> `cmd`。
+///
+/// 同时按 `/` 和 `\` 切分：`Path` 在 Linux/macOS 上不认反斜杠，Windows 路径会取不到文件名。
 fn shell_program_stem(shell_path: &str) -> String {
-    std::path::Path::new(shell_path.trim_matches('"'))
+    let trimmed = shell_path.trim_matches('"');
+    let file_name = trimmed.rsplit(['/', '\\']).next().unwrap_or(trimmed);
+    std::path::Path::new(file_name)
         .file_stem()
         .and_then(|stem| stem.to_str())
         .map(str::to_ascii_lowercase)
