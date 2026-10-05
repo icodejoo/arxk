@@ -59,6 +59,7 @@ pub enum ContextMenuAction {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TabContextMenuAction {
     Rename,
+    Duplicate,
     Pin,
     Unpin,
     Close,
@@ -87,6 +88,7 @@ const TAB_CONTEXT_MENU_PIN_ID: i32 = 101;
 const TAB_CONTEXT_MENU_UNPIN_ID: i32 = 102;
 const TAB_CONTEXT_MENU_RENAME_ID: i32 = 103;
 const TAB_CONTEXT_MENU_CLOSE_ID: i32 = 104;
+const TAB_CONTEXT_MENU_DUPLICATE_ID: i32 = 105;
 #[cfg(target_os = "macos")]
 static CONTEXT_MENU_SELECTION: AtomicI32 = AtomicI32::new(0);
 
@@ -614,6 +616,15 @@ pub fn show_tab_context_menu(
             );
             menu.addItem(&rename_item);
 
+            // Duplicate Tab
+            let duplicate_item = TermyContextMenuItem::new_with_action_id(
+                mtm,
+                t!("Duplicate Tab"),
+                TAB_CONTEXT_MENU_DUPLICATE_ID,
+                true,
+            );
+            menu.addItem(&duplicate_item);
+
             // Pin/Unpin Tab
             let (pin_title, pin_action_id) = if pinned {
                 (t!("Unpin Tab"), TAB_CONTEXT_MENU_UNPIN_ID)
@@ -641,6 +652,7 @@ pub fn show_tab_context_menu(
 
             match CONTEXT_MENU_SELECTION.swap(0, Ordering::Relaxed) {
                 TAB_CONTEXT_MENU_RENAME_ID => Some(TabContextMenuAction::Rename),
+                TAB_CONTEXT_MENU_DUPLICATE_ID => Some(TabContextMenuAction::Duplicate),
                 TAB_CONTEXT_MENU_PIN_ID => Some(TabContextMenuAction::Pin),
                 TAB_CONTEXT_MENU_UNPIN_ID => Some(TabContextMenuAction::Unpin),
                 TAB_CONTEXT_MENU_CLOSE_ID => Some(TabContextMenuAction::Close),
@@ -669,6 +681,18 @@ pub fn show_tab_context_menu(
                 MF_STRING,
                 TAB_CONTEXT_MENU_RENAME_ID as usize,
                 windows::core::PCWSTR(rename_title.as_ptr()),
+            )
+            .ok()?;
+        }
+
+        // Duplicate Tab
+        let duplicate_title = wide_string(t!("Duplicate Tab"));
+        unsafe {
+            AppendMenuW(
+                menu,
+                MF_STRING,
+                TAB_CONTEXT_MENU_DUPLICATE_ID as usize,
+                windows::core::PCWSTR(duplicate_title.as_ptr()),
             )
             .ok()?;
         }
@@ -726,6 +750,7 @@ pub fn show_tab_context_menu(
 
         match result {
             TAB_CONTEXT_MENU_RENAME_ID => Some(TabContextMenuAction::Rename),
+            TAB_CONTEXT_MENU_DUPLICATE_ID => Some(TabContextMenuAction::Duplicate),
             TAB_CONTEXT_MENU_PIN_ID => Some(TabContextMenuAction::Pin),
             TAB_CONTEXT_MENU_UNPIN_ID => Some(TabContextMenuAction::Unpin),
             TAB_CONTEXT_MENU_CLOSE_ID => Some(TabContextMenuAction::Close),

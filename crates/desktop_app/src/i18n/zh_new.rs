@@ -21,6 +21,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Move Tab Left", "标签页左移"),
     ("Move Tab Right", "标签页右移"),
     ("Rename Tab", "重命名标签页"),
+    ("Duplicate Tab", "复制标签页"),
+    ("Failed to duplicate tab", "复制标签页失败"),
     ("Show / Hide Tab Bar", "显示 / 隐藏标签栏"),
     ("Split Pane Vertically", "竖向分屏"),
     ("Split Pane Horizontally", "横向分屏"),

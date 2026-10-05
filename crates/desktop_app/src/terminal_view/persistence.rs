@@ -1033,6 +1033,55 @@ impl TerminalView {
 
     /// Replace the visible strip with one restored workspace (named layout
     /// loads). Stashed workspaces are left untouched.
+    /// 复制指定标签页：沿用布局树、窗格尺寸、各窗格目录与手动标题、固定状态、标签标题与颜色，
+    /// 每个窗格在原目录里新开 shell（运行中的进程和滚动缓冲区不复制）。
+    /// 新标签插在原标签右侧并激活；返回是否复制成功。
+    pub(super) fn duplicate_tab_by_id(&mut self, tab_id: TabId, cx: &mut Context<Self>) -> bool {
+        let Some(index) = self.tab_index_by_id(tab_id) else {
+            return false;
+        };
+        let mut workspace =
+            self.collect_persisted_workspace_from_tabs(&self.session.tabs[index..=index], 0);
+        for pane in workspace
+            .tabs
+            .iter_mut()
+            .flat_map(|tab| tab.panes.iter_mut())
+        {
+            pane.session_id = None;
+            pane.buffer = None;
+        }
+        for presentation in workspace
+            .tabs
+            .iter_mut()
+            .filter_map(|tab| tab.presentation.as_mut())
+        {
+            presentation.running_process = false;
+            presentation.current_command = None;
+        }
+        let (mut tabs, layout_trees, zoom, _) = match self.build_restored_tabs(workspace) {
+            Ok(restored) => restored,
+            Err(error) => {
+                log::warn!("Failed to duplicate tab: {error}");
+                crate::ui::toast::error(t!("Failed to duplicate tab"));
+                return false;
+            }
+        };
+        let Some(new_tab) = tabs.pop() else {
+            return false;
+        };
+        let new_id = new_tab.id;
+        if let Some(color) = self.tab_colors.get(&tab_id).copied() {
+            self.tab_colors.insert(new_id, color);
+        }
+        self.session.native_pane_layout_trees.extend(layout_trees);
+        self.session.native_pane_zoom_snapshots.extend(zoom);
+        self.session.tabs.insert(index + 1, new_tab);
+        self.session.active_tab = index + 1;
+        self.finish_workspace_restore(cx);
+        self.schedule_persist_native_workspace(cx);
+        true
+    }
+
     fn restore_workspace(
         &mut self,
         workspace: PersistedNativeWorkspace,

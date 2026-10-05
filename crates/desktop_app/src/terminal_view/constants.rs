@@ -124,8 +124,6 @@ pub(super) const PANE_TITLE_INSET: f32 = 3.0;
 pub(super) const PANE_TITLE_PADDING_X: f32 = 6.0;
 /// 标签可用宽度低于此值时不绘制。
 pub(super) const PANE_TITLE_MIN_WIDTH: f32 = 32.0;
-/// 标题文字颜色（黄色，RGB 分量）。
-pub(super) const PANE_TITLE_TITLE_RGB: (f32, f32, f32) = (0.98, 0.80, 0.20);
 /// 标题文字透明度（不随焦点变化）。
 pub(super) const PANE_TITLE_TITLE_ALPHA: f32 = 0.75;
 /// 路径文字透明度（颜色取前景反差色，不随焦点变化）。

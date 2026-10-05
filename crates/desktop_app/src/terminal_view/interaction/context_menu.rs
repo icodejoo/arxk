@@ -217,6 +217,9 @@ impl TerminalView {
                     self.begin_rename_tab(index, cx);
                 }
             }
+            crate::native_sdk::TabContextMenuAction::Duplicate => {
+                let _ = self.duplicate_tab_by_id(tab_id, cx);
+            }
             crate::native_sdk::TabContextMenuAction::Pin => {
                 let _ = self.set_tab_pinned_by_id(tab_id, true, cx);
             }

@@ -2486,7 +2486,7 @@ impl TerminalView {
                 260.0
             };
             let row_height = 30.0;
-            let content_height = (row_height * (3 + plugin_commands.len()) as f32)
+            let content_height = (row_height * (4 + plugin_commands.len()) as f32)
                 + 8.0
                 + tab_colors::TAB_COLOR_MENU_HEIGHT
                 + if plugin_commands.is_empty() { 0.0 } else { 7.0 };
@@ -2688,6 +2688,31 @@ impl TerminalView {
                                         ),
                                     )
                                     .child(t!("Rename Tab"))
+                            })
+                            // Duplicate Tab
+                            .child({
+                                let tab_id = state.tab_id;
+                                div()
+                                    .id("tab-context-menu-duplicate")
+                                    .h(px(row_height))
+                                    .px(px(10.0))
+                                    .flex()
+                                    .items_center()
+                                    .text_size(px(13.0))
+                                    .text_color(text_active)
+                                    .cursor_pointer()
+                                    .hover(|style| style.bg(hover_bg))
+                                    .on_mouse_down(
+                                        MouseButton::Left,
+                                        cx.listener(
+                                            move |view, _event: &MouseDownEvent, _window, cx| {
+                                                let _ = view.close_tab_context_menu(cx);
+                                                let _ = view.duplicate_tab_by_id(tab_id, cx);
+                                                cx.stop_propagation();
+                                            },
+                                        ),
+                                    )
+                                    .child(t!("Duplicate Tab"))
                             })
                             // Tab Color
                             .child(
@@ -3568,7 +3593,7 @@ impl Render for TerminalView {
 
                 if multi_pane {
                     // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 1em，不占布局。
-                    // 有自定义标题：左标题（半透明黄）、右路径（半透明反差色）；
+                    // 有自定义标题：左标题（半透明主题色）、右路径（半透明反差色）；
                     // 没有标题：路径就是标题，只有左段。中间留出拖拽手柄，放不下就不画。
                     let label_texts = TerminalView::pane_label_texts(
                         TerminalView::resolve_pane_title(
@@ -3601,14 +3626,10 @@ impl Render for TerminalView {
                             )
                         };
 
-                        let (red, green, blue) = PANE_TITLE_TITLE_RGB;
-                        let title_color: gpui_kit::Hsla = gpui_kit::Rgba {
-                            r: red,
-                            g: green,
-                            b: blue,
-                            a: self.scaled_chrome_alpha(PANE_TITLE_TITLE_ALPHA),
-                        }
-                        .into();
+                        // 标题色与高亮边框同源（主题光标色混一点前景色），透明度固定。
+                        let mut title_rgba = blend_rgb_only(colors.cursor, colors.foreground, 0.32);
+                        title_rgba.a = self.scaled_chrome_alpha(PANE_TITLE_TITLE_ALPHA);
+                        let title_color: gpui_kit::Hsla = title_rgba.into();
                         let left_text = fit_text(&label_texts.left);
                         if !left_text.is_empty() {
                             pane_title_labels.push(
