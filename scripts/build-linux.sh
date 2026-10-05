@@ -191,7 +191,7 @@ install_linux_file_manager_share() {
 stage_linux_package_root() {
   local root="$1"
   local desktop_file_source="$REPO_ROOT/scripts/aur/${APP_NAME_LOWER}.desktop"
-  local icon_source="$REPO_ROOT/assets/${APP_NAME_LOWER}_icon.png"
+  local icon_source="$REPO_ROOT/assets/termy_icon.png"
 
   [[ -f "$desktop_file_source" ]] || die "Desktop file not found at $desktop_file_source"
   [[ -f "$icon_source" ]] || die "Linux app icon not found at $icon_source"
@@ -327,7 +327,7 @@ INSTALL_SCRIPT
     APPIMAGE_NAME="${APP_NAME}-${VERSION}-${OS_NAME}-${ARCH}.AppImage"
     OUTPUT_PATH="$DIST_DIR/$APPIMAGE_NAME"
     DESKTOP_FILE_SOURCE="$REPO_ROOT/scripts/aur/${APP_NAME_LOWER}.desktop"
-    ICON_SOURCE="$REPO_ROOT/assets/${APP_NAME_LOWER}_icon.png"
+    ICON_SOURCE="$REPO_ROOT/assets/termy_icon.png"
 
     log "Creating AppImage staging directory"
     rm -rf "$APPIMAGE_STAGING_ROOT"
