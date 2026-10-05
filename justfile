@@ -133,7 +133,7 @@ test-tmux-integration:
       "termy|integration|tmux_split_integration|repeated_reconnect_does_not_increase_client_count"
       "termy_core|lib||tmux_control_core::session::tests::launches_and_drives_control_mode"
       "termy_core|integration|tmux_control_ffi|ffi_control_open_poll_send_close"
-      "termy|bin|termy|terminal_view::working_dir_tests::new_tmux_tab_inherits_live_pane_cwd_with_foreground_app"
+      "termy|bin|arxk|terminal_view::working_dir_tests::new_tmux_tab_inherits_live_pane_cwd_with_foreground_app"
     )
     if (( ${#tmux_tests[@]} != 11 )); then
       echo "Tmux integration configuration error: expected 11 tests, got ${#tmux_tests[@]}" >&2

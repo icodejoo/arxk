@@ -275,8 +275,9 @@ impl TerminalView {
         let raw = raw.trim().trim_matches('"');
         // Windows 上 Git Bash / MSYS2 / Cygwin 报的是 `/c/...`，转回盘符路径才能显示与恢复。
         #[cfg(target_os = "windows")]
-        let raw = Self::normalize_msys_cwd(raw);
-        let cwd = Self::truncate_tab_title(&raw);
+        let cwd = Self::truncate_tab_title(&Self::normalize_msys_cwd(raw));
+        #[cfg(not(target_os = "windows"))]
+        let cwd = Self::truncate_tab_title(raw);
         if cwd.is_empty() || self.pane_cwds.get(pane_id) == Some(&cwd) {
             return false;
         }
@@ -339,6 +340,7 @@ impl TerminalView {
     /// 转成 `C:\Users\x`；不是这种形式的路径原样返回。
     ///
     /// - `raw`：shell 上报的路径文本。
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     pub(crate) fn normalize_msys_cwd(raw: &str) -> String {
         let rest = raw.strip_prefix("/cygdrive").unwrap_or(raw);
         let Some(after) = rest.strip_prefix('/') else {

@@ -3,6 +3,8 @@
 //! 颜色按 `TabId` 存在视图的侧表里，不改 `TerminalTab` 结构；标签关闭后残留的条目只有几个字节，
 //! 且 `TabId` 单调递增不会复用，所以不额外清理。
 
+#![cfg_attr(target_os = "macos", allow(dead_code))]
+
 use super::*;
 
 /// 标签背景色预设。
