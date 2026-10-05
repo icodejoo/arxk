@@ -28,10 +28,10 @@ impl TerminalCellMetrics {
 ///
 /// Width is based on the selected font's horizontal advance for `M`, falling
 /// back to `0` and then space for fonts without that glyph. Height follows the
-/// same row metric Termy's renderer uses: `font_size * line_height`.
+/// same row metric Arxk's renderer uses: `font_size * line_height`.
 ///
 /// If the requested font cannot be resolved from system fonts, the result falls
-/// back to Termy's default monospace ratio instead of returning an error.
+/// back to Arxk's default monospace ratio instead of returning an error.
 pub fn measure_cell(
     font_family: impl AsRef<str>,
     font_size: f32,
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn measure_cell_handles_missing_font_with_stable_fallback() {
-        let metrics = measure_cell("Definitely Missing Termy Test Font", 18.0, 1.25);
+        let metrics = measure_cell("Definitely Missing Arxk Test Font", 18.0, 1.25);
         assert!(metrics.cell_width >= 1.0);
         assert_eq!(metrics.cell_height, 22.5);
     }

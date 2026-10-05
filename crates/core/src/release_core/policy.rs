@@ -210,31 +210,31 @@ mod tests {
     #[test]
     fn selects_platform_assets_by_convention() {
         let assets = vec![
-            asset("Termy-v1.0.0-macos-arm64.dmg"),
-            asset("Termy-v1.0.0-macos-x86_64.dmg"),
-            asset("Termy-v1.0.0-windows-x64.msi"),
-            asset("Termy-v1.0.0-windows-arm64.exe"),
-            asset("Termy-v1.0.0-linux-aarch64.tar.gz"),
-            asset("Termy-v1.0.0-linux-x86_64.tar.gz"),
+            asset("Arxk-v1.0.0-macos-arm64.dmg"),
+            asset("Arxk-v1.0.0-macos-x86_64.dmg"),
+            asset("Arxk-v1.0.0-windows-x64.msi"),
+            asset("Arxk-v1.0.0-windows-arm64.exe"),
+            asset("Arxk-v1.0.0-linux-aarch64.tar.gz"),
+            asset("Arxk-v1.0.0-linux-x86_64.tar.gz"),
         ];
 
         assert_eq!(
             select_platform_asset(&assets, PlatformKind::MacOs, "arm64")
                 .expect("macOS asset")
                 .name,
-            "Termy-v1.0.0-macos-arm64.dmg"
+            "Arxk-v1.0.0-macos-arm64.dmg"
         );
         assert_eq!(
             select_platform_asset(&assets, PlatformKind::Windows, "x86_64")
                 .expect("Windows asset")
                 .name,
-            "Termy-v1.0.0-windows-x64.msi"
+            "Arxk-v1.0.0-windows-x64.msi"
         );
         assert_eq!(
             select_platform_asset(&assets, PlatformKind::Linux, "arm64")
                 .expect("Linux asset")
                 .name,
-            "Termy-v1.0.0-linux-aarch64.tar.gz"
+            "Arxk-v1.0.0-linux-aarch64.tar.gz"
         );
         assert!(select_platform_asset(&assets, PlatformKind::Other, "x86_64").is_none());
     }
@@ -243,13 +243,13 @@ mod tests {
     fn selects_signed_macos_assets_and_checksum_manifest() {
         let assets = vec![
             asset("checksums.txt"),
-            asset("Termy-v0.2.75-macos-x86_64-signed.dmg"),
-            asset("Termy-v0.2.75-macos-arm64-signed.dmg"),
+            asset("Arxk-v0.2.75-macos-x86_64-signed.dmg"),
+            asset("Arxk-v0.2.75-macos-arm64-signed.dmg"),
         ];
 
         for (arch, expected_name) in [
-            ("arm64", "Termy-v0.2.75-macos-arm64-signed.dmg"),
-            ("x86_64", "Termy-v0.2.75-macos-x86_64-signed.dmg"),
+            ("arm64", "Arxk-v0.2.75-macos-arm64-signed.dmg"),
+            ("x86_64", "Arxk-v0.2.75-macos-x86_64-signed.dmg"),
         ] {
             let selected = select_platform_asset(&assets, PlatformKind::MacOs, arch)
                 .expect("signed macOS asset");
@@ -268,26 +268,26 @@ mod tests {
     fn selects_asset_specific_checksum_before_manifest() {
         let assets = vec![
             asset("checksums.txt"),
-            asset("Termy-v1.0.0-windows-x64-Setup.exe.sha256"),
+            asset("Arxk-v1.0.0-windows-x64-Setup.exe.sha256"),
         ];
 
         assert_eq!(
-            select_checksum_asset(&assets, "Termy-v1.0.0-windows-x64-Setup.exe")
+            select_checksum_asset(&assets, "Arxk-v1.0.0-windows-x64-Setup.exe")
                 .expect("checksum asset")
                 .name,
-            "Termy-v1.0.0-windows-x64-Setup.exe.sha256"
+            "Arxk-v1.0.0-windows-x64-Setup.exe.sha256"
         );
     }
 
     #[test]
     fn selects_checksum_manifest_when_asset_specific_checksum_is_missing() {
         let assets = vec![
-            asset("Termy-v1.0.0-windows-x64-Setup.exe"),
+            asset("Arxk-v1.0.0-windows-x64-Setup.exe"),
             asset("checksums.txt"),
         ];
 
         assert_eq!(
-            select_checksum_asset(&assets, "Termy-v1.0.0-windows-x64-Setup.exe")
+            select_checksum_asset(&assets, "Arxk-v1.0.0-windows-x64-Setup.exe")
                 .expect("checksum manifest")
                 .name,
             "checksums.txt"

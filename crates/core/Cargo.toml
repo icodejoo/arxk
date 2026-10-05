@@ -4,6 +4,10 @@ version = "1.0.4"
 edition = "2024"
 license = "MIT"
 
+[[bin]]
+name = "arxk-session-host"
+path = "src/bin/arxk-session-host.rs"
+
 [lints]
 workspace = true
 

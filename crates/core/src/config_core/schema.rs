@@ -265,11 +265,11 @@ pub const THEME_MODE_ENUM_CHOICES: &[EnumChoice] = &[
 pub const APP_ICON_ENUM_CHOICES: &[EnumChoice] = &[
     EnumChoice {
         value: "default",
-        label: "Termy Default",
+        label: "Arxk Default",
     },
     EnumChoice {
         value: "old",
-        label: "Termy Old",
+        label: "Arxk Old",
     },
 ];
 
@@ -376,7 +376,7 @@ define_root_settings! {
     (AppIcon, "app_icon", [], Appearance, "APP", "App Icon", "macOS app icon shown in the Dock and app switcher", ["app", "icon", "dock", "macos", "old"], RootSettingValueKind::Enum, false),
     (ChromeContrast, "chrome_contrast", [], Appearance, "CHROME", "Increase Chrome Contrast", "Increase contrast of non-terminal UI surfaces", ["chrome", "contrast", "sidebar", "titlebar", "panel", "overlay", "tab strip"], RootSettingValueKind::Boolean, false),
     (AutoUpdate, "auto_update", [], Advanced, "UPDATES", "Auto Update", "Enable automatic update checks", ["update", "check", "upgrade", "version"], RootSettingValueKind::Boolean, false),
-    (MultiplexerEnabled, "multiplexer_enabled", [], Terminal, "SESSIONS", "Built-in Multiplexer", "Keep programs running after quitting and restore tabs, panes, and terminal state when reopening. Applies after restarting Termy.", ["multiplexer", "session", "background", "persist", "restore", "quit"], RootSettingValueKind::Boolean, false),
+    (MultiplexerEnabled, "multiplexer_enabled", [], Terminal, "SESSIONS", "Built-in Multiplexer", "Keep programs running after quitting and restore tabs, panes, and terminal state when reopening. Applies after restarting Arxk.", ["multiplexer", "session", "background", "persist", "restore", "quit"], RootSettingValueKind::Boolean, false),
     (TmuxEnabled, "tmux_enabled", [], Terminal, "TMUX", "Tmux Enabled", "Enable tmux runtime integration", ["tmux", "runtime", "integration", "enabled"], RootSettingValueKind::Boolean, false),
     (TmuxPersistence, "tmux_persistence", [], Terminal, "TMUX", "Tmux Persistence", "Reuse tmux tabs and panes across app restarts", ["tmux", "session", "persistence", "restart"], RootSettingValueKind::Boolean, false),
     (TmuxExclusive, "tmux_exclusive", [], Terminal, "TMUX", "Tmux Exclusive", "Stay in tmux control mode; restart it instead of falling back to a classic terminal when control mode exits", ["tmux", "exclusive", "control", "mode", "restart", "fallback"], RootSettingValueKind::Boolean, false),
@@ -407,7 +407,7 @@ define_root_settings! {
     (AutoHideTabbar, "auto_hide_tabbar", [], Tabs, "TAB STRIP", "Auto-hide Tab Bar", "Hide the tab bar when only one tab is open", ["tab", "tabs", "hide", "auto", "single", "tabbar"], RootSettingValueKind::Boolean, false),
     (SidebarEnabled, "sidebar_enabled", [], Tabs, "SIDEBAR", "Workspace Sidebar", "Show the left sidebar for grouping tabs into workspaces", ["sidebar", "workspace", "workspaces", "tabs", "groups"], RootSettingValueKind::Boolean, false),
     (SidebarWidth, "sidebar_width", [], Tabs, "SIDEBAR", "Sidebar Width", "Width of the left workspace sidebar in pixels", ["sidebar", "workspace", "width", "resize"], RootSettingValueKind::Numeric, false),
-    (ShowTermyInTitlebar, "show_termy_in_titlebar", [], Tabs, "TITLE BAR", "Show Termy In Titlebar", "Show or hide the termy branding in the titlebar", ["titlebar", "branding", "tabs"], RootSettingValueKind::Boolean, false),
+    (ShowTermyInTitlebar, "show_termy_in_titlebar", [], Tabs, "TITLE BAR", "Show Arxk In Titlebar", "Show or hide the termy branding in the titlebar", ["titlebar", "branding", "tabs"], RootSettingValueKind::Boolean, false),
     (WindowsShell, "windows_shell", [], Terminal, "SHELL", "Windows Shell Preset", "Preset shell used for new sessions on Windows", ["windows", "shell", "cmd", "powershell", "pwsh", "git bash"], RootSettingValueKind::Enum, false),
     (Shell, "shell", [], Terminal, "SHELL", "Shell", "Optional executable path used for new sessions; overrides the Windows shell preset on Windows", ["shell", "bash", "zsh", "fish", "custom"], RootSettingValueKind::Text, false),
     (Term, "term", [], Terminal, "SHELL", "TERM", "TERM value exposed to child applications", ["term", "terminal", "env"], RootSettingValueKind::Text, false),

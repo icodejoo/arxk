@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Import Termy's Developer ID certificate and notarization key on an ephemeral
+# Import Arxk's Developer ID certificate and notarization key on an ephemeral
 # GitHub-hosted macOS runner. Never print the credential material.
 
 die() { echo "Error: $*" >&2; exit 1; }

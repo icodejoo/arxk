@@ -160,14 +160,14 @@ function buildNebula(
 }
 
 const NEBULA_LEFT = buildNebula(90210, [
-  [1, 10, '$ termy'],
+  [1, 10, '$ arxk'],
   [4, 4, '0.3ns'],
   [7, 14, 'neofetch'],
   [10, 8, 'andies'],
 ]);
 
 const NEBULA_RIGHT = buildNebula(48151, [
-  [1, 12, './termy --fast'],
+  [1, 12, './arxk --fast'],
   [4, 22, 'GPU'],
   [6, 8, 'config'],
   [9, 16, 'rainbow'],
@@ -242,7 +242,7 @@ function SiteNav() {
           >
             ❯_
           </span>
-          <span className="text-[15px] font-medium tracking-tight">termy</span>
+          <span className="text-[15px] font-medium tracking-tight">arxk</span>
         </Link>
 
         <nav className="hidden items-center gap-8 sm:flex">
@@ -321,7 +321,7 @@ function Hero() {
             background: 'linear-gradient(180deg, #eaf2ff 0%, #94b8f8 100%)',
           }}
         >
-          Download Termy
+          Download Arxk
         </Link>
         <Link
           to="/docs/$"
@@ -454,7 +454,7 @@ function Showcase() {
           <div className="min-h-[430px] px-7 py-6 text-[13.5px] leading-[1.9] sm:text-sm">
             <p>
               <span className="text-[#7aa2f7]">$</span>{' '}
-              <span className="text-[#c0caf5]">termy</span>
+              <span className="text-[#c0caf5]">arxk</span>
             </p>
             <p>
               <span className="text-[#7aa2f7]">$</span>{' '}
@@ -532,7 +532,7 @@ function SettingsWindow() {
             ))}
           </nav>
           <p className="mt-auto px-2 pt-6 text-[8.5px] text-[#565f89]">
-            Termy v0.2.6
+            Arxk v0.2.6
           </p>
         </aside>
 
@@ -573,7 +573,7 @@ function SettingsWindow() {
               title="App Icon"
               description="Manage app icon shown in the Dock and app switcher"
             >
-              <SelectControl value="Termy Old" />
+              <SelectControl value="Arxk Old" />
             </SettingsRow>
           </SettingsSection>
 

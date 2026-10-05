@@ -322,7 +322,7 @@ and style resets, long combining text plus hyperlinks, edits, erasure, wide
 cell cleanup, reflow, scrollback, saved cursors, and alternate screens. The
 next Actions artifact is the first performance acceptance measurement for this
 layout; no speed claim is inferred from the unchanged static size.
-Termy's Tmon-only render path now retains the five styles and explicit color.
+Arxk's Tmon-only render path now retains the five styles and explicit color.
 Straight and curly styles use GPUI decorations; double, dotted, and dashed
 styles paint one bounded path per text batch. Style and color participate in
 batch/cache identity, while the native Alacritty and tmux mapping deliberately
@@ -451,7 +451,7 @@ tracked separately from these benchmark results.
 
 A follow-up parity audit removed Tmon's artificial 4,096-character REP cap, so
 the full parsed `u16` repeat count now matches the pinned VTE behavior. The
-desktop adapter also enables OSC 52 clipboard queries through Termy's existing
+desktop adapter also enables OSC 52 clipboard queries through Arxk's existing
 reply host, matching the native engine while leaving standalone Tmon's
 copy-only default unchanged.
 

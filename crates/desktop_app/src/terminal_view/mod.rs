@@ -3223,13 +3223,13 @@ impl TerminalView {
         let benchmark_config = match BenchmarkConfig::from_env() {
             Ok(config) => config,
             Err(error) => {
-                eprintln!("Termy startup blocked: {error}");
+                eprintln!("Arxk startup blocked: {error}");
                 std::process::exit(1);
             }
         };
         let configured_runtime_kind = RuntimeKind::from_app_config(&config);
         if benchmark_config.is_some() && configured_runtime_kind == RuntimeKind::Tmux {
-            eprintln!("Termy startup blocked: benchmark mode requires native runtime");
+            eprintln!("Arxk startup blocked: benchmark mode requires native runtime");
             std::process::exit(1);
         }
         let tab_title = config.tab_title.clone();
@@ -3845,7 +3845,7 @@ impl TerminalView {
         if self.multiplexer_enabled_config != config.multiplexer_enabled {
             self.multiplexer_enabled_config = config.multiplexer_enabled;
             crate::ui::toast::info(t!(
-                "Built-in multiplexer setting saved. Restart Termy to apply it."
+                "Built-in multiplexer setting saved. Restart Arxk to apply it."
             ));
         }
         self.tmux_enabled_config = config.tmux_enabled;
@@ -5263,7 +5263,7 @@ mod tests {
         assert!(TerminalView::overlay_banner_visible_for_state(Some(
             &UpdateState::Available {
                 version: "1.2.3".to_string(),
-                asset_name: "Termy-v1.2.3-macos-arm64.dmg".to_string(),
+                asset_name: "Arxk-v1.2.3-macos-arm64.dmg".to_string(),
                 url: "https://example.com/installer".to_string(),
                 checksum_asset_name: Some("checksums.txt".to_string()),
                 checksum_url: Some("https://example.com/checksums.txt".to_string()),

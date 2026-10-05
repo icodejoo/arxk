@@ -1,10 +1,10 @@
 # termy::design_system
 
-Termy's settings design system as reusable GPUI components.
+Arxk's settings design system as reusable GPUI components.
 
 ## Owner
 
-This module owns Termy's chrome vocabulary: color tokens derived from the active
+This module owns Arxk's chrome vocabulary: color tokens derived from the active
 terminal theme, layout metrics, and the stateless components built on them —
 sidebar, section headers, grouped cards, setting rows, controls (select,
 stepper, switch, slider, text field, segmented control, shortcut box), and

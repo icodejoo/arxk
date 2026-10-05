@@ -4,7 +4,7 @@ Shared configuration schema and defaults.
 
 ## Owner
 
-This module owns Termy's config data model, defaults, validation-friendly types, and theme references used by app, CLI, docs, and embedding surfaces.
+This module owns Arxk's config data model, defaults, validation-friendly types, and theme references used by app, CLI, docs, and embedding surfaces.
 
 Keep terminal runtime behavior in `termy_core`, command metadata in `termy_core::command_core`, and bundled theme definitions in `termy_core::themes`.
 

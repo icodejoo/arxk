@@ -47,7 +47,7 @@ impl TerminalGlyphMetrics {
 
 /// Nearby codepoints used for context-sensitive terminal glyph decisions.
 ///
-/// Termy renders Braille as geometry only in runs of at least three cells so
+/// Arxk renders Braille as geometry only in runs of at least three cells so
 /// short animated Braille spinners keep their font-designed appearance.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct TerminalGlyphNeighbors {

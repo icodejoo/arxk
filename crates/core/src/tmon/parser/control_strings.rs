@@ -268,7 +268,7 @@ impl Parser {
             _ => {}
         }
 
-        // Termy's native OSC interceptor only recognizes its custom events
+        // Arxk's native OSC interceptor only recognizes its custom events
         // when the complete payload is valid UTF-8. Invalid payloads are
         // forwarded to vte, where these commands are unhandled.
         let custom_osc = matches!(raw_command, b"7" | b"9" | b"133");

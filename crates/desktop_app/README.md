@@ -7,7 +7,7 @@ Main desktop application.
 The desktop uses `gpui-kit = 0.7.0` with `default-features = false`, backed by
 its matching `gpui-pre = 0.3.7` snapshot. Import framework APIs through
 `gpui_kit`; do not add a separate GPUI dependency. Styled Kit components and
-Kit icon assets are disabled. Termy's `design_system`, assets, themes,
+Kit icon assets are disabled. Arxk's `design_system`, assets, themes,
 terminal renderer, and overlays remain application-owned.
 
 Startup uses `gpui_kit::application()` and initializes the Base layer with
@@ -32,7 +32,7 @@ forward to an already-running v0.2.61 instance, which used a marker file instead
 
 Additional windows start with a fresh session. The first terminal window owns native session restoration and persistence; extra windows do not overwrite its saved workspace. Managed tmux sessions in extra windows are independent and torn down when closed.
 
-On Windows, tmux requires `tmux_command_prefix` (for example, `wsl.exe -e`). When that runtime is active, its pane and session commands appear in the menus and command palette; without a prefix, Termy remains in native mode. Explorer's per-user "Open new Termy tab here" verbs are refreshed in the background when their registered executable path or text changes.
+On Windows, tmux requires `tmux_command_prefix` (for example, `wsl.exe -e`). When that runtime is active, its pane and session commands appear in the menus and command palette; without a prefix, Arxk remains in native mode. Explorer's per-user "Open new Arxk tab here" verbs are refreshed in the background when their registered executable path or text changes.
 
 Important internal areas:
 
@@ -89,7 +89,7 @@ cargo check -p termy
 ## Kitty graphics visual check
 
 Run `python3 crates/desktop_app/examples/kitty_graphics_conformance.py` inside
-Termy. The alternate-screen demo covers natural and cell-based sizes, crops and
+Arxk. The alternate-screen demo covers natural and cell-based sizes, crops and
 pixel offsets, all three z layers, repeated Unicode placeholders with gaps,
 clipped relative placements, animation, margin scrolling, and final-chunk
 cursor placement. Space switches pages, R redraws, and Q restores the shell.

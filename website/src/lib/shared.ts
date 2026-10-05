@@ -1,4 +1,4 @@
-export const appName = 'Termy';
+export const appName = 'Arxk';
 export const docsRoute = '/docs';
 
 export const gitConfig = {

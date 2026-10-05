@@ -28,8 +28,8 @@ pub(crate) enum DeepLinkArgument {
 
 impl DeepLinkRoute {
     pub(crate) fn parse(raw: &str) -> Result<(Self, Option<DeepLinkArgument>), String> {
-        let url = Url::parse(raw)
-            .map_err(|error| t!("Invalid Termy deeplink: {error}", error = error))?;
+        let url =
+            Url::parse(raw).map_err(|error| t!("Invalid Arxk deeplink: {error}", error = error))?;
 
         if url.scheme() != "termy" {
             return Err(t!(
@@ -39,7 +39,7 @@ impl DeepLinkRoute {
         }
 
         if !url.username().is_empty() || url.password().is_some() || url.port().is_some() {
-            return Err(t!("Termy deeplinks do not support user info or ports").to_string());
+            return Err(t!("Arxk deeplinks do not support user info or ports").to_string());
         }
 
         let mut segments = Vec::new();
@@ -91,7 +91,7 @@ impl DeepLinkRoute {
                 Ok((Self::ThemeInstall, Some(DeepLinkArgument::Value(slug))))
             }
             _ => Err(t!(
-                "Unsupported Termy deeplink route: {route}",
+                "Unsupported Arxk deeplink route: {route}",
                 route = segments.join("/")
             )),
         }
@@ -105,13 +105,13 @@ fn parse_query_value(url: &Url, name: &str) -> Option<String> {
 }
 
 pub(crate) fn new_tab_deeplink_for_dir(dir: &str) -> String {
-    let mut url = Url::parse("termy://new").expect("static Termy new-tab URL");
+    let mut url = Url::parse("termy://new").expect("static Arxk new-tab URL");
     url.query_pairs_mut().append_pair("dir", dir);
     url.to_string()
 }
 
 pub(crate) fn new_window_deeplink(dir: Option<&str>) -> String {
-    let mut url = Url::parse("termy://window").expect("static Termy new-window URL");
+    let mut url = Url::parse("termy://window").expect("static Arxk new-window URL");
     if let Some(dir) = dir {
         url.query_pairs_mut().append_pair("dir", dir);
     }
@@ -156,11 +156,11 @@ fn directory_path_for_open(path: &Path) -> String {
 
 fn validate_deeplink_text(value: String, name: &str, max_len: usize) -> Result<String, String> {
     if value.len() > max_len {
-        return Err(t!("Termy deeplink {name} value is too long", name = name));
+        return Err(t!("Arxk deeplink {name} value is too long", name = name));
     }
     if value.bytes().any(|byte| byte.is_ascii_control()) {
         return Err(t!(
-            "Termy deeplink {name} value contains unsupported control characters",
+            "Arxk deeplink {name} value contains unsupported control characters",
             name = name
         ));
     }
@@ -291,7 +291,7 @@ mod tests {
     fn rejects_unknown_route() {
         let error =
             DeepLinkRoute::parse("termy://workspace").expect_err("route should be rejected");
-        assert!(error.contains("Unsupported Termy deeplink route"));
+        assert!(error.contains("Unsupported Arxk deeplink route"));
     }
 
     #[test]
@@ -306,7 +306,7 @@ mod tests {
     fn rejects_malformed_url() {
         let error =
             DeepLinkRoute::parse("termy://[").expect_err("malformed deeplink should be rejected");
-        assert!(error.contains("Invalid Termy deeplink"));
+        assert!(error.contains("Invalid Arxk deeplink"));
     }
 
     #[test]

@@ -26,7 +26,7 @@ pub struct Palette {
 }
 
 impl Palette {
-    /// `tokyo-night-storm`, Termy's shipped default.
+    /// `tokyo-night-storm`, Arxk's shipped default.
     pub fn tokyo_night_storm() -> Self {
         Self {
             background: rgb(0x1a1b26),

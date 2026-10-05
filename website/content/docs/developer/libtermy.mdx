@@ -1,21 +1,21 @@
 ---
 title: libtermy
-description: Embed Termy's beta terminal engine in Rust, C, Swift, and other native hosts.
+description: Embed Arxk's beta terminal engine in Rust, C, Swift, and other native hosts.
 ---
 
 <Callout type="info">
   libtermy is in beta and ready for experiments, prototypes, and real host
   integrations. The Rust and C APIs are usable today, but they can still change
-  between Termy releases. Pin a commit or release and test upgrades before
+  between Arxk releases. Pin a commit or release and test upgrades before
   shipping them.
 </Callout>
 
-`libtermy` is Termy's reusable terminal engine. It provides the PTY, VT parser,
+`libtermy` is Arxk's reusable terminal engine. It provides the PTY, VT parser,
 scrollback, input protocols, shell integration, search, links, configuration,
 events, and damage-scoped frames while leaving the actual UI and GPU renderer to
 your application.
 
-The same engine powers Termy's desktop surfaces. You can build another terminal
+The same engine powers Arxk's desktop surfaces. You can build another terminal
 app, embed a terminal inside a native tool, render terminal output in a custom
 UI, or feed output into a display-only terminal without creating a child
 process.
@@ -52,7 +52,7 @@ owned by the embedder.
 
 ## Rust quick start
 
-Add `termy_core` from the Termy repository. During beta, pinning a known commit
+Add `termy_core` from the Arxk repository. During beta, pinning a known commit
 or release is recommended:
 
 ```toml title="Cargo.toml"
@@ -312,19 +312,19 @@ tear down safely:
 libtermy is usable, but it has not reached a stable 1.0 contract yet:
 
 - Rust types and C ABI functions may change between releases.
-- Prebuilt standalone SDK packages are not published yet; build from the Termy
+- Prebuilt standalone SDK packages are not published yet; build from the Arxk
   repository and vendor the matching header and shared library.
 - The host must provide rendering, focus, clipboard policy, accessibility, and
   platform integration.
 - Validate performance with incremental frame updates; a full snapshot every
   display tick leaves much of libtermy's performance work unused.
 
-Pin the Termy revision in your dependency or build system, keep the header and
+Pin the Arxk revision in your dependency or build system, keep the header and
 library from the same revision, and review release notes before updating.
 
 ## Validate an integration
 
-When working from a Termy checkout, the focused checks are:
+When working from a Arxk checkout, the focused checks are:
 
 ```bash
 cargo test -p termy_core

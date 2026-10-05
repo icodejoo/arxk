@@ -286,7 +286,7 @@ pub(crate) fn open_terminal_window(
 
     #[cfg(target_os = "macos")]
     let titlebar = Some(gpui_kit::TitlebarOptions {
-        title: Some("Termy".into()),
+        title: Some("Arxk".into()),
         appears_transparent: true,
         traffic_light_position: Some(gpui_kit::point(px(12.0), px(10.0))),
     });
@@ -294,13 +294,13 @@ pub(crate) fn open_terminal_window(
     // 标签栏右侧留白带自绘（见 tab_strip/render_window_controls.rs）。
     #[cfg(target_os = "windows")]
     let titlebar = Some(gpui_kit::TitlebarOptions {
-        title: Some("Termy".into()),
+        title: Some("Arxk".into()),
         appears_transparent: true,
         traffic_light_position: None,
     });
     #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     let titlebar = Some(gpui_kit::TitlebarOptions {
-        title: Some("Termy".into()),
+        title: Some("Arxk".into()),
         appears_transparent: false,
         traffic_light_position: None,
     });
@@ -336,7 +336,7 @@ pub(crate) fn open_terminal_window(
         move |window, cx| {
             #[cfg(target_os = "linux")]
             {
-                window.set_window_title("Termy");
+                window.set_window_title("Arxk");
             }
             if benchmark_mode {
                 #[cfg(target_os = "macos")]
@@ -652,7 +652,7 @@ fn main() {
             )),
         };
         if let Err(error) = result {
-            eprintln!("Termy session host: {error}");
+            eprintln!("Arxk session host: {error}");
             std::process::exit(1);
         }
         return;
@@ -672,13 +672,13 @@ fn main() {
     let (deeplink_tx, deeplink_rx) = flume::unbounded::<Vec<String>>();
     match instance::claim_or_forward(&instance::urls_to_forward(&startup_arguments)) {
         Ok(instance::InstanceClaim::Forwarded) => {
-            log::info!("Forwarded launch request to the running Termy instance.");
+            log::info!("Forwarded launch request to the running Arxk instance.");
             std::process::exit(0);
         }
         Ok(instance::InstanceClaim::Primary(guard)) => {
             instance::spawn_listener(guard, deeplink_tx.clone());
         }
-        Err(error) => log::warn!("Termy instance handoff unavailable: {error}"),
+        Err(error) => log::warn!("Arxk instance handoff unavailable: {error}"),
     }
 
     let application = gpui_kit::application().with_assets(crate::asset_source::EmbeddedAssets);

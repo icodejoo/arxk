@@ -1,6 +1,6 @@
 #!/bin/bash
 # Test script for OSC escape sequences
-# Run this in Termy to verify shell integration and progress support
+# Run this in Arxk to verify shell integration and progress support
 
 set -e
 

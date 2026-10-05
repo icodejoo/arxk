@@ -4,7 +4,7 @@ set shell := ["bash", "-cu"]
 @default:
     just --list
 
-# Checkout-local instance lock so this does not silently attach to Termy.app.
+# Checkout-local instance lock so this does not silently attach to Arxk.app.
 run:
     TERMY_INSTANCE_HOME="${TERMY_INSTANCE_HOME:-{{ justfile_directory() }}/target/termy-dev-instance}" cargo run -p termy --release
 
@@ -25,7 +25,7 @@ benchmark-tmon:
     } 2>&1 | tee -a "$report"
 
 run-cli *args:
-    cargo run --bin termy-cli --release {{ args }}
+    cargo run --bin arxk-cli --release {{ args }}
 
 # Check a benchmark summary against regression gates
 check-performance *args:
@@ -62,7 +62,7 @@ clean:
 generate-icon:
     ./scripts/generate-icon.sh
 
-# Build the GPUI Termy app bundle and DMG (unsigned by default)
+# Build the GPUI Arxk app bundle and DMG (unsigned by default)
 # Example:
 
 # just build-dmg -- --version 0.1.0 --arch arm64 --sign-identity "Developer ID Application: ..."

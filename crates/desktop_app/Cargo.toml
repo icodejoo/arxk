@@ -1,13 +1,17 @@
 [package]
 name = "termy"
-default-run = "termy"
+default-run = "arxk"
 version = "1.0.4"
 edition = "2024"
+
+[[bin]]
+name = "arxk"
+path = "src/main.rs"
 
 [package.metadata]
 
 [package.metadata.bundle]
-name = "Termy"
+name = "Arxk"
 identifier = "com.lassevestergaard.termy"
 short_description = "Minimal GPUI-powered terminal"
 category = "Developer Tool"

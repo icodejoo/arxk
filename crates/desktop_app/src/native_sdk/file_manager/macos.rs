@@ -49,7 +49,7 @@ mod tests {
         let service_dir = temp.path().join("service/Contents");
         std::fs::create_dir_all(&service_dir).unwrap();
         let workflow = service_dir.join("document.wflow");
-        std::fs::write(&workflow, "/old/build/Termy.app/Contents/MacOS/Termy").unwrap();
+        std::fs::write(&workflow, "/old/build/Arxk.app/Contents/MacOS/Arxk").unwrap();
         install_user_service(&service_dir).unwrap();
 
         let extracted = Command::new("/usr/bin/plutil")

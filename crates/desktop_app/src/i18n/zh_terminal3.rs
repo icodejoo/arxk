@@ -32,8 +32,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "tmux 启动默认值已保存。请通过 Tmux 会话立即切换运行时。",
     ),
     (
-        "Built-in multiplexer setting saved. Restart Termy to apply it.",
-        "内置多路复用器设置已保存。重启 Termy 后生效。",
+        "Built-in multiplexer setting saved. Restart Arxk to apply it.",
+        "内置多路复用器设置已保存。重启 Arxk 后生效。",
     ),
     (
         "tmux on Windows requires tmux_command_prefix (for example, wsl.exe -e); using native runtime.",

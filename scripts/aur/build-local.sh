@@ -79,17 +79,17 @@ fi
 aur_dir="$REPO_ROOT/target/aur/termy-bin-${version}-${carch}"
 mkdir -p "$aur_dir"
 
-desktop_path="$aur_dir/termy.desktop"
+desktop_path="$aur_dir/arxk.desktop"
 license_path="$aur_dir/LICENSE"
 icon_path="$aur_dir/termy_icon.png"
 tarball_path="$aur_dir/termy-${version}-${carch}.tar.gz"
 pkgbuild_path="$aur_dir/PKGBUILD"
 
-cp "$SCRIPT_DIR/termy.desktop" "$desktop_path"
+cp "$SCRIPT_DIR/arxk.desktop" "$desktop_path"
 curl -fsSL -o "$license_path" "https://raw.githubusercontent.com/lassejlv/termy/v${version}/LICENSE"
 curl -fsSL -o "$icon_path" "https://raw.githubusercontent.com/lassejlv/termy/v${version}/assets/termy_icon.png"
 curl -fsSL -o "$tarball_path" \
-  "https://github.com/lassejlv/termy/releases/download/v${version}/Termy-v${version}-linux-${carch}.tar.gz"
+  "https://github.com/lassejlv/termy/releases/download/v${version}/Arxk-v${version}-linux-${carch}.tar.gz"
 
 desktop_sum="$(b2sum "$desktop_path" | cut -d' ' -f1)"
 license_sum="$(b2sum "$license_path" | cut -d' ' -f1)"

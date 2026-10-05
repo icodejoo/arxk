@@ -99,7 +99,7 @@ impl TerminalView {
             |path| path.to_string_lossy().into_owned(),
         );
         let message = t!(
-            "Termy v{version} | {os}-{arch} | config: {config_path}",
+            "Arxk v{version} | {os}-{arch} | config: {config_path}",
             version = crate::APP_VERSION,
             os = std::env::consts::OS,
             arch = std::env::consts::ARCH,

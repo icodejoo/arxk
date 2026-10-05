@@ -51,7 +51,7 @@ pub enum InstallOutcome {
 #[cfg(target_os = "macos")]
 pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
     let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-    let cache_dir = PathBuf::from(home).join("Library/Caches/Termy");
+    let cache_dir = PathBuf::from(home).join("Library/Caches/Arxk");
     let _ = std::fs::create_dir_all(&cache_dir);
     cache_dir.join(format!("update-{version}.{extension}"))
 }
@@ -60,7 +60,7 @@ pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
 pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
     let cache_dir = std::env::var("LOCALAPPDATA")
         .map_or_else(|_| std::env::temp_dir(), PathBuf::from)
-        .join("Termy")
+        .join("Arxk")
         .join("Cache");
     let _ = std::fs::create_dir_all(&cache_dir);
     cache_dir.join(format!("update-{version}.{extension}"))
@@ -292,7 +292,7 @@ pub fn do_install(dmg_path: &Path) -> Result<InstallOutcome> {
             if !is_app {
                 continue;
             }
-            if path.file_name().and_then(|n| n.to_str()) == Some("Termy.app") {
+            if path.file_name().and_then(|n| n.to_str()) == Some("Arxk.app") {
                 app_path = Some(path);
                 break;
             }
@@ -510,9 +510,9 @@ pub fn do_install(tarball_path: &Path) -> Result<InstallOutcome> {
         ));
     }
 
-    // Find the termy binary in the extracted contents
-    let binary_path = temp_dir.join("termy/termy");
-    let alt_binary_path = temp_dir.join("termy");
+    // Find the arxk binary in the extracted contents
+    let binary_path = temp_dir.join("arxk/arxk");
+    let alt_binary_path = temp_dir.join("arxk");
 
     let source_binary = if binary_path.exists() {
         binary_path
@@ -525,17 +525,17 @@ pub fn do_install(tarball_path: &Path) -> Result<InstallOutcome> {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                let potential = path.join("termy");
+                let potential = path.join("arxk");
                 if potential.exists() {
                     found = Some(potential);
                     break;
                 }
             }
         }
-        found.context(t!("Could not find termy binary in extracted tarball"))?
+        found.context(t!("Could not find arxk binary in extracted tarball"))?
     };
 
-    let target_binary = install_dir.join("termy");
+    let target_binary = install_dir.join("arxk");
     std::fs::copy(&source_binary, &target_binary)
         .context(t!("Failed to copy binary to install directory"))?;
 
@@ -567,12 +567,12 @@ mod tests {
     #[test]
     fn checksum_parser_finds_matching_manifest_entry() {
         let checksums = "\
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Termy-v1.2.3-macos-arm64.dmg
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb *Termy-v1.2.3-windows-x64-Setup.exe
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  Arxk-v1.2.3-macos-arm64.dmg
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb *Arxk-v1.2.3-windows-x64-Setup.exe
 ";
 
         assert_eq!(
-            expected_sha256_for_asset(checksums, "Termy-v1.2.3-windows-x64-Setup.exe", false),
+            expected_sha256_for_asset(checksums, "Arxk-v1.2.3-windows-x64-Setup.exe", false),
             Some("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string())
         );
     }
@@ -582,7 +582,7 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb *Termy-v1.2.3-w
         assert_eq!(
             expected_sha256_for_asset(
                 "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-                "Termy-v1.2.3-windows-x64-Setup.exe",
+                "Arxk-v1.2.3-windows-x64-Setup.exe",
                 true,
             ),
             Some("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc".to_string())
@@ -594,7 +594,7 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb *Termy-v1.2.3-w
         assert_eq!(
             expected_sha256_for_asset(
                 "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
-                "Termy-v1.2.3-windows-x64-Setup.exe",
+                "Arxk-v1.2.3-windows-x64-Setup.exe",
                 false,
             ),
             None
@@ -609,7 +609,7 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 ";
 
         assert_eq!(
-            expected_sha256_for_asset(checksums, "Termy-v1.2.3-windows-x64-Setup.exe", true),
+            expected_sha256_for_asset(checksums, "Arxk-v1.2.3-windows-x64-Setup.exe", true),
             None
         );
     }
@@ -626,12 +626,11 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     #[cfg(target_os = "windows")]
     #[test]
     fn windows_msi_installer_quotes_installer_path() {
-        let params = windows_msi_installer_parameters(Path::new(
-            "C:\\Users\\me\\Downloads\\Termy Setup.msi",
-        ));
+        let params =
+            windows_msi_installer_parameters(Path::new("C:\\Users\\me\\Downloads\\Arxk Setup.msi"));
         assert_eq!(
             params,
-            "/i \"C:\\Users\\me\\Downloads\\Termy Setup.msi\" /passive /norestart"
+            "/i \"C:\\Users\\me\\Downloads\\Arxk Setup.msi\" /passive /norestart"
         );
     }
 }

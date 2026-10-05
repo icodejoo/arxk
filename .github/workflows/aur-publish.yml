@@ -20,13 +20,13 @@ jobs:
           set -euo pipefail
           v="${{ inputs.version }}"
           curl -fsSL -o termy.tar.gz \
-            "https://github.com/lassejlv/termy/releases/download/v${v}/Termy-v${v}-linux-x86_64.tar.gz"
+            "https://github.com/lassejlv/termy/releases/download/v${v}/Arxk-v${v}-linux-x86_64.tar.gz"
           curl -fsSL -o termy_icon.png \
             "https://raw.githubusercontent.com/lassejlv/termy/v${v}/assets/termy_icon.png"
           curl -fsSL -o LICENSE \
             "https://raw.githubusercontent.com/lassejlv/termy/v${v}/LICENSE"
           echo "tarball=$(b2sum termy.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
-          echo "desktop=$(b2sum scripts/aur/termy.desktop | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "desktop=$(b2sum scripts/aur/arxk.desktop | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           echo "license=$(b2sum LICENSE | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
           echo "icon=$(b2sum termy_icon.png | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
@@ -47,7 +47,7 @@ jobs:
           pkgname: termy-bin
           pkgbuild: scripts/aur/PKGBUILD
           assets: |
-            scripts/aur/termy.desktop
+            scripts/aur/arxk.desktop
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}

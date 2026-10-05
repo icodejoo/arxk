@@ -78,7 +78,7 @@ fn run_driver(mut args: impl Iterator<Item = String>) -> Result<()> {
 
 fn run_compare(mut args: impl Iterator<Item = String>) -> Result<()> {
     // Capture once so inherited engine state cannot select different runtimes
-    // for the two Termy targets during a comparison.
+    // for the two Arxk targets during a comparison.
     let termy_engine = TermyBenchmarkEngine::from_env();
     let mut baseline_spec = None;
     let mut candidate_spec = None;
@@ -581,8 +581,8 @@ impl BenchmarkTargetKind {
 
     fn display_name(self) -> &'static str {
         match self {
-            Self::Termy => "Termy",
-            Self::Native => "Termy Native",
+            Self::Termy => "Arxk",
+            Self::Native => "Arxk Native",
             Self::Ghostty => "Ghostty",
         }
     }
@@ -747,14 +747,14 @@ fn resolve_native_executable(path: &Path) -> Result<PathBuf> {
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| extension.eq_ignore_ascii_case("app"))
     {
-        path.join("Contents/MacOS/Termy")
+        path.join("Contents/MacOS/Arxk")
     } else {
         path.to_path_buf()
     };
 
     if !executable.is_file() {
         bail!(
-            "native target must point to the Termy executable or .app bundle: {}",
+            "native target must point to the Arxk executable or .app bundle: {}",
             executable.display()
         );
     }
@@ -2742,7 +2742,7 @@ fn write_report_artifacts(output_root: &Path, summary: &ComparisonSummary) -> Re
 
 fn render_report(summary: &ComparisonSummary) -> String {
     let mut report = String::new();
-    report.push_str("# Termy Render Benchmark Report\n\n");
+    report.push_str("# Arxk Render Benchmark Report\n\n");
     report.push_str(&format!(
         "Baseline `{}` ({}, runtime `{}`) vs candidate `{}` ({}, runtime `{}`).\n\n",
         summary.baseline.name,
@@ -3182,7 +3182,7 @@ fn render_report(summary: &ComparisonSummary) -> String {
         }
         if scenario.baseline.app_summary.is_some() || scenario.candidate.app_summary.is_some() {
             report.push_str(
-                "- Termy-only redraw diagnostics are app-specific; use the shared external metrics table for apples-to-apples frame comparison, and the app diagnostics section to explain Termy-side churn.\n",
+                "- Arxk-only redraw diagnostics are app-specific; use the shared external metrics table for apples-to-apples frame comparison, and the app diagnostics section to explain Arxk-side churn.\n",
             );
         }
         report.push('\n');
@@ -3346,8 +3346,8 @@ mod tests {
     #[test]
     fn resolves_native_app_executable() {
         let temp = tempfile::tempdir().unwrap();
-        let app = temp.path().join("Termy.app");
-        let executable = app.join("Contents/MacOS/Termy");
+        let app = temp.path().join("Arxk.app");
+        let executable = app.join("Contents/MacOS/Arxk");
         fs::create_dir_all(executable.parent().unwrap()).unwrap();
         fs::write(&executable, b"native").unwrap();
 
@@ -3669,7 +3669,7 @@ mod tests {
         let report = render_report(&super::ComparisonSummary {
             baseline: super::ComparedTargetSummary {
                 label: "baseline".to_string(),
-                name: "Termy".to_string(),
+                name: "Arxk".to_string(),
                 runtime_name: "native/alacritty".to_string(),
                 source_path: "/tmp/baseline".to_string(),
                 git_sha: Some("abc".to_string()),
@@ -3685,7 +3685,7 @@ mod tests {
                 scenario: "idle-burst".to_string(),
                 baseline: super::RunResult {
                     build_label: "baseline".to_string(),
-                    target_name: "Termy".to_string(),
+                    target_name: "Arxk".to_string(),
                     runtime_name: "native/alacritty".to_string(),
                     git_sha: Some("abc".to_string()),
                     scenario: "idle-burst".to_string(),
@@ -4015,7 +4015,7 @@ mod tests {
     fn compared_target(label: &str) -> super::ComparedTargetSummary {
         super::ComparedTargetSummary {
             label: label.to_string(),
-            name: "Termy".to_string(),
+            name: "Arxk".to_string(),
             runtime_name: "native/alacritty".to_string(),
             source_path: format!("/tmp/{label}"),
             git_sha: None,
@@ -4030,7 +4030,7 @@ mod tests {
     ) -> super::RunResult {
         super::RunResult {
             build_label: build_label.to_string(),
-            target_name: "Termy".to_string(),
+            target_name: "Arxk".to_string(),
             runtime_name: "native/alacritty".to_string(),
             git_sha: None,
             scenario: "idle-burst".to_string(),

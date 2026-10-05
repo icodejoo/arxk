@@ -108,8 +108,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "该插件命令在当前终端环境下不可用",
     ),
     (
-        "Plugin keybinding lost its Termy window",
-        "插件快捷键找不到对应的 Termy 窗口",
+        "Plugin keybinding lost its Arxk window",
+        "插件快捷键找不到对应的 Arxk 窗口",
     ),
     ("{label} is required", "{label}为必填项"),
     (
@@ -117,8 +117,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "{label}最多 {max_length} 个字符",
     ),
     (
-        "Plugin command lost its Termy window",
-        "插件命令找不到对应的 Termy 窗口",
+        "Plugin command lost its Arxk window",
+        "插件命令找不到对应的 Arxk 窗口",
     ),
     ("Running {title}…", "正在运行{title}…"),
     ("Cancel", "取消"),
@@ -130,8 +130,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("{title} ({percentage}%)", "{title}（{percentage}%）"),
     ("Cancelling plugin command…", "正在取消插件命令…"),
     (
-        "Plugin returned unknown Termy command `{command}`",
-        "插件返回了未知的 Termy 命令 `{command}`",
+        "Plugin returned unknown Arxk command `{command}`",
+        "插件返回了未知的 Arxk 命令 `{command}`",
     ),
     (
         "Plugin command stopped because its terminal could not be created",
@@ -151,8 +151,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ),
     ("Plugin terminal could not be opened", "无法打开插件终端"),
     (
-        "Unknown Termy command `{command}`",
-        "未知的 Termy 命令 `{command}`",
+        "Unknown Arxk command `{command}`",
+        "未知的 Arxk 命令 `{command}`",
     ),
     (
         "Failed to open plugin URL: {error}",

@@ -384,7 +384,7 @@ impl ClientState {
             .unwrap()
             .events
             .push(TerminalEvent::Title(
-                "Session disconnected — reopen Termy to reconnect".into(),
+                "Session disconnected — reopen Arxk to reconnect".into(),
             ));
         self.notify();
     }

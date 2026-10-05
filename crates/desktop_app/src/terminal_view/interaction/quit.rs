@@ -220,7 +220,7 @@ impl TerminalView {
 
     fn close_warning_title(target: CloseRequestTarget) -> &'static str {
         match target {
-            CloseRequestTarget::Application => t!("Quit Termy?"),
+            CloseRequestTarget::Application => t!("Quit Arxk?"),
             CloseRequestTarget::WindowClose => t!("Close Window?"),
             CloseRequestTarget::TabClose { .. } => t!("Close Tab?"),
             CloseRequestTarget::WorkspaceDelete { .. } => t!("Delete Workspace?"),

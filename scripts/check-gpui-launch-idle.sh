@@ -18,7 +18,7 @@ usage() {
   cat <<EOF
 Usage: $0 [options]
 
-Launch the GPUI Termy binary with an isolated config and gate first-frame
+Launch the GPUI Arxk binary with an isolated config and gate first-frame
 readiness plus settled process-tree RSS and CPU.
 
 Options:

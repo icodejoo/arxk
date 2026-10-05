@@ -548,7 +548,7 @@ pub fn askpass_environment(
     let executable = executable
         .to_str()
         .filter(|path| !path.is_empty())
-        .ok_or_else(|| "The Termy executable path is not valid UTF-8".to_string())?;
+        .ok_or_else(|| "The Arxk executable path is not valid UTF-8".to_string())?;
     Ok(HashMap::from([
         ("SSH_ASKPASS".to_string(), executable.to_string()),
         ("SSH_ASKPASS_REQUIRE".to_string(), "force".to_string()),
@@ -584,7 +584,7 @@ pub fn parse_askpass_request(
         return Ok(None);
     }
     let prompt_kind = classify_askpass_prompt(prompt)
-        .ok_or_else(|| "Termy refused an unsupported SSH prompt".to_string())?;
+        .ok_or_else(|| "Arxk refused an unsupported SSH prompt".to_string())?;
     let host_id = get_env(ASKPASS_HOST_ID_ENV)
         .ok_or_else(|| "The SSH credential request is missing its host ID".to_string())?;
     validate_host_id(&host_id)?;
@@ -1087,7 +1087,7 @@ mod tests {
     #[test]
     fn askpass_environment_contains_only_safe_references() {
         let host = password_input().into_host(Uuid::new_v4().to_string());
-        let environment = askpass_environment(Path::new("/Applications/Termy"), 42, &host)
+        let environment = askpass_environment(Path::new("/Applications/Arxk"), 42, &host)
             .expect("askpass environment");
         assert_eq!(environment.get(ASKPASS_HOST_ID_ENV), Some(&host.id));
         assert_eq!(
@@ -1117,7 +1117,7 @@ mod tests {
     #[test]
     fn askpass_request_classifies_host_key_confirmation_without_disabling_checks() {
         let host = password_input().into_host(Uuid::new_v4().to_string());
-        let environment = askpass_environment(Path::new("/Applications/Termy"), 42, &host).unwrap();
+        let environment = askpass_environment(Path::new("/Applications/Arxk"), 42, &host).unwrap();
         let request = parse_askpass_request(
             |key| environment.get(key).cloned(),
             "Are you sure you want to continue connecting (yes/no/[fingerprint])?",

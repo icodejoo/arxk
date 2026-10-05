@@ -87,7 +87,7 @@ pub enum MenuRoot {
 impl MenuRoot {
     pub const fn title(self) -> &'static str {
         match self {
-            Self::App => "Termy",
+            Self::App => "Arxk",
             Self::File => "File",
             Self::Edit => "Edit",
             Self::View => "View",
@@ -993,14 +993,14 @@ define_commands!(
         Quit,
         GLOBAL_CONTEXT,
         Some(palette(
-            "Quit Termy",
+            "Quit Arxk",
             "quit exit close",
             CommandPaletteVisibility::Always
         )),
         Some(menu(
             MenuRoot::App,
             2,
-            "Quit Termy",
+            "Quit Arxk",
             MenuVisibility::Always,
             MenuActionRole::Normal
         ))

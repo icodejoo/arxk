@@ -1,6 +1,6 @@
-//! Termy's settings design system, in GPUI.
+//! Arxk's settings design system, in GPUI.
 //!
-//! This module owns the visual language of Termy's chrome — surfaces, controls,
+//! This module owns the visual language of Arxk's chrome — surfaces, controls,
 //! rows, and status affordances — as stateless components. It knows nothing
 //! about config keys, plugins, or SSH hosts; product surfaces pass values in
 //! and get elements back.

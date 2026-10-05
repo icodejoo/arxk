@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Termy Theme Colors",
-  "description": "Color scheme for Termy terminal emulator",
+  "title": "Arxk Theme Colors",
+  "description": "Color scheme for Arxk terminal emulator",
   "type": "object",
   "properties": {
     "$schema": {

@@ -183,7 +183,7 @@ impl TerminalView {
         ) {
             Ok(terminal) => terminal,
             Err(error) => {
-                eprintln!("Termy startup blocked: failed to start native runtime: {error}");
+                eprintln!("Arxk startup blocked: failed to start native runtime: {error}");
                 std::process::exit(1);
             }
         }
@@ -248,7 +248,7 @@ impl TerminalView {
                     Err(error) => {
                         if let Err(cleanup_error) = tmux_client.shutdown_default() {
                             eprintln!(
-                                "Termy startup warning: failed to cleanup tmux client after \
+                                "Arxk startup warning: failed to cleanup tmux client after \
                                  snapshot startup failure: {cleanup_error}"
                             );
                         }

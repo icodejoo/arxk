@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Open new Arxk tab here
+Comment=Open a new Arxk tab in this folder
+Exec=arxk --new-tab --working-directory %F
+Icon-Name=arxk
+Selection=any
+Extensions=dir;
+Quote=double

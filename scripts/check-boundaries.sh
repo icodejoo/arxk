@@ -147,13 +147,13 @@ done < <(find crates -mindepth 2 -maxdepth 2 -name Cargo.toml | sort)
 require_pattern './scripts/build-dmg-signed\.sh' \
   ".github/workflows/release.yml" \
   "release workflow must call scripts/build-dmg-signed.sh"
-require_pattern 'dist/Termy-\$\{\{ env.VERSION \}\}-macos-\$\{\{ matrix.arch \}\}-signed\.dmg' \
+require_pattern 'dist/Arxk-\$\{\{ env.VERSION \}\}-macos-\$\{\{ matrix.arch \}\}-signed\.dmg' \
   ".github/workflows/release.yml" \
   "release workflow must upload the documented signed macOS DMG path"
 require_pattern 'types: \[released\]' \
   ".github/workflows/finalize-stable-release.yml" \
   "stable release finalization must run for initial stable releases and prerelease promotions"
-require_pattern 'Termy-\$\{tag\}-linux-x86_64\.tar\.gz' \
+require_pattern 'Arxk-\$\{tag\}-linux-x86_64\.tar\.gz' \
   ".github/workflows/finalize-stable-release.yml" \
   "stable release finalization must wait for the AUR source asset"
 require_pattern 'createWorkflowDispatch' \
@@ -172,7 +172,7 @@ forbid_pattern 'WebView2|MicrosoftEdgeWebView2' \
   "scripts/build-setup.ps1" \
   "Windows setup must not bootstrap a browser runtime"
 forbid_pattern 'WebView2|MicrosoftEdgeWebView2' \
-  "scripts/installer/termy.iss" \
+  "scripts/installer/arxk.iss" \
   "Windows installer must not package a browser runtime"
 forbid_pattern 'webkit2gtk|GDK_BACKEND' \
   "scripts/build-linux.sh" \
@@ -186,32 +186,32 @@ require_pattern 'pkg-config' \
 require_pattern 'pkg-config' \
   ".github/workflows/release.yml" \
   "release workflow must install pkg-config for Linux desktop builds"
-require_path "scripts/file-manager/termy-open-tab.desktop"
-require_path "scripts/file-manager/termy-open-tab.nemo_action"
+require_path "scripts/file-manager/arxk-open-tab.desktop"
+require_path "scripts/file-manager/arxk-open-tab.nemo_action"
 require_path "scripts/file-manager/nautilus-open-tab.sh"
 require_path "scripts/file-manager/macos/Info.plist"
 require_path "scripts/file-manager/macos/document.wflow"
 require_pattern 'TermyOpenTab' \
-  "scripts/installer/termy.iss" \
-  "Windows installer must register the Explorer Open new Termy tab here verb"
-require_pattern 'Open new Termy tab here' \
-  "scripts/installer/termy.iss" \
-  "Windows installer Explorer verb must use the Open new Termy tab here label"
+  "scripts/installer/arxk.iss" \
+  "Windows installer must register the Explorer Open new Arxk tab here verb"
+require_pattern 'Open new Arxk tab here' \
+  "scripts/installer/arxk.iss" \
+  "Windows installer Explorer verb must use the Open new Arxk tab here label"
 require_pattern '--working-directory ""%V""' \
-  "scripts/installer/termy.iss" \
+  "scripts/installer/arxk.iss" \
   "Windows installer Explorer verb must pass the selected folder as --working-directory"
 require_pattern 'MimeType=inode/directory;x-scheme-handler/termy;' \
-  "scripts/aur/termy.desktop" \
+  "scripts/aur/arxk.desktop" \
   "Linux desktop file must advertise directory and termy:// handlers"
 require_pattern 'Actions=open-tab-here' \
-  "scripts/aur/termy.desktop" \
-  "Linux desktop file must expose the Open new Termy tab here action"
-require_pattern 'Name=Open new Termy tab here' \
-  "scripts/aur/termy.desktop" \
-  "Linux desktop action must use the Open new Termy tab here label"
+  "scripts/aur/arxk.desktop" \
+  "Linux desktop file must expose the Open new Arxk tab here action"
+require_pattern 'Name=Open new Arxk tab here' \
+  "scripts/aur/arxk.desktop" \
+  "Linux desktop action must use the Open new Arxk tab here label"
 require_pattern 'install_linux_file_manager_share' \
   "scripts/build-linux.sh" \
-  "Linux packages must install file-manager Open new Termy tab here entries"
+  "Linux packages must install file-manager Open new Arxk tab here entries"
 require_pattern 'scripts/aur/\$\{APP_NAME_LOWER\}\.desktop' \
   "scripts/build-linux.sh" \
   "Linux AppImage packaging must use the shared desktop file"
@@ -221,9 +221,9 @@ require_pattern 'ensure_folder_document_type' \
 require_pattern 'public.folder' \
   "scripts/build-dmg.sh" \
   "macOS DMG packaging must declare public.folder document support"
-require_pattern 'Open new Termy tab here' \
+require_pattern 'Open new Arxk tab here' \
   "scripts/build-dmg.sh" \
-  "macOS DMG packaging must install the Finder Open new Termy tab here service"
+  "macOS DMG packaging must install the Finder Open new Arxk tab here service"
 require_pattern './scripts/check-platform-builds\.sh --native' \
   ".github/workflows/architecture-checks.yml" \
   "architecture checks must run the shared native platform verifier"
@@ -236,22 +236,22 @@ require_pattern 'TERMY_CHECK_XWIN_MSVC' \
 require_pattern 'cargo xwin check --cross-compiler clang' \
   "scripts/check-platform-builds.sh" \
   "platform verifier must use the working cargo-xwin clang backend for MSVC checks"
-require_pattern 'cp "\$BINARY_PATH" "\$STAGING_DIR/\$APP_NAME_LOWER/termy-bin"' \
+require_pattern 'cp "\$BINARY_PATH" "\$STAGING_DIR/\$APP_NAME_LOWER/arxk-bin"' \
   "scripts/build-linux.sh" \
-  "Linux tarballs must ship the real GUI binary as termy-bin behind the launcher"
+  "Linux tarballs must ship the real GUI binary as arxk-bin behind the launcher"
 require_pattern 'TERMY_LINUX_BACKEND:-x11' \
   "scripts/build-linux.sh" \
   "Linux release launchers must prefer X11/XWayland for native window decorations"
 require_pattern 'TERMY_LINUX_BACKEND:-x11' \
   "scripts/install-linux.sh" \
   "Linux installer launchers must preserve the release backend policy"
-require_pattern 'rm -f "\$INSTALL_DIR/termy" "\$INSTALL_DIR/termy-bin" "\$INSTALL_DIR/termy-cli"' \
+require_pattern 'rm -f "\$INSTALL_DIR/arxk" "\$INSTALL_DIR/arxk-bin" "\$INSTALL_DIR/arxk-cli"' \
   "scripts/build-linux.sh" \
   "Linux tarball installer must unlink existing install targets before writing replacements"
-require_pattern 'rm -f "\$INSTALL_DIR/termy" "\$INSTALL_DIR/termy-bin" "\$INSTALL_DIR/termy-cli"' \
+require_pattern 'rm -f "\$INSTALL_DIR/arxk" "\$INSTALL_DIR/arxk-bin" "\$INSTALL_DIR/arxk-cli"' \
   "scripts/install-linux.sh" \
   "Linux install helper must unlink existing install targets before writing replacements"
-require_pattern 'cp "\$CLI_BINARY_PATH" "\$INSTALL_DIR/termy-cli"' \
+require_pattern 'cp "\$CLI_BINARY_PATH" "\$INSTALL_DIR/arxk-cli"' \
   "scripts/install-linux.sh" \
   "Linux install helper must install the CLI sibling needed by desktop delegation"
 require_pattern '\|\| true' \
@@ -265,7 +265,7 @@ require_pattern 'grep -Ev.*x86_64.*aarch64' \
   "Linux install helper generic fallback must not install an asset for the wrong architecture"
 require_pattern 'file-manager' \
   "scripts/install-linux.sh" \
-  "Linux install helper must install file-manager Open new Termy tab here entries"
+  "Linux install helper must install file-manager Open new Arxk tab here entries"
 # Only core, desktop and CLI are Cargo packages; helpers are ordinary modules.
 check_forbidden_all_target_dep "termy_core" "gpui(-kit|-pre)?"
 check_forbidden_all_target_dep "termy_core" "termy"

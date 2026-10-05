@@ -321,7 +321,7 @@ mod tests {
 
     #[test]
     fn a_trailing_separator_is_the_minus_key() {
-        // `secondary--` is Termy's zoom-out default.
+        // `secondary--` is Arxk's zoom-out default.
         assert_eq!(labels("secondary--", Platform::Mac), ["CMD", "-"]);
         assert_eq!(labels("-", Platform::Mac), ["-"]);
     }

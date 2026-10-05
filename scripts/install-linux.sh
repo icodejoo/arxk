@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Termy Linux Installer
+# Arxk Linux Installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/lassejlv/termy/main/scripts/install-linux.sh | bash
 
 REPO="lassejlv/termy"
@@ -82,49 +82,49 @@ log "Download URL: $DOWNLOAD_URL"
 TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-TARBALL_PATH="$TEMP_DIR/termy.tar.gz"
+TARBALL_PATH="$TEMP_DIR/arxk.tar.gz"
 
-log "Downloading Termy $TAG..."
+log "Downloading Arxk $TAG..."
 curl -fsSL "$DOWNLOAD_URL" -o "$TARBALL_PATH"
 
 log "Extracting..."
 tar -xzf "$TARBALL_PATH" -C "$TEMP_DIR"
 
 BINARY_PATH=""
-if [[ -f "$TEMP_DIR/termy/termy-bin" ]]; then
-  BINARY_PATH="$TEMP_DIR/termy/termy-bin"
-elif [[ -f "$TEMP_DIR/termy/termy" ]]; then
-  BINARY_PATH="$TEMP_DIR/termy/termy"
-elif [[ -f "$TEMP_DIR/termy-bin" ]]; then
-  BINARY_PATH="$TEMP_DIR/termy-bin"
-elif [[ -f "$TEMP_DIR/termy" ]]; then
-  BINARY_PATH="$TEMP_DIR/termy"
+if [[ -f "$TEMP_DIR/arxk/arxk-bin" ]]; then
+  BINARY_PATH="$TEMP_DIR/arxk/arxk-bin"
+elif [[ -f "$TEMP_DIR/arxk/arxk" ]]; then
+  BINARY_PATH="$TEMP_DIR/arxk/arxk"
+elif [[ -f "$TEMP_DIR/arxk-bin" ]]; then
+  BINARY_PATH="$TEMP_DIR/arxk-bin"
+elif [[ -f "$TEMP_DIR/arxk" ]]; then
+  BINARY_PATH="$TEMP_DIR/arxk"
 else
-  BINARY_PATH="$(find "$TEMP_DIR" \( -name "termy-bin" -o -name "termy" \) -type f -executable 2>/dev/null | head -n1)"
+  BINARY_PATH="$(find "$TEMP_DIR" \( -name "arxk-bin" -o -name "arxk" \) -type f -executable 2>/dev/null | head -n1)"
 fi
 
 if [[ -z "$BINARY_PATH" || ! -f "$BINARY_PATH" ]]; then
-  die "Could not find termy binary in downloaded tarball"
+  die "Could not find arxk binary in downloaded tarball"
 fi
 
 CLI_BINARY_PATH=""
-if [[ -f "$TEMP_DIR/termy/termy-cli" ]]; then
-  CLI_BINARY_PATH="$TEMP_DIR/termy/termy-cli"
+if [[ -f "$TEMP_DIR/arxk/arxk-cli" ]]; then
+  CLI_BINARY_PATH="$TEMP_DIR/arxk/arxk-cli"
 else
-  CLI_BINARY_PATH="$(find "$TEMP_DIR" -name "termy-cli" -type f -executable 2>/dev/null | head -n1)"
+  CLI_BINARY_PATH="$(find "$TEMP_DIR" -name "arxk-cli" -type f -executable 2>/dev/null | head -n1)"
 fi
 
 if [[ -z "$CLI_BINARY_PATH" || ! -f "$CLI_BINARY_PATH" ]]; then
-  die "Could not find termy-cli binary in downloaded tarball"
+  die "Could not find arxk-cli binary in downloaded tarball"
 fi
 
 mkdir -p "$INSTALL_DIR"
 
-log "Installing to $INSTALL_DIR/termy..."
-rm -f "$INSTALL_DIR/termy" "$INSTALL_DIR/termy-bin" "$INSTALL_DIR/termy-cli"
-cp "$BINARY_PATH" "$INSTALL_DIR/termy-bin"
-cp "$CLI_BINARY_PATH" "$INSTALL_DIR/termy-cli"
-cat > "$INSTALL_DIR/termy" <<'LAUNCHER'
+log "Installing to $INSTALL_DIR/arxk..."
+rm -f "$INSTALL_DIR/arxk" "$INSTALL_DIR/arxk-bin" "$INSTALL_DIR/arxk-cli"
+cp "$BINARY_PATH" "$INSTALL_DIR/arxk-bin"
+cp "$CLI_BINARY_PATH" "$INSTALL_DIR/arxk-cli"
+cat > "$INSTALL_DIR/arxk" <<'LAUNCHER'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -132,11 +132,11 @@ if [[ "${TERMY_LINUX_BACKEND:-x11}" == "x11" && -n "${DISPLAY:-}" ]]; then
   unset WAYLAND_DISPLAY
 fi
 
-exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/termy-bin" "$@"
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/arxk-bin" "$@"
 LAUNCHER
-chmod +x "$INSTALL_DIR/termy" "$INSTALL_DIR/termy-bin" "$INSTALL_DIR/termy-cli"
+chmod +x "$INSTALL_DIR/arxk" "$INSTALL_DIR/arxk-bin" "$INSTALL_DIR/arxk-cli"
 
-if [[ -d "$TEMP_DIR/termy/file-manager" ]]; then
+if [[ -d "$TEMP_DIR/arxk/file-manager" ]]; then
   SHARE_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
   mkdir -p \
     "$SHARE_HOME/applications" \
@@ -145,23 +145,23 @@ if [[ -d "$TEMP_DIR/termy/file-manager" ]]; then
     "$SHARE_HOME/nemo/actions" \
     "$SHARE_HOME/nautilus/scripts" \
     "$SHARE_HOME/caja/scripts"
-  if [[ -f "$TEMP_DIR/termy/file-manager/termy.desktop" ]]; then
-    cp "$TEMP_DIR/termy/file-manager/termy.desktop" "$SHARE_HOME/applications/termy.desktop"
+  if [[ -f "$TEMP_DIR/arxk/file-manager/arxk.desktop" ]]; then
+    cp "$TEMP_DIR/arxk/file-manager/arxk.desktop" "$SHARE_HOME/applications/arxk.desktop"
   fi
-  if [[ -f "$TEMP_DIR/termy/file-manager/termy-open-tab.desktop" ]]; then
-    cp "$TEMP_DIR/termy/file-manager/termy-open-tab.desktop" "$SHARE_HOME/kio/servicemenus/termy-open-tab.desktop"
-    cp "$TEMP_DIR/termy/file-manager/termy-open-tab.desktop" "$SHARE_HOME/kservices5/ServiceMenus/termy-open-tab.desktop"
+  if [[ -f "$TEMP_DIR/arxk/file-manager/arxk-open-tab.desktop" ]]; then
+    cp "$TEMP_DIR/arxk/file-manager/arxk-open-tab.desktop" "$SHARE_HOME/kio/servicemenus/arxk-open-tab.desktop"
+    cp "$TEMP_DIR/arxk/file-manager/arxk-open-tab.desktop" "$SHARE_HOME/kservices5/ServiceMenus/arxk-open-tab.desktop"
   fi
-  if [[ -f "$TEMP_DIR/termy/file-manager/termy-open-tab.nemo_action" ]]; then
-    cp "$TEMP_DIR/termy/file-manager/termy-open-tab.nemo_action" "$SHARE_HOME/nemo/actions/termy-open-tab.nemo_action"
+  if [[ -f "$TEMP_DIR/arxk/file-manager/arxk-open-tab.nemo_action" ]]; then
+    cp "$TEMP_DIR/arxk/file-manager/arxk-open-tab.nemo_action" "$SHARE_HOME/nemo/actions/arxk-open-tab.nemo_action"
   fi
-  if [[ -f "$TEMP_DIR/termy/file-manager/nautilus-open-tab.sh" ]]; then
-    install -m 755 "$TEMP_DIR/termy/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/nautilus/scripts/Open new Termy tab here"
-    install -m 755 "$TEMP_DIR/termy/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/caja/scripts/Open new Termy tab here"
+  if [[ -f "$TEMP_DIR/arxk/file-manager/nautilus-open-tab.sh" ]]; then
+    install -m 755 "$TEMP_DIR/arxk/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/nautilus/scripts/Open new Arxk tab here"
+    install -m 755 "$TEMP_DIR/arxk/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/caja/scripts/Open new Arxk tab here"
   fi
 fi
 
-log "Termy $TAG installed successfully!"
+log "Arxk $TAG installed successfully!"
 
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo ""
@@ -180,4 +180,4 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
 fi
 
 echo ""
-echo "Run 'termy' to start the terminal."
+echo "Run 'arxk' to start the terminal."

@@ -251,7 +251,7 @@ mod tests {
                 },
                 ReleaseSummary {
                     tag: "v1.2.3".to_string(),
-                    title: "Termy 1.2.3".to_string(),
+                    title: "Arxk 1.2.3".to_string(),
                     prerelease: false,
                 },
                 ReleaseSummary {
@@ -264,7 +264,7 @@ mod tests {
         );
 
         assert_eq!(rows[0].status_hint.as_deref(), Some("Pre-release"));
-        assert_eq!(rows[1].title, "Termy 1.2.3");
+        assert_eq!(rows[1].title, "Arxk 1.2.3");
         assert_eq!(rows[1].status_hint.as_deref(), Some("Latest"));
         assert_eq!(rows[2].status_hint.as_deref(), Some("Installed"));
         assert!(rows[1].keywords.contains("latest"));

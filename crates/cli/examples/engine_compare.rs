@@ -1037,7 +1037,7 @@ fn run_timed_mode() {
     );
     println!();
     println!(
-        "Integrated Termy backend throughput (median MiB/s and paired ratio; higher is better)"
+        "Integrated Arxk backend throughput (median MiB/s and paired ratio; higher is better)"
     );
     println!(
         "{:<24} {:>12} {:>12} {:>14} {:>10}",
@@ -1188,7 +1188,7 @@ fn run_timed_mode() {
     println!(
         "  - The selected runtimes are printed above and do not depend on the desktop engine environment."
     );
-    println!("  - Alacritty is measured through Termy's termy_core wrapper.");
+    println!("  - Alacritty is measured through Arxk's termy_core wrapper.");
     println!("  - Even sample counts balance T/A and A/T starting order within every workload.");
     println!("  - Parser targets use the median of per-sample paired ratios.");
     println!(

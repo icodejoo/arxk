@@ -4,7 +4,7 @@ Shared command catalog.
 
 ## Owner
 
-This module owns Termy's public command identifiers, command metadata, and command/keybinding-facing definitions. It should stay pure and must not depend on GPUI or config parsing.
+This module owns Arxk's public command identifiers, command metadata, and command/keybinding-facing definitions. It should stay pure and must not depend on GPUI or config parsing.
 
 Use this module when adding, renaming, documenting, or grouping user-facing commands. Wire execution in `crates/desktop_app/`.
 

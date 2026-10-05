@@ -35,10 +35,10 @@ impl SettingsWindow {
         let description = match &self.default_terminal_state {
             Some(Err(error)) => error.clone(),
             Some(Ok(true)) => {
-                t!("Termy is your default terminal. Apps may have their own terminal preference.")
+                t!("Arxk is your default terminal. Apps may have their own terminal preference.")
                     .into()
             }
-            _ => t!("Use Termy when macOS requests the default terminal.").into(),
+            _ => t!("Use Arxk when macOS requests the default terminal.").into(),
         };
         let accent = self.accent();
         let row = div()

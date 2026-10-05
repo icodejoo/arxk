@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Termy — The terminal, at full speed" src="./assets/termy-readme-hero.png" width="900" />
+  <img alt="Arxk — The terminal, at full speed" src="./assets/termy-readme-hero.png" width="900" />
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="./CONTRIBUTING.md"><strong>Contribute</strong></a>
 </p>
 
-Termy is a fast, native terminal for macOS, Linux, and Windows. It combines GPU-accelerated rendering with the terminal workflows you use every day—tabs, splits, search, tasks, layouts, themes, and optional tmux sessions—without turning the interface into a control panel.
+Arxk is a fast, native terminal for macOS, Linux, and Windows. It combines GPU-accelerated rendering with the terminal workflows you use every day—tabs, splits, search, tasks, layouts, themes, and optional tmux sessions—without turning the interface into a control panel.
 
 - Damage-scoped GPU rendering with dirty-span cell caching
 - Tabs, splits, search, tasks, and reusable layouts
@@ -28,12 +28,12 @@ Termy is a fast, native terminal for macOS, Linux, and Windows. It combines GPU-
 Download the latest build from **[termy.sh/download](https://termy.sh/download)** or browse every artifact on **[GitHub Releases](https://github.com/lassejlv/termy/releases)**.
 
 macOS DMGs from v0.2.75 onward are signed and notarized. Open the DMG and drag
-Termy to `/Applications`. See [macOS troubleshooting](https://termy.sh/docs/getting-started/troubleshooting)
+Arxk to `/Applications`. See [macOS troubleshooting](https://termy.sh/docs/getting-started/troubleshooting)
 if the app still does not open.
 
 ### Build from source
 
-Termy is a Rust workspace. Build and launch the desktop app with:
+Arxk is a Rust workspace. Build and launch the desktop app with:
 
 ```bash
 cargo run --release -p termy
@@ -43,7 +43,7 @@ See the [installation guide](https://termy.sh/docs/getting-started/installation)
 
 ## What you can shape
 
-Termy keeps its behavior in plain configuration rather than burying it in hidden application state.
+Arxk keeps its behavior in plain configuration rather than burying it in hidden application state.
 
 | Surface | What you control |
 | --- | --- |
@@ -52,11 +52,11 @@ Termy keeps its behavior in plain configuration rather than burying it in hidden
 | Workspace | Tabs, split panes, tasks, reusable layouts, and working directories |
 | Sessions | Local shells and optional tmux-backed sessions |
 
-Start with [Customize Termy](https://termy.sh/docs/customize) or use the complete [configuration reference](https://termy.sh/docs/reference/configuration-reference).
+Start with [Customize Arxk](https://termy.sh/docs/customize) or use the complete [configuration reference](https://termy.sh/docs/reference/configuration-reference).
 
 ## Architecture
 
-Termy is more than a window around a PTY. Its terminal emulation is powered by [Alacritty's terminal engine](https://github.com/alacritty/alacritty), wrapped in Termy's reusable runtime. The repository also contains a GPUI desktop application, CLI, native FFI, website, and release tooling.
+Arxk is more than a window around a PTY. Its terminal emulation is powered by [Alacritty's terminal engine](https://github.com/alacritty/alacritty), wrapped in Arxk's reusable runtime. The repository also contains a GPUI desktop application, CLI, native FFI, website, and release tooling.
 
 ```text
 desktop / embedding hosts
@@ -72,7 +72,7 @@ Read [Project Layout](./docs/architecture/project-layout.md) for ownership bound
 
 ## Sponsors
 
-Termy is supported by companies and people who care about fast, native developer tools.
+Arxk is supported by companies and people who care about fast, native developer tools.
 
 <p align="center">
   <a href="https://neon.tech">

@@ -16,13 +16,13 @@ usage() {
   cat <<EOF
 Usage: $0 (--summary PATH | --run-compare [options]) [gate options]
 
-Validate Termy benchmark output against soft regression gates.
+Validate Arxk benchmark output against soft regression gates.
 
 Input options:
   --summary PATH          Existing benchmark-compare summary.json
   --run-compare           Run benchmark-compare before gating
-  --baseline-root PATH    Baseline Termy repo root for --run-compare
-  --candidate-root PATH   Candidate Termy repo root for --run-compare (default: repo root)
+  --baseline-root PATH    Baseline Arxk repo root for --run-compare
+  --candidate-root PATH   Candidate Arxk repo root for --run-compare (default: repo root)
   --output PATH           Output directory for --run-compare (default: target/performance-gate)
   --duration-secs SECS    Scenario duration for --run-compare (default: 5)
 

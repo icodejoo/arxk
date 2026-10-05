@@ -1,8 +1,8 @@
-# Contributing to Termy
+# Contributing to Arxk
 
 Thanks for contributing.
 
-This guide focuses on the current Termy workflow so you can get a change from clone to PR without guessing.
+This guide focuses on the current Arxk workflow so you can get a change from clone to PR without guessing.
 
 ## Before you start
 

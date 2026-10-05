@@ -20,7 +20,7 @@ export const Route = createFileRoute('/sponsors')({
 const FUNDS_GO: Array<[string, string]> = [
   [
     'maintenance',
-    'Full-time work on Termy itself — features, bug fixes, and performance.',
+    'Full-time work on Arxk itself — features, bug fixes, and performance.',
   ],
   [
     'signing & infra',
@@ -51,7 +51,7 @@ function SponsorsPage() {
           Sponsors
         </h1>
         <p className="mt-5 leading-relaxed text-[#787c99]">
-          Termy is free and open source. Sponsorships keep development moving —
+          Arxk is free and open source. Sponsorships keep development moving —
           every contribution goes straight back into the terminal.
         </p>
 

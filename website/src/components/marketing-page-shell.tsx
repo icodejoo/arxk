@@ -76,7 +76,7 @@ function MarketingNav() {
           >
             ❯_
           </span>
-          <span className="text-[15px] font-medium tracking-tight">termy</span>
+          <span className="text-[15px] font-medium tracking-tight">arxk</span>
         </Link>
 
         <nav className="hidden items-center gap-8 sm:flex">

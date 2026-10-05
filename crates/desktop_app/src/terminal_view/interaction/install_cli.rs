@@ -40,7 +40,7 @@ impl TerminalView {
                         ));
                     } else {
                         crate::ui::toast::success(t!(
-                            "CLI installed to {path}. {profile} already configures Termy PATH; activated PATH in this shell.",
+                            "CLI installed to {path}. {profile} already configures Arxk PATH; activated PATH in this shell.",
                             path = path_str,
                             profile = shell_setup.profile_path.display()
                         ));

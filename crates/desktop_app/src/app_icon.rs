@@ -75,7 +75,7 @@ pub(crate) fn apply(icon: termy_core::config_core::AppIcon) {
                     .any(|p| p.extension().and_then(|ext| ext.to_str()) == Some("app"))
             })
         {
-            log::warn!("Failed to persist selected Termy app icon on the app bundle");
+            log::warn!("Failed to persist selected Arxk app icon on the app bundle");
         }
         *applied = Some(icon);
     }
@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn startup_icon_reuse_requires_packaged_default_without_custom_finder_icon() {
         let root = tempfile::tempdir().unwrap();
-        let bundle = root.path().join("Termy.app");
+        let bundle = root.path().join("Arxk.app");
         let resources = bundle.join("Contents/Resources");
         std::fs::create_dir_all(&resources).unwrap();
         assert!(!can_use_bundled_icon(&bundle));

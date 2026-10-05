@@ -1,4 +1,4 @@
-//! Terminal search utilities for Termy.
+//! Terminal search utilities for Arxk.
 
 mod engine;
 mod matcher;

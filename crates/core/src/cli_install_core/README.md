@@ -4,9 +4,9 @@ Shared CLI installation helpers.
 
 ## Owner
 
-This module owns path resolution and filesystem helpers used to install or locate Termy's command-line tools. It must stay independent of GPUI and desktop app state.
+This module owns path resolution and filesystem helpers used to install or locate Arxk's command-line tools. It must stay independent of GPUI and desktop app state.
 
-Use this module when install behavior needs to be reused by the desktop app and `termy-cli`.
+Use this module when install behavior needs to be reused by the desktop app and `arxk-cli`.
 
 ## Validation
 

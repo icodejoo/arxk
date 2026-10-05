@@ -11,11 +11,11 @@
 #endif
 
 #ifndef MyExeName
-  #define MyExeName "termy.exe"
+  #define MyExeName "arxk.exe"
 #endif
 
 #ifndef MyCliExeName
-  #define MyCliExeName "termy-cli.exe"
+  #define MyCliExeName "arxk-cli.exe"
 #endif
 
 #if MyArch == "x64"
@@ -30,16 +30,16 @@
 
 [Setup]
 AppId={{7D3DD34B-5F8F-4D7B-BBC9-0F54B4C89142}
-AppName=Termy
+AppName=Arxk
 AppVersion={#MyAppVersion}
-AppPublisher=Termy
+AppPublisher=Arxk
 AppPublisherURL=https://github.com/lassejlv/termy
 AppSupportURL=https://github.com/lassejlv/termy/issues
 AppUpdatesURL=https://github.com/lassejlv/termy/releases
-DefaultDirName={autopf}\Termy
-DefaultGroupName=Termy
+DefaultDirName={autopf}\Arxk
+DefaultGroupName=Arxk
 OutputDir=..\..\target\dist
-OutputBaseFilename=Termy-{#MyAppVersion}-windows-{#MyArch}-Setup
+OutputBaseFilename=Arxk-{#MyAppVersion}-windows-{#MyArch}-Setup
 SetupIconFile=..\..\assets\termy.ico
 Compression=lzma
 SolidCompression=yes
@@ -56,25 +56,25 @@ Source: "..\..\target\{#MyTarget}\release\{#MyExeName}"; DestDir: "{app}"; Flags
 Source: "..\..\target\{#MyTarget}\release\{#MyCliExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Termy"; Filename: "{app}\{#MyExeName}"
-Name: "{autodesktop}\Termy"; Filename: "{app}\{#MyExeName}"
+Name: "{group}\Arxk"; Filename: "{app}\{#MyExeName}"
+Name: "{autodesktop}\Arxk"; Filename: "{app}\{#MyExeName}"
 
 [Registry]
-Root: HKCR; Subkey: "termy"; ValueType: string; ValueName: ""; ValueData: "URL:Termy Protocol"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "termy"; ValueType: string; ValueName: ""; ValueData: "URL:Arxk Protocol"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "termy"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
 Root: HKCR; Subkey: "termy\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyExeName},0"
 Root: HKCR; Subkey: "termy\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" ""%1"""
-Root: HKCR; Subkey: "Directory\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Termy tab here"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Arxk tab here"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Directory\shell\TermyOpenTab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyExeName}"
 Root: HKCR; Subkey: "Directory\shell\TermyOpenTab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" --working-directory ""%V"""
-Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Termy tab here"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Arxk tab here"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyExeName}"
 Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" --working-directory ""%V"""
-Root: HKCR; Subkey: "Drive\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Termy tab here"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Drive\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Arxk tab here"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Drive\shell\TermyOpenTab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyExeName}"
 Root: HKCR; Subkey: "Drive\shell\TermyOpenTab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" --working-directory ""%V"""
 
 [Run]
-Filename: "{app}\{#MyExeName}"; Description: "Launch Termy"; Flags: nowait postinstall skipifsilent
-; Silent auto-updates quit Termy before setup finishes, so relaunch after install.
+Filename: "{app}\{#MyExeName}"; Description: "Launch Arxk"; Flags: nowait postinstall skipifsilent
+; Silent auto-updates quit Arxk before setup finishes, so relaunch after install.
 Filename: "{app}\{#MyExeName}"; Flags: nowait runasoriginaluser skipifnotsilent

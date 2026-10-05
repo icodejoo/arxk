@@ -16,13 +16,13 @@ Options:
   --help, -h          Show this help message
 
 Output:
-  target/dist/Termy-<version>-linux-<arch>.tar.gz
+  target/dist/Arxk-<version>-linux-<arch>.tar.gz
   or
-  target/dist/Termy-<version>-linux-<arch>.AppImage
+  target/dist/Arxk-<version>-linux-<arch>.AppImage
   or
-  target/dist/Termy-<version>-linux-<arch>.deb
+  target/dist/Arxk-<version>-linux-<arch>.deb
   or
-  target/dist/Termy-<version>-linux-<arch>.rpm
+  target/dist/Arxk-<version>-linux-<arch>.rpm
 EOF
 }
 
@@ -126,8 +126,8 @@ if [[ -n "$ARCH" && -n "$TARGET" ]]; then
   [[ "$EXPECTED_TARGET" == "$TARGET" ]] || die "Mismatched --arch ($ARCH) and --target ($TARGET)"
 fi
 
-APP_NAME="Termy"
-APP_NAME_LOWER="termy"
+APP_NAME="Arxk"
+APP_NAME_LOWER="arxk"
 OS_NAME="linux"
 DIST_DIR="$REPO_ROOT/target/dist"
 TARGET_RELEASE_DIR="$REPO_ROOT/target/$TARGET/release"
@@ -152,23 +152,23 @@ fi
 log "Building $APP_NAME v$VERSION for $ARCH ($TARGET)"
 (cd "$REPO_ROOT" && cargo build --release --target "$TARGET" -p termy -p termy_cli)
 
-CLI_BINARY_PATH="$TARGET_RELEASE_DIR/termy-cli"
+CLI_BINARY_PATH="$TARGET_RELEASE_DIR/arxk-cli"
 [[ -f "$BINARY_PATH" ]] || die "Binary not found at $BINARY_PATH"
 [[ -f "$CLI_BINARY_PATH" ]] || die "CLI binary not found at $CLI_BINARY_PATH"
 
 mkdir -p "$DIST_DIR"
 
-# Shared FHS staging for deb/rpm packages: payload in /usr/lib/termy with a
-# /usr/bin/termy launcher, so assets stay a sibling of the real binary,
+# Shared FHS staging for deb/rpm packages: payload in /usr/lib/arxk with a
+# /usr/bin/arxk launcher, so assets stay a sibling of the real binary,
 # matching the tarball and AppImage layouts.
 FILE_MANAGER_DIR="$REPO_ROOT/scripts/file-manager"
-OPEN_TAB_HERE_LABEL="Open new Termy tab here"
+OPEN_TAB_HERE_LABEL="Open new Arxk tab here"
 
 install_linux_file_manager_share() {
   local share_root="$1"
   local nautilus_script_source="$FILE_MANAGER_DIR/nautilus-open-tab.sh"
-  local kde_source="$FILE_MANAGER_DIR/termy-open-tab.desktop"
-  local nemo_source="$FILE_MANAGER_DIR/termy-open-tab.nemo_action"
+  local kde_source="$FILE_MANAGER_DIR/arxk-open-tab.desktop"
+  local nemo_source="$FILE_MANAGER_DIR/arxk-open-tab.nemo_action"
 
   [[ -f "$nautilus_script_source" ]] || die "Nautilus script not found at $nautilus_script_source"
   [[ -f "$kde_source" ]] || die "KDE service menu not found at $kde_source"
@@ -181,9 +181,9 @@ install_linux_file_manager_share() {
     "$share_root/nautilus/scripts" \
     "$share_root/caja/scripts"
 
-  cp "$kde_source" "$share_root/kio/servicemenus/termy-open-tab.desktop"
-  cp "$kde_source" "$share_root/kservices5/ServiceMenus/termy-open-tab.desktop"
-  cp "$nemo_source" "$share_root/nemo/actions/termy-open-tab.nemo_action"
+  cp "$kde_source" "$share_root/kio/servicemenus/arxk-open-tab.desktop"
+  cp "$kde_source" "$share_root/kservices5/ServiceMenus/arxk-open-tab.desktop"
+  cp "$nemo_source" "$share_root/nemo/actions/arxk-open-tab.nemo_action"
   install -m 755 "$nautilus_script_source" "$share_root/nautilus/scripts/$OPEN_TAB_HERE_LABEL"
   install -m 755 "$nautilus_script_source" "$share_root/caja/scripts/$OPEN_TAB_HERE_LABEL"
 }
@@ -202,9 +202,9 @@ stage_linux_package_root() {
     "$root/usr/share/applications" \
     "$root/usr/share/pixmaps"
 
-  cp "$BINARY_PATH" "$root/usr/lib/$APP_NAME_LOWER/termy-bin"
-  cp "$CLI_BINARY_PATH" "$root/usr/lib/$APP_NAME_LOWER/termy-cli"
-  chmod 755 "$root/usr/lib/$APP_NAME_LOWER/termy-bin" "$root/usr/lib/$APP_NAME_LOWER/termy-cli"
+  cp "$BINARY_PATH" "$root/usr/lib/$APP_NAME_LOWER/arxk-bin"
+  cp "$CLI_BINARY_PATH" "$root/usr/lib/$APP_NAME_LOWER/arxk-cli"
+  chmod 755 "$root/usr/lib/$APP_NAME_LOWER/arxk-bin" "$root/usr/lib/$APP_NAME_LOWER/arxk-cli"
 
   if [[ -d "$REPO_ROOT/assets" ]]; then
     mkdir -p "$root/usr/lib/$APP_NAME_LOWER/assets"
@@ -219,10 +219,10 @@ if [[ "\${TERMY_LINUX_BACKEND:-x11}" == "x11" && -n "\${DISPLAY:-}" ]]; then
   unset WAYLAND_DISPLAY
 fi
 
-exec /usr/lib/$APP_NAME_LOWER/termy-bin "\$@"
+exec /usr/lib/$APP_NAME_LOWER/arxk-bin "\$@"
 LAUNCHER
   chmod 755 "$root/usr/bin/$APP_NAME_LOWER"
-  ln -s "../lib/$APP_NAME_LOWER/termy-cli" "$root/usr/bin/termy-cli"
+  ln -s "../lib/$APP_NAME_LOWER/arxk-cli" "$root/usr/bin/arxk-cli"
 
   cp "$desktop_file_source" "$root/usr/share/applications/${APP_NAME_LOWER}.desktop"
   cp "$icon_source" "$root/usr/share/pixmaps/${APP_NAME_LOWER}.png"
@@ -239,7 +239,7 @@ case "$FORMAT" in
     rm -rf "$STAGING_DIR"
     mkdir -p "$STAGING_DIR/$APP_NAME_LOWER"
 
-    cp "$BINARY_PATH" "$STAGING_DIR/$APP_NAME_LOWER/termy-bin"
+    cp "$BINARY_PATH" "$STAGING_DIR/$APP_NAME_LOWER/arxk-bin"
     cp "$CLI_BINARY_PATH" "$STAGING_DIR/$APP_NAME_LOWER/"
     cat > "$STAGING_DIR/$APP_NAME_LOWER/$APP_NAME_LOWER" <<'LAUNCHER'
 #!/usr/bin/env bash
@@ -249,9 +249,9 @@ if [[ "${TERMY_LINUX_BACKEND:-x11}" == "x11" && -n "${DISPLAY:-}" ]]; then
   unset WAYLAND_DISPLAY
 fi
 
-exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/termy-bin" "$@"
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/arxk-bin" "$@"
 LAUNCHER
-    chmod +x "$STAGING_DIR/$APP_NAME_LOWER/$APP_NAME_LOWER" "$STAGING_DIR/$APP_NAME_LOWER/termy-bin"
+    chmod +x "$STAGING_DIR/$APP_NAME_LOWER/$APP_NAME_LOWER" "$STAGING_DIR/$APP_NAME_LOWER/arxk-bin"
 
     if [[ -d "$REPO_ROOT/assets" ]]; then
       mkdir -p "$STAGING_DIR/$APP_NAME_LOWER/assets"
@@ -259,9 +259,9 @@ LAUNCHER
     fi
 
     mkdir -p "$STAGING_DIR/$APP_NAME_LOWER/file-manager"
-    cp "$REPO_ROOT/scripts/aur/${APP_NAME_LOWER}.desktop" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/termy.desktop"
-    cp "$FILE_MANAGER_DIR/termy-open-tab.desktop" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/"
-    cp "$FILE_MANAGER_DIR/termy-open-tab.nemo_action" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/"
+    cp "$REPO_ROOT/scripts/aur/${APP_NAME_LOWER}.desktop" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/arxk.desktop"
+    cp "$FILE_MANAGER_DIR/arxk-open-tab.desktop" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/"
+    cp "$FILE_MANAGER_DIR/arxk-open-tab.nemo_action" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/"
     install -m 755 "$FILE_MANAGER_DIR/nautilus-open-tab.sh" "$STAGING_DIR/$APP_NAME_LOWER/file-manager/nautilus-open-tab.sh"
 
     # Embed a tarball-local installer.
@@ -273,14 +273,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="${1:-$HOME/.local/bin}"
 
 mkdir -p "$INSTALL_DIR"
-rm -f "$INSTALL_DIR/termy" "$INSTALL_DIR/termy-bin" "$INSTALL_DIR/termy-cli"
-if [[ -f "$SCRIPT_DIR/termy-bin" ]]; then
-  cp "$SCRIPT_DIR/termy-bin" "$INSTALL_DIR/termy-bin"
+rm -f "$INSTALL_DIR/arxk" "$INSTALL_DIR/arxk-bin" "$INSTALL_DIR/arxk-cli"
+if [[ -f "$SCRIPT_DIR/arxk-bin" ]]; then
+  cp "$SCRIPT_DIR/arxk-bin" "$INSTALL_DIR/arxk-bin"
 else
-  cp "$SCRIPT_DIR/termy" "$INSTALL_DIR/termy-bin"
+  cp "$SCRIPT_DIR/arxk" "$INSTALL_DIR/arxk-bin"
 fi
-cp "$SCRIPT_DIR/termy-cli" "$INSTALL_DIR/termy-cli"
-cat > "$INSTALL_DIR/termy" <<'LAUNCHER'
+cp "$SCRIPT_DIR/arxk-cli" "$INSTALL_DIR/arxk-cli"
+cat > "$INSTALL_DIR/arxk" <<'LAUNCHER'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -288,9 +288,9 @@ if [[ "${TERMY_LINUX_BACKEND:-x11}" == "x11" && -n "${DISPLAY:-}" ]]; then
   unset WAYLAND_DISPLAY
 fi
 
-exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/termy-bin" "$@"
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/arxk-bin" "$@"
 LAUNCHER
-chmod +x "$INSTALL_DIR/termy" "$INSTALL_DIR/termy-bin" "$INSTALL_DIR/termy-cli"
+chmod +x "$INSTALL_DIR/arxk" "$INSTALL_DIR/arxk-bin" "$INSTALL_DIR/arxk-cli"
 
 if [[ -d "$SCRIPT_DIR/file-manager" ]]; then
   SHARE_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -301,15 +301,15 @@ if [[ -d "$SCRIPT_DIR/file-manager" ]]; then
     "$SHARE_HOME/nemo/actions" \
     "$SHARE_HOME/nautilus/scripts" \
     "$SHARE_HOME/caja/scripts"
-  cp "$SCRIPT_DIR/file-manager/termy.desktop" "$SHARE_HOME/applications/termy.desktop"
-  cp "$SCRIPT_DIR/file-manager/termy-open-tab.desktop" "$SHARE_HOME/kio/servicemenus/termy-open-tab.desktop"
-  cp "$SCRIPT_DIR/file-manager/termy-open-tab.desktop" "$SHARE_HOME/kservices5/ServiceMenus/termy-open-tab.desktop"
-  cp "$SCRIPT_DIR/file-manager/termy-open-tab.nemo_action" "$SHARE_HOME/nemo/actions/termy-open-tab.nemo_action"
-  install -m 755 "$SCRIPT_DIR/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/nautilus/scripts/Open new Termy tab here"
-  install -m 755 "$SCRIPT_DIR/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/caja/scripts/Open new Termy tab here"
+  cp "$SCRIPT_DIR/file-manager/arxk.desktop" "$SHARE_HOME/applications/arxk.desktop"
+  cp "$SCRIPT_DIR/file-manager/arxk-open-tab.desktop" "$SHARE_HOME/kio/servicemenus/arxk-open-tab.desktop"
+  cp "$SCRIPT_DIR/file-manager/arxk-open-tab.desktop" "$SHARE_HOME/kservices5/ServiceMenus/arxk-open-tab.desktop"
+  cp "$SCRIPT_DIR/file-manager/arxk-open-tab.nemo_action" "$SHARE_HOME/nemo/actions/arxk-open-tab.nemo_action"
+  install -m 755 "$SCRIPT_DIR/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/nautilus/scripts/Open new Arxk tab here"
+  install -m 755 "$SCRIPT_DIR/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/caja/scripts/Open new Arxk tab here"
 fi
 
-echo "Installed termy and termy-cli to $INSTALL_DIR/"
+echo "Installed arxk and arxk-cli to $INSTALL_DIR/"
 echo "Make sure $INSTALL_DIR is in your PATH"
 INSTALL_SCRIPT
     chmod +x "$STAGING_DIR/$APP_NAME_LOWER/install.sh"
@@ -337,8 +337,8 @@ INSTALL_SCRIPT
       "$APPDIR/usr/share/icons/hicolor/512x512/apps"
 
     cp "$BINARY_PATH" "$APPDIR/usr/bin/$APP_NAME_LOWER"
-    cp "$CLI_BINARY_PATH" "$APPDIR/usr/bin/termy-cli"
-    chmod +x "$APPDIR/usr/bin/$APP_NAME_LOWER" "$APPDIR/usr/bin/termy-cli"
+    cp "$CLI_BINARY_PATH" "$APPDIR/usr/bin/arxk-cli"
+    chmod +x "$APPDIR/usr/bin/$APP_NAME_LOWER" "$APPDIR/usr/bin/arxk-cli"
 
     # Keep assets as a sibling to the binary, matching the tarball layout.
     if [[ -d "$REPO_ROOT/assets" ]]; then
@@ -361,7 +361,7 @@ MimeType=inode/directory;x-scheme-handler/termy;
 Actions=open-tab-here;
 
 [Desktop Action open-tab-here]
-Name=Open new Termy tab here
+Name=Open new Arxk tab here
 Exec=$APP_NAME_LOWER --new-tab --working-directory %f
 EOF
       cp "$APPDIR/${APP_NAME_LOWER}.desktop" "$APPDIR/usr/share/applications/${APP_NAME_LOWER}.desktop"
@@ -383,7 +383,7 @@ if [[ "${TERMY_LINUX_BACKEND:-x11}" == "x11" && -n "${DISPLAY:-}" ]]; then
   unset WAYLAND_DISPLAY
 fi
 
-exec "$HERE/usr/bin/termy" "$@"
+exec "$HERE/usr/bin/arxk" "$@"
 APP_RUN
     chmod +x "$APPDIR/AppRun"
 
@@ -432,7 +432,7 @@ Section: x11
 Priority: optional
 Homepage: https://github.com/lassejlv/termy
 Description: Minimal GPUI-powered terminal
- Termy is a terminal emulator built with GPUI and alacritty_terminal.
+ Arxk is a terminal emulator built with GPUI and alacritty_terminal.
 EOF
 
     log "Creating deb package"
@@ -477,22 +477,22 @@ URL: https://github.com/lassejlv/termy
 AutoReqProv: no
 
 %description
-Termy is a terminal emulator built with GPUI and alacritty_terminal.
+Arxk is a terminal emulator built with GPUI and alacritty_terminal.
 
 %install
 cp -a "$RPM_ROOT/." "%{buildroot}/"
 
 %files
 /usr/bin/$APP_NAME_LOWER
-/usr/bin/termy-cli
+/usr/bin/arxk-cli
 /usr/lib/$APP_NAME_LOWER
 /usr/share/applications/$APP_NAME_LOWER.desktop
 /usr/share/pixmaps/$APP_NAME_LOWER.png
-/usr/share/kio/servicemenus/termy-open-tab.desktop
-/usr/share/kservices5/ServiceMenus/termy-open-tab.desktop
-/usr/share/nemo/actions/termy-open-tab.nemo_action
-"/usr/share/nautilus/scripts/Open new Termy tab here"
-"/usr/share/caja/scripts/Open new Termy tab here"
+/usr/share/kio/servicemenus/arxk-open-tab.desktop
+/usr/share/kservices5/ServiceMenus/arxk-open-tab.desktop
+/usr/share/nemo/actions/arxk-open-tab.nemo_action
+"/usr/share/nautilus/scripts/Open new Arxk tab here"
+"/usr/share/caja/scripts/Open new Arxk tab here"
 EOF
 
     log "Creating rpm package"

@@ -114,15 +114,15 @@ mod tests {
             .map(|menu| menu.name.to_string())
             .collect::<Vec<_>>();
 
-        assert_eq!(names, ["Termy", "File", "Edit", "View", "Window", "Help"]);
+        assert_eq!(names, ["Arxk", "File", "Edit", "View", "Window", "Help"]);
     }
 
     #[test]
     fn app_menu_includes_services_only_on_macos() {
         let app_menu = app_menus(true, true, false)
             .into_iter()
-            .find(|menu| menu.name.as_ref() == "Termy")
-            .expect("missing Termy menu");
+            .find(|menu| menu.name.as_ref() == "Arxk")
+            .expect("missing Arxk menu");
 
         let has_services = app_menu
             .items

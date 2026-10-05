@@ -60,7 +60,7 @@ pub(crate) fn connect_with_capabilities(root: &Path) -> anyhow::Result<(TcpStrea
     let endpoint: Endpoint = serde_json::from_slice(&fs::read(root.join("endpoint.json"))?)?;
     ensure!(
         endpoint.version == VERSION,
-        "a different multiplexer protocol is running; use the matching Termy version to detach or close its sessions"
+        "a different multiplexer protocol is running; use the matching Arxk version to detach or close its sessions"
     );
     let mut stream = TcpStream::connect_timeout(
         &([127, 0, 0, 1], endpoint.port).into(),

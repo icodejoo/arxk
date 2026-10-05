@@ -3161,7 +3161,7 @@ impl Render for TerminalView {
                 // consistent dimming model and avoid a separate full-screen color overlay.
                 let cell_color_transform =
                     palette_backdrop_transform.unwrap_or(pane_focus_transform);
-                // tmux mode already has pane boundary affordances; layering Termy's active-pane
+                // tmux mode already has pane boundary affordances; layering Arxk's active-pane
                 // outline on top creates a second full-frame box around the active pane.
                 let pane_active_border_alpha = effective_pane_focus_active_border_alpha(
                     raw_pane_active_border_alpha,

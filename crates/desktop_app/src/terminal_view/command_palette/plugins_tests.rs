@@ -99,7 +99,7 @@ fn input_session_uses_defaults_and_tracks_progress() {
                 id: "name".to_string(),
                 label: "Name".to_string(),
                 placeholder: None,
-                default_value: Some("Termy".to_string()),
+                default_value: Some("Arxk".to_string()),
                 required: true,
                 max_length: 80,
             },
@@ -111,7 +111,7 @@ fn input_session_uses_defaults_and_tracks_progress() {
         ]),
         "test-revision".to_string(),
     );
-    assert_eq!(session.input_prefill(), "Termy");
+    assert_eq!(session.input_prefill(), "Arxk");
     assert_eq!(session.progress_label(), "1 of 2");
     assert!(!session.is_last_input());
     assert!(!session.can_go_back());

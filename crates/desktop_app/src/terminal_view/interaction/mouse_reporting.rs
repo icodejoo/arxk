@@ -423,7 +423,7 @@ impl TerminalView {
         let mut outcome =
             self.try_send_mouse_event_to_pane(pane_id.as_str(), event_kind, cell, event.modifiers);
         // A tmux pane can enable mouse reporting between metadata refreshes.
-        // Before Termy opens its own right-click menu, make one short live query
+        // Before Arxk opens its own right-click menu, make one short live query
         // so the nested application's context menu wins deterministically.
         if !outcome.is_handled()
             && button == MouseTrackedButton::Right

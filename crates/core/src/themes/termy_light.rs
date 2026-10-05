@@ -1,6 +1,6 @@
 use super::{ThemeColors, rgba};
 
-/// The built-in light counterpart to Termy's default dark palette.
+/// The built-in light counterpart to Arxk's default dark palette.
 ///
 /// Keep this in sync with `termy-light` in the official theme registry so
 /// system appearance switching still has a usable light palette offline.

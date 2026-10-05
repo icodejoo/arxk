@@ -25,7 +25,7 @@ pub fn export_theme(
         Ok(()) => {
             println!("Theme exported to {}", repo.display());
             println!(
-                "Run `termy-cli -validate-theme-repo --repo {}` before opening a PR.",
+                "Run `arxk-cli -validate-theme-repo --repo {}` before opening a PR.",
                 repo.display()
             );
         }

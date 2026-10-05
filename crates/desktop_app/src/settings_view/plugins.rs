@@ -313,7 +313,7 @@ impl SettingsWindow {
         let runtime = self.plugin_runtime.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             let folder = rfd::AsyncFileDialog::new()
-                .set_title(t!("Install Termy Plugin"))
+                .set_title(t!("Install Arxk Plugin"))
                 .pick_folder()
                 .await;
             let Some(folder) = folder else {
@@ -454,7 +454,7 @@ impl SettingsWindow {
             return;
         }
         let Some(path) = self.plugin_runtime.plugins_directory() else {
-            crate::ui::toast::error(t!("Termy config path is unavailable"));
+            crate::ui::toast::error(t!("Arxk config path is unavailable"));
             return;
         };
 

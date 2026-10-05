@@ -1,6 +1,6 @@
 # termy_core::themes
 
-Bundled Termy themes.
+Bundled Arxk themes.
 
 ## Owner
 

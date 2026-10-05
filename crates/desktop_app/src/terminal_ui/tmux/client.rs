@@ -411,7 +411,7 @@ impl TmuxClient {
         target_window_id: &str,
         working_dir: Option<&str>,
     ) -> Result<()> {
-        // Use explicit insert-after targeting so Termy tab creation is deterministic:
+        // Use explicit insert-after targeting so Arxk tab creation is deterministic:
         // new tabs always appear immediately to the right of the active tab.
         let args = new_window_after_args(target_window_id, working_dir);
         self.run_control_status_args(&args)
@@ -877,7 +877,7 @@ impl TmuxClient {
             .context("failed to disable tmux status line for managed session")?;
         // Managed persistence must survive detach->reattach even when the user's tmux
         // config enables `destroy-unattached`, which would otherwise tear down the
-        // session as soon as Termy's control client detaches.
+        // session as soon as Arxk's control client detaches.
         self.run_control_status_args(&[
             "set-option",
             "-q",
@@ -940,7 +940,7 @@ impl Drop for TmuxClient {
                 }
             };
             eprintln!(
-                "Termy shutdown warning: failed to {} '{}': {}",
+                "Arxk shutdown warning: failed to {} '{}': {}",
                 action, self.session_name, error
             );
         }

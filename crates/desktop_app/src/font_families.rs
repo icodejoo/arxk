@@ -260,7 +260,7 @@ mod tests {
             Some(DEFAULT_FONT_FAMILY)
         );
         assert_eq!(
-            directly_available_font_family("Termy missing font 8f77d2"),
+            directly_available_font_family("Arxk missing font 8f77d2"),
             None
         );
         assert_eq!(directly_available_font_family(""), None);

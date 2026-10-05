@@ -1,10 +1,10 @@
 ---
 title: Native UI
-description: Build safe JSX tools that Termy validates and renders with GPUI.
+description: Build safe JSX tools that Arxk validates and renders with GPUI.
 ---
 
 Plugins can open small native tools from `.tsx` entrypoints. JSX is compiled into a
-strictly validated Termy document and rendered with GPUI; it is not HTML or React,
+strictly validated Arxk document and rendered with GPUI; it is not HTML or React,
 and plugins never receive native renderer access.
 
 Declare `native-ui` in `plugin.json`; add `storage` too when the view persists data.
@@ -24,7 +24,7 @@ Point the manifest at a `.tsx` entrypoint:
 }
 ```
 
-Add the Termy JSX pragmas, declare the view, and return `view.open` from a command:
+Add the Arxk JSX pragmas, declare the view, and return `view.open` from a command:
 
 ```tsx title="plugin.tsx"
 /** @jsxRuntime classic */
@@ -72,7 +72,7 @@ export default definePlugin({
       },
       async onAction({ action, values, context }) {
         // Persist changes using action.id, action.payload, and the form values.
-        // Termy rerenders the view after this handler finishes.
+        // Arxk rerenders the view after this handler finishes.
       },
     },
   },
@@ -82,7 +82,7 @@ export default definePlugin({
 The view key (`todos`) must match the `view` in the `view.open` action. The managed
 `termy.d.ts` file supplies `TermyUI`, JSX, view, and action types globally.
 
-`view.open` accepts a bounded JSON `params` object. Termy freezes it and passes the
+`view.open` accepts a bounded JSON `params` object. Arxk freezes it and passes the
 same values to `render` and `onAction`. Return `view.replace` to navigate to another
 declared view in place, or `view.close` to dismiss the current view.
 
@@ -104,14 +104,14 @@ it.
 - `TextInput` and `TextArea` require an `id`; `submit` names an optional submit action.
 - Every control ID in one rendered document must be unique.
 
-Termy supplies Tab/Shift-Tab focus traversal, arrow-key selection for selects and
+Arxk supplies Tab/Shift-Tab focus traversal, arrow-key selection for selects and
 lists, and Enter/Space activation for controls. A filtering list also accepts text
 while focused and filters its items locally.
 
 `onAction` receives `action.id`, `action.controlId`, optional `action.payload` and
 `action.value`, plus a `values` snapshot keyed by control ID. It can update storage,
 emit toasts, or return any normal [plugin action](/docs/using-termy/plugins/commands-context#return-actions).
-After it finishes, Termy calls `render` again and replaces the document.
+After it finishes, Arxk calls `render` again and replaces the document.
 
 ```tsx
 type Todo = { id: string; title: string; done: boolean };

@@ -78,7 +78,7 @@ pub(crate) fn nemo_action(quoted_exe: &str) -> String {
     format!(
         "[Nemo Action]\n\
          Name={OPEN_TAB_HERE_LABEL}\n\
-         Comment=Open a new Termy tab in this folder\n\
+         Comment=Open a new Arxk tab in this folder\n\
          Exec={quoted_exe} --new-tab --working-directory %F\n\
          Icon-Name=termy\n\
          Selection=any\n\
@@ -157,7 +157,7 @@ mod tests {
                 .contains("Exec='/usr/bin/termy' --new-tab --working-directory %f")
         );
         assert!(kde_servicemenu(quoted).contains("inode/directory"));
-        assert!(nemo_action(quoted).contains("Open new Termy tab here"));
+        assert!(nemo_action(quoted).contains("Open new Arxk tab here"));
     }
 
     #[test]

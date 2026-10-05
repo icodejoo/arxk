@@ -1,4 +1,4 @@
-# Termy Shell Integration for Fish
+# Arxk Shell Integration for Fish
 # This file should be sourced in your ~/.config/fish/config.fish
 # It enables OSC 133 shell integration for command lifecycle tracking
 

@@ -19,44 +19,44 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "打开设置窗口失败：{error}",
     ),
     (
-        "Invalid Termy deeplink: {error}",
-        "无效的 Termy 链接：{error}",
+        "Invalid Arxk deeplink: {error}",
+        "无效的 Arxk 链接：{error}",
     ),
     (
         "Unsupported deeplink scheme \"{scheme}\"; expected termy://",
         "不支持的链接协议 \"{scheme}\"，应为 termy://",
     ),
     (
-        "Termy deeplinks do not support user info or ports",
-        "Termy 链接不支持用户信息或端口",
+        "Arxk deeplinks do not support user info or ports",
+        "Arxk 链接不支持用户信息或端口",
     ),
     (
         "Theme install deeplink requires ?slug=<theme-slug>",
         "主题安装链接需要带上 ?slug=<theme-slug>",
     ),
     (
-        "Unsupported Termy deeplink route: {route}",
-        "不支持的 Termy 链接路径：{route}",
+        "Unsupported Arxk deeplink route: {route}",
+        "不支持的 Arxk 链接路径：{route}",
     ),
     (
-        "Termy deeplink {name} value is too long",
-        "Termy 链接的 {name} 值过长",
+        "Arxk deeplink {name} value is too long",
+        "Arxk 链接的 {name} 值过长",
     ),
     (
-        "Termy deeplink {name} value contains unsupported control characters",
-        "Termy 链接的 {name} 值包含不支持的控制字符",
+        "Arxk deeplink {name} value contains unsupported control characters",
+        "Arxk 链接的 {name} 值包含不支持的控制字符",
     ),
     (
-        "Open the installed Termy.app to set it as your default terminal.",
-        "请打开已安装的 Termy.app，再把它设为默认终端。",
+        "Open the installed Arxk.app to set it as your default terminal.",
+        "请打开已安装的 Arxk.app，再把它设为默认终端。",
     ),
     (
-        "Could not locate the Termy app bundle.",
-        "找不到 Termy 应用包。",
+        "Could not locate the Arxk app bundle.",
+        "找不到 Arxk 应用包。",
     ),
     (
-        "Could not register Termy with macOS (error {status}).",
-        "无法向 macOS 注册 Termy（错误码 {status}）。",
+        "Could not register Arxk with macOS (error {status}).",
+        "无法向 macOS 注册 Arxk（错误码 {status}）。",
     ),
     (
         "Could not change the default terminal (macOS error {status}).",
@@ -112,12 +112,12 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "会话布局正在变化，请再保存一次",
     ),
     (
-        "Unable to resolve the Termy configuration directory",
-        "无法确定 Termy 配置目录",
+        "Unable to resolve the Arxk configuration directory",
+        "无法确定 Arxk 配置目录",
     ),
     (
-        "The Termy configuration path has no parent directory",
-        "Termy 配置路径没有上级目录",
+        "The Arxk configuration path has no parent directory",
+        "Arxk 配置路径没有上级目录",
     ),
     ("Verify SSH Host Key", "验证 SSH 主机密钥"),
     ("tmux preflight failed", "tmux 预检失败"),
@@ -126,14 +126,14 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "tmux 不可用（{reason}：{error}），改用原生模式启动",
     ),
     (
-        "Termy cannot continue because it failed to open the main window.\n\nError:\n{error}\n\nRecovery:\n- Restart Termy and try again.\n- If this was launched from a terminal, keep this stderr message for support.\n- If the problem repeats, include your OS, display/GPU setup, and recent Termy logs in the bug report.",
-        "Termy 无法继续运行，因为打开主窗口失败。\n\n错误：\n{error}\n\n恢复办法：\n- 重启 Termy 后再试。\n- 如果是从终端启动的，请保留这段 stderr 输出以便排查。\n- 如果问题反复出现，请在反馈中附上操作系统、显示器/GPU 配置和最近的 Termy 日志。",
+        "Arxk cannot continue because it failed to open the main window.\n\nError:\n{error}\n\nRecovery:\n- Restart Arxk and try again.\n- If this was launched from a terminal, keep this stderr message for support.\n- If the problem repeats, include your OS, display/GPU setup, and recent Arxk logs in the bug report.",
+        "Arxk 无法继续运行，因为打开主窗口失败。\n\n错误：\n{error}\n\n恢复办法：\n- 重启 Arxk 后再试。\n- 如果是从终端启动的，请保留这段 stderr 输出以便排查。\n- 如果问题反复出现，请在反馈中附上操作系统、显示器/GPU 配置和最近的 Arxk 日志。",
     ),
     (
-        "Termy cannot continue because {reason}.\n\nError:\n{error}\n\nRecovery:\n- Open your config and set tmux_enabled = false to start in native mode.\n- Finder/DMG launches use a minimal environment; set tmux_binary to an absolute path (for example /opt/homebrew/bin/tmux) if tmux is not on the default PATH.\n- If tmux integration is desired, ensure tmux 3.3 or newer is installed.\n- Save the config and restart Termy, then use tmux Sessions… when ready.",
-        "Termy 无法继续运行，因为{reason}。\n\n错误：\n{error}\n\n恢复办法：\n- 打开配置，设置 tmux_enabled = false，以原生模式启动。\n- 从 Finder/DMG 启动时环境变量很精简；如果默认 PATH 里找不到 tmux，请把 tmux_binary 设为绝对路径（例如 /opt/homebrew/bin/tmux）。\n- 想使用 tmux 集成，请确认已安装 tmux 3.3 或更新版本。\n- 保存配置并重启 Termy，准备好后再使用 tmux 会话…。",
+        "Arxk cannot continue because {reason}.\n\nError:\n{error}\n\nRecovery:\n- Open your config and set tmux_enabled = false to start in native mode.\n- Finder/DMG launches use a minimal environment; set tmux_binary to an absolute path (for example /opt/homebrew/bin/tmux) if tmux is not on the default PATH.\n- If tmux integration is desired, ensure tmux 3.3 or newer is installed.\n- Save the config and restart Arxk, then use tmux Sessions… when ready.",
+        "Arxk 无法继续运行，因为{reason}。\n\n错误：\n{error}\n\n恢复办法：\n- 打开配置，设置 tmux_enabled = false，以原生模式启动。\n- 从 Finder/DMG 启动时环境变量很精简；如果默认 PATH 里找不到 tmux，请把 tmux_binary 设为绝对路径（例如 /opt/homebrew/bin/tmux）。\n- 想使用 tmux 集成，请确认已安装 tmux 3.3 或更新版本。\n- 保存配置并重启 Arxk，准备好后再使用 tmux 会话…。",
     ),
-    ("Termy Startup Error", "Termy 启动错误"),
+    ("Arxk Startup Error", "Arxk 启动错误"),
     (
         "Server returned 304 Not Modified but no matching local cache exists",
         "服务器返回 304（未修改），但本地没有匹配的缓存",
@@ -294,7 +294,7 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("tar extraction failed: {error}", "tar 解压失败：{error}"),
     ("Failed to read temp directory", "读取临时目录失败"),
     (
-        "Could not find termy binary in extracted tarball",
+        "Could not find arxk binary in extracted tarball",
         "在解压出的 tar 包中找不到 termy 可执行文件",
     ),
     (
@@ -456,8 +456,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Could not decode image: {error}", "无法解码图片：{error}"),
     ("Version {version} is ready", "版本 {version} 已就绪"),
     (
-        "Install now to get the latest Termy.",
-        "立即安装，用上最新的 Termy。",
+        "Install now to get the latest Arxk.",
+        "立即安装，用上最新的 Arxk。",
     ),
     ("View release notes", "查看发行说明"),
     ("Later", "稍后"),
@@ -465,7 +465,7 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("{size} so far", "已下载 {size}"),
     ("Downloading", "下载中"),
     ("Fetching version {version}", "正在获取版本 {version}"),
-    ("Keeping Termy current.", "让 Termy 保持最新。"),
+    ("Keeping Arxk current.", "让 Arxk 保持最新。"),
     ("Downloaded", "已下载"),
     (
         "Version {version} is ready to install",
@@ -486,13 +486,13 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "版本 {version} 的安装程序已启动",
     ),
     (
-        "Termy will quit and reopen when setup finishes.",
-        "安装完成后 Termy 会退出并自动重新打开。",
+        "Arxk will quit and reopen when setup finishes.",
+        "安装完成后 Arxk 会退出并自动重新打开。",
     ),
     ("Version {version} is installed", "版本 {version} 已安装"),
     (
-        "Restart Termy to start using it.",
-        "重启 Termy 即可开始使用。",
+        "Restart Arxk to start using it.",
+        "重启 Arxk 即可开始使用。",
     ),
     ("Restart", "重启"),
     ("Dismiss", "关闭"),

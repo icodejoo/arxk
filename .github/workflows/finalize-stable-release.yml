@@ -25,9 +25,9 @@ jobs:
           script: |
             const tag = context.payload.release.tag_name;
             const expectedAssets = [
-              `Termy-${tag}-linux-x86_64.tar.gz`,
-              `Termy-${tag}-macos-arm64-signed.dmg`,
-              `Termy-${tag}-macos-x86_64-signed.dmg`
+              `Arxk-${tag}-linux-x86_64.tar.gz`,
+              `Arxk-${tag}-macos-arm64-signed.dmg`,
+              `Arxk-${tag}-macos-x86_64-signed.dmg`
             ];
             const deadline = Date.now() + 65 * 60 * 1000;
 

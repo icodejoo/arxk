@@ -285,7 +285,7 @@ fn ui(frame: &mut Frame, app: &mut App) {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(" Termy CLI ")
+                .title(" Arxk CLI ")
                 .title_style(Style::default().bold()),
         )
         .highlight_style(Style::default().bg(Color::Rgb(60, 60, 80)).bold())

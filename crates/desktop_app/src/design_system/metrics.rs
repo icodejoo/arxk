@@ -1,4 +1,4 @@
-//! Layout constants for Termy's settings chrome.
+//! Layout constants for Arxk's settings chrome.
 //!
 //! These mirror the shipped values in `crates/desktop_app/src/settings_view/`
 //! so a kit-built surface lines up pixel for pixel with the app's own panels.
