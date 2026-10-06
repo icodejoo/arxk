@@ -385,6 +385,7 @@ fn reconcile(saved: &mut SavedState, live: &[termy_core::multiplexer::PaneInfo])
         .iter()
         .filter(|pane| !referenced.contains(&pane.id))
         .map(|pane| StoredTab {
+            color: None,
             zoomed: false,
             presentation: None,
             pinned: false,

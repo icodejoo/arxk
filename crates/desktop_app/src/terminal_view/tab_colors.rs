@@ -1,4 +1,4 @@
-//! 标签背景色：在标签右键菜单里给单个标签选一个预设色，重启后不保留。
+//! 标签背景色：在标签右键菜单里给单个标签选一个预设色，随工作区一起持久化。
 //!
 //! 颜色按 `TabId` 存在视图的侧表里，不改 `TerminalTab` 结构；标签关闭后残留的条目只有几个字节，
 //! 且 `TabId` 单调递增不会复用，所以不额外清理。
@@ -32,6 +32,25 @@ impl TabColor {
         TabColor::Purple,
         TabColor::Pink,
     ];
+
+    /// 持久化用的稳定键（小写英文名）。
+    pub(crate) const fn key(self) -> &'static str {
+        match self {
+            TabColor::Red => "red",
+            TabColor::Orange => "orange",
+            TabColor::Yellow => "yellow",
+            TabColor::Green => "green",
+            TabColor::Teal => "teal",
+            TabColor::Blue => "blue",
+            TabColor::Purple => "purple",
+            TabColor::Pink => "pink",
+        }
+    }
+
+    /// 由持久化键还原颜色；未知键返回 `None`。
+    pub(crate) fn from_key(key: &str) -> Option<TabColor> {
+        TabColor::ALL.into_iter().find(|color| color.key() == key)
+    }
 
     /// 颜色的 RGB 分量（0.0–1.0）。
     pub(crate) const fn rgb(self) -> (f32, f32, f32) {
@@ -80,6 +99,8 @@ impl TerminalView {
             None => self.tab_colors.remove(&tab_id).is_some(),
         };
         if changed {
+            // 颜色属于工作区状态，改了就要落盘，重启才能恢复。
+            self.schedule_persist_native_workspace(cx);
             cx.notify();
         }
         changed
@@ -95,6 +116,14 @@ impl TerminalView {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn color_key_round_trips() {
+        for color in TabColor::ALL {
+            assert_eq!(TabColor::from_key(color.key()), Some(color));
+        }
+        assert_eq!(TabColor::from_key("nope"), None);
+    }
 
     #[test]
     fn presets_are_distinct_and_in_range() {

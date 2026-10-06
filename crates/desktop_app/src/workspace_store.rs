@@ -288,6 +288,7 @@ impl WorkspaceStore {
                     .entry(workspace_id)
                     .or_default()
                     .push(StoredTab {
+                        color: None,
                         zoomed: false,
                         presentation: None,
                         pinned: row.get("pinned"),
@@ -505,6 +506,7 @@ mod tests {
                     active_tab: 1,
                     tabs: vec![
                         StoredTab {
+                            color: None,
                             zoomed: false,
                             presentation: None,
                             pinned: true,
@@ -524,6 +526,7 @@ mod tests {
                             }],
                         },
                         StoredTab {
+                            color: None,
                             zoomed: false,
                             presentation: None,
                             pinned: false,
@@ -562,6 +565,7 @@ mod tests {
                     pinned: false,
                     active_tab: 0,
                     tabs: vec![StoredTab {
+                        color: None,
                         zoomed: false,
                         presentation: None,
                         pinned: false,

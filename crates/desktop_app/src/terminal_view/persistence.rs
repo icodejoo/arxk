@@ -55,6 +55,8 @@ struct PersistedNativeTab {
     layout_tree: Option<PersistedNativeLayoutNode>,
     active_pane: usize,
     pinned: bool,
+    /// 标签背景色预设键，没设置为 `None`。
+    color: Option<String>,
     manual_title: Option<String>,
 }
 
@@ -294,6 +296,7 @@ impl TerminalView {
                     zoomed: tab.zoomed,
                     presentation: tab.presentation,
                     pinned: tab.pinned,
+                    color: tab.color,
                     manual_title: tab.manual_title,
                     active_pane: tab.active_pane,
                     layout_tree_json: tab
@@ -330,6 +333,7 @@ impl TerminalView {
                 zoomed: tab.zoomed,
                 presentation: tab.presentation,
                 pinned: tab.pinned,
+                color: tab.color,
                 manual_title: tab.manual_title,
                 active_pane: tab.active_pane,
                 layout_tree: tab
@@ -506,6 +510,10 @@ impl TerminalView {
                     layout_tree,
                     active_pane,
                     pinned: tab.pinned,
+                    color: self
+                        .tab_colors
+                        .get(&tab.id)
+                        .map(|color| color.key().to_string()),
                     manual_title: tab.manual_title.clone(),
                 }
             })
@@ -526,6 +534,7 @@ impl TerminalView {
                 json!({
                     "active_pane": tab.active_pane,
                     "pinned": tab.pinned,
+                    "color": tab.color,
                     "manual_title": tab.manual_title,
                     "layout_tree": tab.layout_tree.map(NativeLayout::persisted_layout_tree_to_value),
                     "panes": tab.panes.into_iter().map(|pane| {
@@ -624,6 +633,7 @@ impl TerminalView {
                 .get("pinned")
                 .and_then(Value::as_bool)
                 .unwrap_or(false);
+            let color = non_blank_str(tab_value, "color");
             let manual_title = tab_value
                 .get("manual_title")
                 .and_then(Value::as_str)
@@ -641,6 +651,7 @@ impl TerminalView {
                 layout_tree,
                 active_pane,
                 pinned,
+                color,
                 manual_title,
             });
         }
@@ -865,6 +876,13 @@ impl TerminalView {
                 .map(|pane| pane.id.clone())
                 .ok_or_else(|| "restored tab has no panes".to_string())?;
             tab.pinned = persisted_tab.pinned;
+            if let Some(color) = persisted_tab
+                .color
+                .as_deref()
+                .and_then(tab_colors::TabColor::from_key)
+            {
+                self.tab_colors.insert(tab.id, color);
+            }
             tab.manual_title = manual_title;
             // 手动窗格名、路径、上报标题按新建窗格的 id 重新映射回来。
             for (pane, persisted_pane) in tab.panes.iter().zip(persisted_tab.panes.iter()) {
@@ -1493,6 +1511,7 @@ mod tests {
                 zoomed: false,
                 presentation: None,
                 pinned: false,
+                color: None,
                 manual_title: Some("Build".to_string()),
                 active_pane: 0,
                 layout_tree_json: None,
@@ -1762,6 +1781,30 @@ mod tests {
             .expect("state should include last session");
         assert_eq!(workspace.tabs.len(), 1);
         assert!(workspace.tabs[0].pinned);
+    }
+
+    #[test]
+    fn persisted_native_workspace_parser_reads_tab_color() {
+        let state = TerminalView::parse_persisted_native_workspace_state(
+            r#"{
+  "version": 2,
+  "last_session": {
+    "active_tab": 0,
+    "tabs": [
+      { "active_pane": 0, "color": "blue",
+        "panes": [ { "left": 0, "top": 0, "width": 80, "height": 24 } ] },
+      { "active_pane": 0,
+        "panes": [ { "left": 0, "top": 0, "width": 80, "height": 24 } ] }
+    ]
+  },
+  "layouts": []
+}"#,
+        )
+        .expect("workspace state should parse");
+
+        let tabs = state.last_session.expect("last session").tabs;
+        assert_eq!(tabs[0].color.as_deref(), Some("blue"));
+        assert_eq!(tabs[1].color, None);
     }
 
     #[test]

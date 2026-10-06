@@ -322,6 +322,7 @@ impl SessionClient {
                 let expected = self.layout()?;
                 let mut layout = decode(expected.as_deref())?;
                 let tab = StoredTab {
+                    color: None,
                     zoomed: false,
                     presentation: None,
                     pinned: false,

@@ -84,6 +84,9 @@ pub struct StoredTab {
     #[serde(default)]
     pub presentation: Option<StoredTabPresentation>,
     pub pinned: bool,
+    /// 标签背景色的预设键（如 `"red"`），没设置为 `None`；旧数据缺省按 `None` 读。
+    #[serde(default)]
+    pub color: Option<String>,
     pub manual_title: Option<String>,
     pub active_pane: usize,
     /// Pane split layout tree, serialized as JSON in the same shape the
