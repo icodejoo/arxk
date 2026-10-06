@@ -3595,14 +3595,21 @@ impl Render for TerminalView {
                     // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 1em，不占布局。
                     // 有自定义标题：左标题（半透明主题色）、右路径（半透明反差色）；
                     // 没有标题：路径就是标题，只有左段。中间留出拖拽手柄，放不下就不画。
+                    let pane_cwd = self.pane_cwds.get(pane.id.as_str()).map(String::as_str);
                     let label_texts = TerminalView::pane_label_texts(
                         TerminalView::resolve_pane_title(
                             &self.pane_manual_titles,
                             &self.pane_titles,
                             pane.id.as_str(),
                         ),
-                        self.pane_cwds.get(pane.id.as_str()).map(String::as_str),
-                    );
+                        pane_cwd,
+                    )
+                    .map(|mut texts| {
+                        // 有 git 时左段（标题）固定追加 `::分支`。
+                        let branch = pane_cwd.and_then(|cwd| self.branch_for_pane_cwd(cwd));
+                        texts.left = titles::git::append_branch(&texts.left, branch);
+                        texts
+                    });
                     let side_max_width =
                         (pane_frame_width - PANE_DRAG_HANDLE_WIDTH) * 0.5 - PANE_TITLE_INSET * 2.0;
                     if let Some(label_texts) = label_texts

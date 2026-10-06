@@ -395,7 +395,18 @@ impl TerminalView {
         }
     }
 
-    pub(crate) fn resolved_tab_title(&self, index: usize) -> String {
+    /// 标签页当前所在分支：取活动窗格的 cwd，缺失时退回最近一次提示符 cwd；非 git 返回 None。
+    pub(crate) fn tab_branch(&self, index: usize) -> Option<&str> {
+        let tab = self.session.tabs.get(index)?;
+        let cwd = tab
+            .active_pane_id()
+            .and_then(|id| self.pane_cwds.get(id))
+            .or(tab.last_prompt_cwd.as_ref())?;
+        self.branch_for_pane_cwd(cwd)
+    }
+
+    /// 标签页标题（不含分支后缀）：按优先级挑选来源，手动名同样适用。
+    pub(crate) fn resolved_tab_title_base(&self, index: usize) -> String {
         let tab = &self.session.tabs[index];
         let fallback_title = self.fallback_title();
         let smart_mode_shell_fallback = Self::smart_mode_shell_fallback_enabled(&self.tab_title);
@@ -419,6 +430,11 @@ impl TerminalView {
         }
 
         Self::truncate_tab_title(fallback_title)
+    }
+
+    /// 标签页最终显示的标题：有 git 时固定追加 `::分支`（手动标题也一样）。
+    pub(crate) fn resolved_tab_title(&self, index: usize) -> String {
+        super::git::append_branch(&self.resolved_tab_title_base(index), self.tab_branch(index))
     }
 
     pub(crate) fn refresh_tab_title(&mut self, index: usize) -> bool {

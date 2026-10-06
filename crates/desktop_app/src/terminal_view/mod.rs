@@ -1504,6 +1504,8 @@ pub struct TerminalView {
     pane_manual_titles: HashMap<String, String>,
     /// 窗格 id -> shell 上报的当前目录（OSC 7 / OSC 9;9），用于窗格标签的路径文字。
     pane_cwds: HashMap<String, String>,
+    /// git 分支监听器（按仓库去重），首次收到 cwd 时才创建。
+    git_watcher: Option<titles::git::ViewGitWatcher>,
     /// 快捷键弹窗（点击顶栏左侧 logo 打开）是否显示。
     shortcuts_popup_open: bool,
     /// 快捷键弹窗列表的滚动状态。
@@ -3454,6 +3456,7 @@ impl TerminalView {
             pane_titles: HashMap::new(),
             pane_manual_titles: HashMap::new(),
             pane_cwds: HashMap::new(),
+            git_watcher: None,
             shortcuts_popup_open: false,
             shortcuts_scroll: ScrollHandle::new(),
             tab_colors: HashMap::new(),
@@ -4352,6 +4355,9 @@ impl TerminalView {
                         TerminalEvent::WorkingDirectory(path) => {
                             // 窗格标签的路径文字：每个窗格都记，不限于活动窗格。
                             if self.record_pane_cwd(pane_id.as_str(), &path) {
+                                self.sync_git_watch(cx);
+                                // 进出 git 仓库会改变标题里的分支后缀。
+                                self.refresh_tab_title(tab_index);
                                 // 路径变了就刷新持久化缓存（长防抖合并写入）。
                                 self.schedule_persist_native_pane_meta(cx);
                                 if tab_index == active_tab {

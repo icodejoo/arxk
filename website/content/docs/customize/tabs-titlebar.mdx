@@ -15,6 +15,10 @@ description: Tab titles, tab strip behavior, and title bar.
 | `tab_title_prompt_format` | `{cwd}` | Template for prompt-derived titles. |
 | `tab_title_command_format` | `{command}` | Template for command-derived titles. |
 
+### Git branch suffix
+
+When a tab or pane is inside a Git repository, Arxk always appends the current branch to its title as `title::branch`, including custom titles. A detached HEAD shows the short commit hash. The suffix follows `git checkout` live and is not configurable; outside a repository the title is unchanged.
+
 ## Tab Strip
 
 | Key | Default | Description |

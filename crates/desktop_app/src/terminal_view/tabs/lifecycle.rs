@@ -778,7 +778,7 @@ impl TerminalView {
         self.reset_tab_drag_state();
         self.renaming_tab = Some(index);
         self.rename_input
-            .set_text(self.session.tabs[index].title.clone());
+            .set_text(self.resolved_tab_title_base(index));
         self.reset_cursor_blink_phase();
         self.inline_input_selecting = false;
         // Recompute tab widths so the renamed tab expands to its editing width.
