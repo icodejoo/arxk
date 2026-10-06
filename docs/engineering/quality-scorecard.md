@@ -14,7 +14,7 @@ Baseline audit: **2026-06-01** (app version **0.3.0**).
 |----|------|--------|--------|---------------|-------------|
 | G1 | Workspace Clippy | `-D warnings` on all targets | Met | 2026-06-01 | `architecture-checks.yml` |
 | G2 | Crate boundaries | No forbidden deps; generated docs in sync | Met | 2026-06-01 | `scripts/check-boundaries.sh` |
-| G3 | Workspace unit tests in CI | `cargo test --workspace` on every PR | Met | 2026-06-01 | `architecture-checks.yml` `workspace-tests` |
+| G3 | Workspace unit tests in CI | `cargo test --workspace` on every PR | Met | 2026-06-01 | `ci.yml` `test` |
 | G4 | Formatting | `cargo fmt --check` on every PR | Met | 2026-06-01 | `architecture-checks.yml` `fmt` |
 | G5 | Local CI parity | `just validate` matches PR CI | Met | 2026-06-01 | `justfile` |
 | G6 | Max file size | No `.rs` file &gt; 1,500 lines; no new files &gt; 800 without ADR | Partial | 2026-08-20 | `scripts/check-file-sizes.sh` (allowlist is the source of truth; shrink over time) |

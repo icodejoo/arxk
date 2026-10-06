@@ -181,8 +181,8 @@ forbid_pattern 'webkit2gtk|GDK_BACKEND' \
   "scripts/install-linux.sh" \
   "Linux installer must not carry browser runtime requirements"
 require_pattern 'pkg-config' \
-  ".github/workflows/architecture-checks.yml" \
-  "architecture checks must install pkg-config for Linux desktop builds"
+  ".github/workflows/ci.yml" \
+  "ci workflow must install pkg-config for Linux desktop builds"
 require_pattern 'pkg-config' \
   ".github/workflows/release.yml" \
   "release workflow must install pkg-config for Linux desktop builds"
@@ -224,9 +224,6 @@ require_pattern 'public.folder' \
 require_pattern 'Open new Arxk tab here' \
   "scripts/build-dmg.sh" \
   "macOS DMG packaging must install the Finder Open new Arxk tab here service"
-require_pattern './scripts/check-platform-builds\.sh --native' \
-  ".github/workflows/architecture-checks.yml" \
-  "architecture checks must run the shared native platform verifier"
 require_pattern 'cargo check -p termy -p termy_cli' \
   "scripts/check-platform-builds.sh" \
   "platform verifier must check desktop and CLI crates"

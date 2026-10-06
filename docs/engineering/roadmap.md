@@ -36,7 +36,7 @@
 
 | ID | Initiative | Work | Exit criterion | Scorecard | Status |
 |----|------------|------|----------------|-----------|--------|
-| E0.1 | Workspace tests in CI | `workspace-tests` job in `architecture-checks.yml` | Green on every PR to `main` | G3 | Done |
+| E0.1 | Workspace tests in CI | `test` job in `ci.yml` | Green on every PR to `main` | G3 | Done |
 | E0.2 | Format gate | `fmt` job + `just fmt-check` | No unformatted Rust on `main` | G4 | Done |
 | E0.3 | Local parity | `just validate` | Documented in CONTRIBUTING | G5 | Done |
 | E0.4 | PR definition of done | PR template checklist | Matches CI jobs by name | G12 | Done |
