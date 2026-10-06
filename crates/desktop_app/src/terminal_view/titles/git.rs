@@ -207,10 +207,9 @@ impl ViewGitWatcher {
                 .watcher
                 .watch(&dir, RecursiveMode::NonRecursive)
                 .is_ok()
+                && let Some(head) = read_head(&dir)
             {
-                if let Some(head) = read_head(&dir) {
-                    self.heads.insert(dir, head);
-                }
+                self.heads.insert(dir, head);
             }
         }
     }
@@ -227,10 +226,10 @@ impl ViewGitWatcher {
             if self.refs.count(dir) == 0 {
                 continue;
             }
-            if let Some(head) = read_head(dir) {
-                if self.heads.insert(dir.clone(), head.clone()) != Some(head) {
-                    changed = true;
-                }
+            if let Some(head) = read_head(dir)
+                && self.heads.insert(dir.clone(), head.clone()) != Some(head)
+            {
+                changed = true;
             }
         }
         changed

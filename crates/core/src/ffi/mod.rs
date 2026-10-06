@@ -44,10 +44,12 @@ pub enum TermyFfiStatus {
     InvalidArgument = 9,
 }
 
+// 测试专用的 panic 注入开关：线程局部，避免并行测试互相消费对方的标志。
 #[cfg(test)]
-static PANIC_NEXT_FEED_OUTPUT: AtomicBool = AtomicBool::new(false);
-#[cfg(test)]
-static PANIC_NEXT_RESIZE: AtomicBool = AtomicBool::new(false);
+thread_local! {
+    static PANIC_NEXT_FEED_OUTPUT: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    static PANIC_NEXT_RESIZE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -3211,7 +3213,7 @@ pub unsafe extern "C" fn termy_terminal_feed_output(
 
         let bytes = unsafe { slice::from_raw_parts(bytes_ptr, bytes_len) };
         #[cfg(test)]
-        if PANIC_NEXT_FEED_OUTPUT.swap(false, Ordering::SeqCst) {
+        if PANIC_NEXT_FEED_OUTPUT.replace(false) {
             panic!("test-only feed_output panic");
         }
         unsafe {
@@ -3346,7 +3348,7 @@ pub unsafe extern "C" fn termy_terminal_resize(
         }
 
         #[cfg(test)]
-        if PANIC_NEXT_RESIZE.swap(false, Ordering::SeqCst) {
+        if PANIC_NEXT_RESIZE.replace(false) {
             panic!("test-only resize panic");
         }
 
@@ -5051,7 +5053,7 @@ mod tests {
             TermyFfiStatus::Ok
         );
 
-        PANIC_NEXT_FEED_OUTPUT.store(true, Ordering::SeqCst);
+        PANIC_NEXT_FEED_OUTPUT.set(true);
         let bytes = b"x";
         assert_eq!(
             unsafe { termy_terminal_feed_output(terminal, bytes.as_ptr(), bytes.len()) },
@@ -5075,7 +5077,7 @@ mod tests {
             TermyFfiStatus::Ok
         );
 
-        PANIC_NEXT_RESIZE.store(true, Ordering::SeqCst);
+        PANIC_NEXT_RESIZE.set(true);
         assert_eq!(
             unsafe { termy_terminal_resize(terminal, size) },
             TermyFfiStatus::Panicked
