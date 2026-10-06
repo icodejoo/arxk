@@ -19,6 +19,35 @@ const SHORT_HASH_LEN: usize = 7;
 /// `.git` 文件里 gitdir 指针的前缀。
 const GITDIR_PREFIX: &str = "gitdir:";
 
+/// 把终端上报的 cwd 文本转成可访问的本地路径：
+/// 解码 OSC 7 的 `%XX` 转义，并把 Windows 上的 `/E:/x` 去掉多余的前导斜杠。
+pub(crate) fn cwd_to_path(cwd: &str) -> PathBuf {
+    let bytes = cwd.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        let hex = |b: u8| (b as char).to_digit(16);
+        if bytes[i] == b'%'
+            && i + 2 < bytes.len()
+            && let (Some(h), Some(l)) = (hex(bytes[i + 1]), hex(bytes[i + 2]))
+        {
+            decoded.push((h * 16 + l) as u8);
+            i += 3;
+        } else {
+            decoded.push(bytes[i]);
+            i += 1;
+        }
+    }
+    let text = String::from_utf8(decoded).unwrap_or_else(|_| cwd.to_string());
+    let b = text.as_bytes();
+    let drive_after_slash =
+        b.len() >= 3 && b[0] == b'/' && b[1].is_ascii_alphabetic() && b[2] == b':';
+    if cfg!(windows) && drive_after_slash {
+        return PathBuf::from(&text[1..]);
+    }
+    PathBuf::from(text)
+}
+
 /// 从 cwd 向上查找 git 目录；`.git` 是文件（worktree/子模块）时解析其 `gitdir:` 指针。
 /// 找不到返回 None（此时不监听）。
 pub(crate) fn find_git_dir(cwd: &Path) -> Option<PathBuf> {
@@ -166,7 +195,7 @@ impl ViewGitWatcher {
     pub(crate) fn sync<'a>(&mut self, cwds: impl IntoIterator<Item = &'a str>) {
         self.cwd_dirs = cwds
             .into_iter()
-            .filter_map(|c| Some((c.to_string(), find_git_dir(Path::new(c))?)))
+            .filter_map(|c| Some((c.to_string(), find_git_dir(&cwd_to_path(c))?)))
             .collect();
         let (added, removed) = self.refs.reconcile(self.cwd_dirs.values().cloned());
         for dir in removed {
@@ -320,6 +349,18 @@ mod tests {
             read_head(&find_git_dir(&wt).unwrap()).as_deref(),
             Some("wt")
         );
+    }
+
+    #[test]
+    fn cwd_to_path_decodes_percent_and_windows_drive() {
+        assert_eq!(cwd_to_path("/tmp/a%20b"), PathBuf::from("/tmp/a b"));
+        assert_eq!(cwd_to_path("/tmp/100%"), PathBuf::from("/tmp/100%"));
+        let drive = cwd_to_path("/E:/work/my%20repo");
+        if cfg!(windows) {
+            assert_eq!(drive, PathBuf::from("E:/work/my repo"));
+        } else {
+            assert_eq!(drive, PathBuf::from("/E:/work/my repo"));
+        }
     }
 
     #[test]

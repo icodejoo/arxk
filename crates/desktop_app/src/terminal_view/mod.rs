@@ -4354,10 +4354,14 @@ impl TerminalView {
                         // Working directory (OSC 7)
                         TerminalEvent::WorkingDirectory(path) => {
                             // 窗格标签的路径文字：每个窗格都记，不限于活动窗格。
-                            if self.record_pane_cwd(pane_id.as_str(), &path) {
+                            let cwd_changed = self.record_pane_cwd(pane_id.as_str(), &path);
+                            // 恢复会话后 cwd 不变也要补建监听，否则分支后缀出不来。
+                            if cwd_changed || self.git_watcher.is_none() {
                                 self.sync_git_watch(cx);
                                 // 进出 git 仓库会改变标题里的分支后缀。
                                 self.refresh_tab_title(tab_index);
+                            }
+                            if cwd_changed {
                                 // 路径变了就刷新持久化缓存（长防抖合并写入）。
                                 self.schedule_persist_native_pane_meta(cx);
                                 if tab_index == active_tab {

@@ -118,7 +118,9 @@ pub(super) const PANE_DRAG_HANDLE_INSET_Y: f32 = 3.0;
 // 窗格左上角的标题小标签（覆盖绘制，不占布局）。
 /// 标签字号。
 pub(super) const PANE_TITLE_FONT_SIZE: f32 = 11.0;
-/// 标签距窗格左边的留白（高度固定为 1em，上下骑在边框上）。
+/// 窗格标签高度相对字号的倍数（高 2em）。
+pub(super) const PANE_TITLE_HEIGHT_RATIO: f32 = 2.0;
+/// 标签距窗格左边的留白（高度固定为 2em，上下骑在边框上）。
 pub(super) const PANE_TITLE_INSET: f32 = 3.0;
 /// 标签左右内边距。
 pub(super) const PANE_TITLE_PADDING_X: f32 = 6.0;

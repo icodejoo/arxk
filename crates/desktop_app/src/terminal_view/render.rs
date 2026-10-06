@@ -152,14 +152,14 @@ fn kitty_graphics_layers(
     (below_background, below_text, above_text)
 }
 
-/// 窗格标签的一段文字：纯色底、直角、高 1em，只负责文字块本身，位置由调用方决定。
+/// 窗格标签的一段文字：纯色底、直角、高 2em，只负责文字块本身，位置由调用方决定。
 fn pane_label_chip(text: String, fg: gpui_kit::Hsla, bg: gpui_kit::Rgba) -> AnyElement {
     div()
-        .h(px(PANE_TITLE_FONT_SIZE))
+        .h(px(PANE_TITLE_FONT_SIZE * PANE_TITLE_HEIGHT_RATIO))
         .px(px(PANE_TITLE_PADDING_X))
         .whitespace_nowrap()
         .text_size(px(PANE_TITLE_FONT_SIZE))
-        .line_height(px(PANE_TITLE_FONT_SIZE))
+        .line_height(px(PANE_TITLE_FONT_SIZE * PANE_TITLE_HEIGHT_RATIO))
         .text_color(fg)
         .bg(bg)
         .child(text)
@@ -3592,7 +3592,7 @@ impl Render for TerminalView {
                 }
 
                 if multi_pane {
-                    // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 1em，不占布局。
+                    // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 2em，不占布局。
                     // 有自定义标题：左标题（半透明主题色）、右路径（半透明反差色）；
                     // 没有标题：路径就是标题，只有左段。中间留出拖拽手柄，放不下就不画。
                     let pane_cwd = self.pane_cwds.get(pane.id.as_str()).map(String::as_str);
@@ -3618,7 +3618,9 @@ impl Render for TerminalView {
                         // 底色与面板背景一致且不透明，盖住边框线；透明度恒定，不随焦点变化。
                         let mut label_bg = colors.background;
                         label_bg.a = 1.0;
-                        let label_top = (pane_frame_top - PANE_TITLE_FONT_SIZE * 0.5).max(0.0);
+                        let label_top = (pane_frame_top
+                            - PANE_TITLE_FONT_SIZE * PANE_TITLE_HEIGHT_RATIO * 0.5)
+                            .max(0.0);
                         // 过长时压缩中段、保留开头和最后一层目录（同标签页标题的规则）。
                         // 宽度按字符数估算，溢出部分不再处理。
                         let fit_text = |text: &str| {

@@ -1186,6 +1186,8 @@ impl TerminalView {
         self.mark_tab_strip_layout_dirty();
         self.sync_tab_strip_for_active_tab();
         self.sync_plugin_lifecycle_state(false, cx);
+        // 恢复出来的窗格 cwd 也要挂上 git 监听，标题才有分支后缀。
+        self.sync_git_watch(cx);
         for index in 0..self.session.tabs.len() {
             self.refresh_tab_title(index);
         }
