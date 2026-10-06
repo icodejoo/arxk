@@ -12,12 +12,12 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ),
     ("Reset to default", "重置为默认值"),
     (
-        "Arxk is your default terminal. Apps may have their own terminal preference.",
-        "Arxk 已是默认终端。部分应用可能有自己的终端偏好。",
+        "Termarx is your default terminal. Apps may have their own terminal preference.",
+        "Termarx 已是默认终端。部分应用可能有自己的终端偏好。",
     ),
     (
-        "Use Arxk when macOS requests the default terminal.",
-        "当 macOS 需要默认终端时使用 Arxk。",
+        "Use Termarx when macOS requests the default terminal.",
+        "当 macOS 需要默认终端时使用 Termarx。",
     ),
     ("Default terminal", "默认终端"),
     ("Checking…", "检查中…"),
@@ -48,7 +48,7 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Theme is not installed", "该主题尚未安装"),
     ("Logged out from theme store", "已退出主题商店登录"),
     ("Failed to open URL: {url}", "无法打开链接：{url}"),
-    ("Install Arxk Plugin", "安装 Arxk 插件"),
+    ("Install Termarx Plugin", "安装 Termarx 插件"),
     ("this plugin", "此插件"),
     (
         "Install \"{folder_name}\"? Plugins are trusted local code and run with your user permissions.",
@@ -67,7 +67,10 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ),
     ("Uninstall Plugin", "卸载插件"),
     ("Plugin uninstalled", "插件已卸载"),
-    ("Arxk config path is unavailable", "找不到 Arxk 配置路径"),
+    (
+        "Termarx config path is unavailable",
+        "找不到 Termarx 配置路径",
+    ),
     (
         "Failed to open plugin folder {path}: {error}",
         "无法打开插件文件夹 {path}：{error}",

@@ -11,11 +11,11 @@
 #endif
 
 #ifndef MyExeName
-  #define MyExeName "arxk.exe"
+  #define MyExeName "termarx.exe"
 #endif
 
 #ifndef MyCliExeName
-  #define MyCliExeName "arxk-cli.exe"
+  #define MyCliExeName "termarx-cli.exe"
 #endif
 
 #if MyArch == "x64"
@@ -30,16 +30,16 @@
 
 [Setup]
 AppId={{7D3DD34B-5F8F-4D7B-BBC9-0F54B4C89142}
-AppName=Arxk
+AppName=Termarx
 AppVersion={#MyAppVersion}
-AppPublisher=Arxk
-AppPublisherURL=https://github.com/icodejoo/arxk
-AppSupportURL=https://github.com/icodejoo/arxk/issues
-AppUpdatesURL=https://github.com/icodejoo/arxk/releases
-DefaultDirName={autopf}\Arxk
-DefaultGroupName=Arxk
+AppPublisher=Termarx
+AppPublisherURL=https://github.com/icodejoo/termarx
+AppSupportURL=https://github.com/icodejoo/termarx/issues
+AppUpdatesURL=https://github.com/icodejoo/termarx/releases
+DefaultDirName={autopf}\Termarx
+DefaultGroupName=Termarx
 OutputDir=..\..\target\dist
-OutputBaseFilename=Arxk-{#MyAppVersion}-windows-{#MyArch}-Setup
+OutputBaseFilename=Termarx-{#MyAppVersion}-windows-{#MyArch}-Setup
 SetupIconFile=..\..\assets\termy.ico
 Compression=lzma
 SolidCompression=yes
@@ -56,25 +56,25 @@ Source: "..\..\target\{#MyTarget}\release\{#MyExeName}"; DestDir: "{app}"; Flags
 Source: "..\..\target\{#MyTarget}\release\{#MyCliExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Arxk"; Filename: "{app}\{#MyExeName}"
-Name: "{autodesktop}\Arxk"; Filename: "{app}\{#MyExeName}"
+Name: "{group}\Termarx"; Filename: "{app}\{#MyExeName}"
+Name: "{autodesktop}\Termarx"; Filename: "{app}\{#MyExeName}"
 
 [Registry]
-Root: HKCR; Subkey: "termy"; ValueType: string; ValueName: ""; ValueData: "URL:Arxk Protocol"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "termy"; ValueType: string; ValueName: ""; ValueData: "URL:Termarx Protocol"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "termy"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
 Root: HKCR; Subkey: "termy\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyExeName},0"
 Root: HKCR; Subkey: "termy\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" ""%1"""
-Root: HKCR; Subkey: "Directory\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Arxk tab here"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Termarx tab here"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Directory\shell\TermyOpenTab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyExeName}"
 Root: HKCR; Subkey: "Directory\shell\TermyOpenTab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" --working-directory ""%V"""
-Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Arxk tab here"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Termarx tab here"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyExeName}"
 Root: HKCR; Subkey: "Directory\Background\shell\TermyOpenTab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" --working-directory ""%V"""
-Root: HKCR; Subkey: "Drive\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Arxk tab here"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "Drive\shell\TermyOpenTab"; ValueType: string; ValueName: ""; ValueData: "Open new Termarx tab here"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "Drive\shell\TermyOpenTab"; ValueType: string; ValueName: "Icon"; ValueData: "{app}\{#MyExeName}"
 Root: HKCR; Subkey: "Drive\shell\TermyOpenTab\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyExeName}"" --working-directory ""%V"""
 
 [Run]
-Filename: "{app}\{#MyExeName}"; Description: "Launch Arxk"; Flags: nowait postinstall skipifsilent
-; Silent auto-updates quit Arxk before setup finishes, so relaunch after install.
+Filename: "{app}\{#MyExeName}"; Description: "Launch Termarx"; Flags: nowait postinstall skipifsilent
+; Silent auto-updates quit Termarx before setup finishes, so relaunch after install.
 Filename: "{app}\{#MyExeName}"; Flags: nowait runasoriginaluser skipifnotsilent

@@ -118,7 +118,7 @@ function ReleasesPage() {
         </div>
 
         <a
-          href="https://github.com/icodejoo/arxk/releases"
+          href="https://github.com/icodejoo/termarx/releases"
           target="_blank"
           rel="noreferrer"
           className="mt-8 text-xs text-[#787c99] hover:text-white"

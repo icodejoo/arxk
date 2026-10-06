@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Arxk Linux Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/icodejoo/arxk/main/scripts/install-linux.sh | bash
+# Termarx Linux Installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/icodejoo/termarx/main/scripts/install-linux.sh | bash
 
-REPO="icodejoo/arxk"
+REPO="icodejoo/termarx"
 INSTALL_DIR="${TERMY_INSTALL_DIR:-$HOME/.local/bin}"
 
 die() {
@@ -82,49 +82,49 @@ log "Download URL: $DOWNLOAD_URL"
 TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-TARBALL_PATH="$TEMP_DIR/arxk.tar.gz"
+TARBALL_PATH="$TEMP_DIR/termarx.tar.gz"
 
-log "Downloading Arxk $TAG..."
+log "Downloading Termarx $TAG..."
 curl -fsSL "$DOWNLOAD_URL" -o "$TARBALL_PATH"
 
 log "Extracting..."
 tar -xzf "$TARBALL_PATH" -C "$TEMP_DIR"
 
 BINARY_PATH=""
-if [[ -f "$TEMP_DIR/arxk/arxk-bin" ]]; then
-  BINARY_PATH="$TEMP_DIR/arxk/arxk-bin"
-elif [[ -f "$TEMP_DIR/arxk/arxk" ]]; then
-  BINARY_PATH="$TEMP_DIR/arxk/arxk"
-elif [[ -f "$TEMP_DIR/arxk-bin" ]]; then
-  BINARY_PATH="$TEMP_DIR/arxk-bin"
-elif [[ -f "$TEMP_DIR/arxk" ]]; then
-  BINARY_PATH="$TEMP_DIR/arxk"
+if [[ -f "$TEMP_DIR/termarx/termarx-bin" ]]; then
+  BINARY_PATH="$TEMP_DIR/termarx/termarx-bin"
+elif [[ -f "$TEMP_DIR/termarx/termarx" ]]; then
+  BINARY_PATH="$TEMP_DIR/termarx/termarx"
+elif [[ -f "$TEMP_DIR/termarx-bin" ]]; then
+  BINARY_PATH="$TEMP_DIR/termarx-bin"
+elif [[ -f "$TEMP_DIR/termarx" ]]; then
+  BINARY_PATH="$TEMP_DIR/termarx"
 else
-  BINARY_PATH="$(find "$TEMP_DIR" \( -name "arxk-bin" -o -name "arxk" \) -type f -executable 2>/dev/null | head -n1)"
+  BINARY_PATH="$(find "$TEMP_DIR" \( -name "termarx-bin" -o -name "termarx" \) -type f -executable 2>/dev/null | head -n1)"
 fi
 
 if [[ -z "$BINARY_PATH" || ! -f "$BINARY_PATH" ]]; then
-  die "Could not find arxk binary in downloaded tarball"
+  die "Could not find termarx binary in downloaded tarball"
 fi
 
 CLI_BINARY_PATH=""
-if [[ -f "$TEMP_DIR/arxk/arxk-cli" ]]; then
-  CLI_BINARY_PATH="$TEMP_DIR/arxk/arxk-cli"
+if [[ -f "$TEMP_DIR/termarx/termarx-cli" ]]; then
+  CLI_BINARY_PATH="$TEMP_DIR/termarx/termarx-cli"
 else
-  CLI_BINARY_PATH="$(find "$TEMP_DIR" -name "arxk-cli" -type f -executable 2>/dev/null | head -n1)"
+  CLI_BINARY_PATH="$(find "$TEMP_DIR" -name "termarx-cli" -type f -executable 2>/dev/null | head -n1)"
 fi
 
 if [[ -z "$CLI_BINARY_PATH" || ! -f "$CLI_BINARY_PATH" ]]; then
-  die "Could not find arxk-cli binary in downloaded tarball"
+  die "Could not find termarx-cli binary in downloaded tarball"
 fi
 
 mkdir -p "$INSTALL_DIR"
 
-log "Installing to $INSTALL_DIR/arxk..."
-rm -f "$INSTALL_DIR/arxk" "$INSTALL_DIR/arxk-bin" "$INSTALL_DIR/arxk-cli"
-cp "$BINARY_PATH" "$INSTALL_DIR/arxk-bin"
-cp "$CLI_BINARY_PATH" "$INSTALL_DIR/arxk-cli"
-cat > "$INSTALL_DIR/arxk" <<'LAUNCHER'
+log "Installing to $INSTALL_DIR/termarx..."
+rm -f "$INSTALL_DIR/termarx" "$INSTALL_DIR/termarx-bin" "$INSTALL_DIR/termarx-cli"
+cp "$BINARY_PATH" "$INSTALL_DIR/termarx-bin"
+cp "$CLI_BINARY_PATH" "$INSTALL_DIR/termarx-cli"
+cat > "$INSTALL_DIR/termarx" <<'LAUNCHER'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -132,11 +132,11 @@ if [[ "${TERMY_LINUX_BACKEND:-x11}" == "x11" && -n "${DISPLAY:-}" ]]; then
   unset WAYLAND_DISPLAY
 fi
 
-exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/arxk-bin" "$@"
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/termarx-bin" "$@"
 LAUNCHER
-chmod +x "$INSTALL_DIR/arxk" "$INSTALL_DIR/arxk-bin" "$INSTALL_DIR/arxk-cli"
+chmod +x "$INSTALL_DIR/termarx" "$INSTALL_DIR/termarx-bin" "$INSTALL_DIR/termarx-cli"
 
-if [[ -d "$TEMP_DIR/arxk/file-manager" ]]; then
+if [[ -d "$TEMP_DIR/termarx/file-manager" ]]; then
   SHARE_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
   mkdir -p \
     "$SHARE_HOME/applications" \
@@ -145,23 +145,23 @@ if [[ -d "$TEMP_DIR/arxk/file-manager" ]]; then
     "$SHARE_HOME/nemo/actions" \
     "$SHARE_HOME/nautilus/scripts" \
     "$SHARE_HOME/caja/scripts"
-  if [[ -f "$TEMP_DIR/arxk/file-manager/arxk.desktop" ]]; then
-    cp "$TEMP_DIR/arxk/file-manager/arxk.desktop" "$SHARE_HOME/applications/arxk.desktop"
+  if [[ -f "$TEMP_DIR/termarx/file-manager/termarx.desktop" ]]; then
+    cp "$TEMP_DIR/termarx/file-manager/termarx.desktop" "$SHARE_HOME/applications/termarx.desktop"
   fi
-  if [[ -f "$TEMP_DIR/arxk/file-manager/arxk-open-tab.desktop" ]]; then
-    cp "$TEMP_DIR/arxk/file-manager/arxk-open-tab.desktop" "$SHARE_HOME/kio/servicemenus/arxk-open-tab.desktop"
-    cp "$TEMP_DIR/arxk/file-manager/arxk-open-tab.desktop" "$SHARE_HOME/kservices5/ServiceMenus/arxk-open-tab.desktop"
+  if [[ -f "$TEMP_DIR/termarx/file-manager/termarx-open-tab.desktop" ]]; then
+    cp "$TEMP_DIR/termarx/file-manager/termarx-open-tab.desktop" "$SHARE_HOME/kio/servicemenus/termarx-open-tab.desktop"
+    cp "$TEMP_DIR/termarx/file-manager/termarx-open-tab.desktop" "$SHARE_HOME/kservices5/ServiceMenus/termarx-open-tab.desktop"
   fi
-  if [[ -f "$TEMP_DIR/arxk/file-manager/arxk-open-tab.nemo_action" ]]; then
-    cp "$TEMP_DIR/arxk/file-manager/arxk-open-tab.nemo_action" "$SHARE_HOME/nemo/actions/arxk-open-tab.nemo_action"
+  if [[ -f "$TEMP_DIR/termarx/file-manager/termarx-open-tab.nemo_action" ]]; then
+    cp "$TEMP_DIR/termarx/file-manager/termarx-open-tab.nemo_action" "$SHARE_HOME/nemo/actions/termarx-open-tab.nemo_action"
   fi
-  if [[ -f "$TEMP_DIR/arxk/file-manager/nautilus-open-tab.sh" ]]; then
-    install -m 755 "$TEMP_DIR/arxk/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/nautilus/scripts/Open new Arxk tab here"
-    install -m 755 "$TEMP_DIR/arxk/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/caja/scripts/Open new Arxk tab here"
+  if [[ -f "$TEMP_DIR/termarx/file-manager/nautilus-open-tab.sh" ]]; then
+    install -m 755 "$TEMP_DIR/termarx/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/nautilus/scripts/Open new Termarx tab here"
+    install -m 755 "$TEMP_DIR/termarx/file-manager/nautilus-open-tab.sh" "$SHARE_HOME/caja/scripts/Open new Termarx tab here"
   fi
 fi
 
-log "Arxk $TAG installed successfully!"
+log "Termarx $TAG installed successfully!"
 
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo ""
@@ -180,4 +180,4 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
 fi
 
 echo ""
-echo "Run 'arxk' to start the terminal."
+echo "Run 'termarx' to start the terminal."

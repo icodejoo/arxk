@@ -12,7 +12,7 @@ impl Host {
         // an inherited output handle; pipe EOF would wait for that child too.
         let mut stdout = tempfile::tempfile().unwrap();
         let mut stderr = tempfile::tempfile().unwrap();
-        let mut command = Command::new(env!("CARGO_BIN_EXE_arxk-cli"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_termarx-cli"));
         command
             .args(["mux", "--session-dir"])
             .arg(self.0.path().join("sessions"))
@@ -308,7 +308,7 @@ fn starting_a_host_releases_captured_output_while_host_stays_alive() {
     let root = host.0.path().join("sessions");
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::spawn(move || {
-        let output = Command::new(env!("CARGO_BIN_EXE_arxk-cli"))
+        let output = Command::new(env!("CARGO_BIN_EXE_termarx-cli"))
             .args(["mux", "--session-dir"])
             .arg(root)
             .arg("start")

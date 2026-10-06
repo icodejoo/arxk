@@ -8,7 +8,7 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Open new Arxk tab here</string>
+				<string>Open new Termarx tab here</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>runWorkflowAsService</string>

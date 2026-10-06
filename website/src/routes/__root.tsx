@@ -15,7 +15,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Arxk — A fast, native terminal',
+        title: 'Termarx — A fast, native terminal',
       },
     ],
     links: [

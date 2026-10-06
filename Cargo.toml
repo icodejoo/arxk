@@ -7,7 +7,7 @@ alacritty_terminal = "0.26"
 anyhow = "1.0"
 dirs = "6.0"
 flume = "0.11"
-# Keep Arxk's own controls and assets; Kit supplies GPUI and the native platforms.
+# Keep Termarx's own controls and assets; Kit supplies GPUI and the native platforms.
 gpui-kit = { version = "=0.7.0", default-features = false }
 keyring = "4.1.1"
 log = "0.4"

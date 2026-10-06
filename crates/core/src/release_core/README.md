@@ -6,7 +6,7 @@ Release metadata and version helpers.
 
 This module owns shared release/update metadata parsing and version comparison logic used by the CLI and updater. It should not own installer execution, UI, or platform packaging scripts.
 
-Use this module when changing how Arxk understands releases, versions, downloadable artifacts, or GitHub release notes.
+Use this module when changing how Termarx understands releases, versions, downloadable artifacts, or GitHub release notes.
 
 ## Validation
 

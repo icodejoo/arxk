@@ -182,7 +182,7 @@ mod tests {
         let mut answer = cx.update(|window, cx| {
             window.prompt(
                 PromptLevel::Warning,
-                "Quit Arxk?",
+                "Quit Termarx?",
                 None,
                 &["Quit", "Cancel"],
                 cx,
@@ -203,7 +203,7 @@ mod tests {
             let mut answer = cx.update(|window, cx| {
                 window.prompt(
                     PromptLevel::Warning,
-                    "Quit Arxk?",
+                    "Quit Termarx?",
                     Some("A process is running."),
                     &["Quit", "Cancel"],
                     cx,
@@ -242,7 +242,7 @@ mod tests {
             let mut answer = cx.update(|window, cx| {
                 window.prompt(
                     PromptLevel::Warning,
-                    "Quit Arxk?",
+                    "Quit Termarx?",
                     None,
                     &["Quit", "Cancel"],
                     cx,

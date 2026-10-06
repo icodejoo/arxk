@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Interactive Kitty graphics smoke test (Python standard library only).
 
-Run in Arxk: python3 crates/desktop_app/examples/kitty_graphics_conformance.py
+Run in Termarx: python3 crates/desktop_app/examples/kitty_graphics_conformance.py
 Space switches between layout/animation and scrolling. R redraws; Q exits.
 Pass --sync to wrap each redraw in a synchronized update, as Grok Build does.
 The test uses an alternate screen and restores the terminal on exit.

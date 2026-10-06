@@ -1,0 +1,8 @@
+[Nemo Action]
+Name=Open new Termarx tab here
+Comment=Open a new Termarx tab in this folder
+Exec=termarx --new-tab --working-directory %F
+Icon-Name=termarx
+Selection=any
+Extensions=dir;
+Quote=double

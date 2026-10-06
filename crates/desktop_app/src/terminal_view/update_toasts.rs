@@ -34,7 +34,7 @@ fn update_toast_effect(state: Option<&UpdateState>) -> UpdateToastEffect {
             UpdateToastEffect::FinishProgressOrEnqueue {
                 kind: crate::ui::toast::ToastKind::Info,
                 message: t!(
-                    "Installer launched for v{version}; Arxk will reopen when setup finishes",
+                    "Installer launched for v{version}; Termarx will reopen when setup finishes",
                     version = version
                 ),
             }
@@ -137,7 +137,7 @@ mod tests {
         assert_eq!(
             update_toast_effect(Some(&UpdateState::Available {
                 version: "0.1.79".to_string(),
-                asset_name: "Arxk-v0.1.79-macos-arm64.dmg".to_string(),
+                asset_name: "Termarx-v0.1.79-macos-arm64.dmg".to_string(),
                 url: "https://example.com".to_string(),
                 checksum_asset_name: Some("checksums.txt".to_string()),
                 checksum_url: Some("https://example.com/checksums.txt".to_string()),
@@ -192,7 +192,7 @@ mod tests {
             })),
             UpdateToastEffect::FinishProgressOrEnqueue {
                 kind: crate::ui::toast::ToastKind::Info,
-                message: "Installer launched for v0.1.79; Arxk will reopen when setup finishes"
+                message: "Installer launched for v0.1.79; Termarx will reopen when setup finishes"
                     .to_string(),
             }
         );

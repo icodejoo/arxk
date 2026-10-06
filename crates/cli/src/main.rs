@@ -5,11 +5,11 @@ use clap::{Parser, Subcommand};
 mod commands;
 
 #[derive(Parser)]
-#[command(name = "arxk")]
-#[command(about = "Arxk terminal emulator CLI", long_about = None)]
+#[command(name = "termarx")]
+#[command(about = "Termarx terminal emulator CLI", long_about = None)]
 #[command(version)]
 struct Cli {
-    /// Open Arxk with this working directory
+    /// Open Termarx with this working directory
     #[arg(
         long = "working-directory",
         value_name = "PATH",
@@ -25,7 +25,7 @@ struct Cli {
     #[arg(long, conflicts_with = "new_window")]
     new_tab: bool,
 
-    /// Open Arxk with this working directory
+    /// Open Termarx with this working directory
     #[arg(value_name = "PATH")]
     path: Option<PathBuf>,
 
@@ -95,13 +95,13 @@ enum Action {
     #[command(name = "-update")]
     Update,
 
-    /// Export the current resolved theme into a Arxk themes repo checkout
+    /// Export the current resolved theme into a Termarx themes repo checkout
     #[command(name = "-export-theme")]
     ExportTheme {
         /// Local path to the termy-org/themes checkout
         #[arg(long)]
         repo: PathBuf,
-        /// Theme slug, normalized to Arxk's theme id format
+        /// Theme slug, normalized to Termarx's theme id format
         #[arg(long)]
         slug: String,
         /// Display name for the theme
@@ -118,7 +118,7 @@ enum Action {
         force: bool,
     },
 
-    /// Validate a Arxk themes repo checkout
+    /// Validate a Termarx themes repo checkout
     #[command(name = "-validate-theme-repo")]
     ValidateThemeRepo {
         /// Local path to the termy-org/themes checkout

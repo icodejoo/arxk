@@ -85,7 +85,7 @@ const SHORTCUT_SECTIONS: &[ShortcutSection] = &[
             ("Switch Theme", CommandAction::SwitchTheme),
             ("Saved Layouts", CommandAction::ManageSavedLayouts),
             ("Minimize Window", CommandAction::MinimizeWindow),
-            ("Quit Arxk", CommandAction::Quit),
+            ("Quit Termarx", CommandAction::Quit),
         ],
     },
 ];

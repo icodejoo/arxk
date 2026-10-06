@@ -123,10 +123,10 @@ mod tests {
             tag_name: tag_name.to_string(),
             release_url: "https://example.com/release".to_string(),
             assets: vec![
-                asset("Arxk-v1.0.0-macos-arm64.dmg"),
-                asset("Arxk-v1.0.0-macos-x86_64.dmg"),
-                asset("Arxk-v1.0.0-windows-x64.msi"),
-                asset("Arxk-v1.0.0-linux-x86_64.tar.gz"),
+                asset("Termarx-v1.0.0-macos-arm64.dmg"),
+                asset("Termarx-v1.0.0-macos-x86_64.dmg"),
+                asset("Termarx-v1.0.0-windows-x64.msi"),
+                asset("Termarx-v1.0.0-linux-x86_64.tar.gz"),
                 asset("checksums.txt"),
             ],
         }

@@ -76,8 +76,8 @@ jobs:
       - name: Upload DMG artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: arxk-dmg-${{ matrix.arch }}
-          path: dist/Arxk-${{ env.VERSION }}-macos-${{ matrix.arch }}-signed.dmg
+          name: termarx-dmg-${{ matrix.arch }}
+          path: dist/Termarx-${{ env.VERSION }}-macos-${{ matrix.arch }}-signed.dmg
           if-no-files-found: error
 
   build-windows-setup:
@@ -109,8 +109,8 @@ jobs:
       - name: Upload Setup artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: arxk-setup-x64
-          path: target/dist/Arxk-${{ env.VERSION }}-windows-x64-Setup.exe
+          name: termarx-setup-x64
+          path: target/dist/Termarx-${{ env.VERSION }}-windows-x64-Setup.exe
           if-no-files-found: error
 
   build-linux:
@@ -185,29 +185,29 @@ jobs:
       - name: Upload Linux tarball artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: arxk-linux-tarball-${{ matrix.arch }}
-          path: target/dist/Arxk-${{ env.VERSION }}-linux-${{ matrix.arch }}.tar.gz
+          name: termarx-linux-tarball-${{ matrix.arch }}
+          path: target/dist/Termarx-${{ env.VERSION }}-linux-${{ matrix.arch }}.tar.gz
           if-no-files-found: error
 
       - name: Upload Linux AppImage artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: arxk-linux-appimage-${{ matrix.arch }}
-          path: target/dist/Arxk-${{ env.VERSION }}-linux-${{ matrix.arch }}.AppImage
+          name: termarx-linux-appimage-${{ matrix.arch }}
+          path: target/dist/Termarx-${{ env.VERSION }}-linux-${{ matrix.arch }}.AppImage
           if-no-files-found: error
 
       - name: Upload Linux deb artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: arxk-linux-deb-${{ matrix.arch }}
-          path: target/dist/Arxk-${{ env.VERSION }}-linux-${{ matrix.arch }}.deb
+          name: termarx-linux-deb-${{ matrix.arch }}
+          path: target/dist/Termarx-${{ env.VERSION }}-linux-${{ matrix.arch }}.deb
           if-no-files-found: error
 
       - name: Upload Linux rpm artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: arxk-linux-rpm-${{ matrix.arch }}
-          path: target/dist/Arxk-${{ env.VERSION }}-linux-${{ matrix.arch }}.rpm
+          name: termarx-linux-rpm-${{ matrix.arch }}
+          path: target/dist/Termarx-${{ env.VERSION }}-linux-${{ matrix.arch }}.rpm
           if-no-files-found: error
 
   attach-and-finalize-release:

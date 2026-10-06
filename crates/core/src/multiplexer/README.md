@@ -25,7 +25,7 @@ progress after client exit, reattaches to the same shell PID, and verifies
 both screens, split parser input, colors, input modes, graphics, links,
 scrollback, search, layout storage, and explicit child termination.
 
-Set `TERMY_MUX_TEST_HOST_BINARY` to a built Arxk executable to run these tests
+Set `TERMY_MUX_TEST_HOST_BINARY` to a built Termarx executable to run these tests
 through the installed app's internal host entry point instead of the test
 host executable. IPC tests check authentication, bounded pre-authentication
 messages, clipboard bridging, and terminal queries without an attached client.

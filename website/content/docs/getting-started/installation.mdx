@@ -1,53 +1,53 @@
 ---
 title: Install
-description: Download Arxk for macOS, Linux, or Windows.
+description: Download Termarx for macOS, Linux, or Windows.
 ---
 
-The fastest path is the [Arxk download page](/download). It detects your platform and links to the current GitHub release.
+The fastest path is the [Termarx download page](/download). It detects your platform and links to the current GitHub release.
 
 <Cards>
   <Card title="macOS" description="Install the DMG on Apple silicon or Intel." href="#macos" />
   <Card title="Linux" description="Run the AppImage or unpack the archive." href="#linux" />
-  <Card title="Windows" description="Install Arxk with the MSI package." href="#windows" />
+  <Card title="Windows" description="Install Termarx with the MSI package." href="#windows" />
   <Card title="Build from source" description="Compile the Rust workspace locally." href="#from-source" />
 </Cards>
 
 ## macOS
 
 1. On the [download page](/download), choose **Apple silicon** for M-series Macs or **Intel** for older Macs.
-2. Open the `.dmg` and drag Arxk to `/Applications`.
-3. Open Arxk from Applications.
+2. Open the `.dmg` and drag Termarx to `/Applications`.
+3. Open Termarx from Applications.
 
-macOS DMGs from v0.2.75 onward are signed and notarized. If Arxk does not open,
+macOS DMGs from v0.2.75 onward are signed and notarized. If Termarx does not open,
 [see the troubleshooting guide](/docs/getting-started/troubleshooting).
 
 ## Linux
 
-Download the AppImage or `.tar.gz` from [GitHub Releases](https://github.com/icodejoo/arxk/releases).
+Download the AppImage or `.tar.gz` from [GitHub Releases](https://github.com/icodejoo/termarx/releases).
 
 - **AppImage:** mark it executable, then run it.
-- **Archive:** unpack it and run the included Arxk binary.
+- **Archive:** unpack it and run the included Termarx binary.
 
 Linux release launchers prefer X11/XWayland when it is available so the desktop
 window manager can provide the native title bar and window controls. To run the
-Wayland backend instead, launch Arxk with `TERMY_LINUX_BACKEND=wayland`.
+Wayland backend instead, launch Termarx with `TERMY_LINUX_BACKEND=wayland`.
 Both terminal and Settings windows request system-managed decorations, including
 KDE's title bar, window controls, and resize borders. The window manager controls
-the titlebar theme independently of Arxk's terminal color theme.
+the titlebar theme independently of Termarx's terminal color theme.
 
 ## Windows
 
-Download and run the `.msi` installer from [GitHub Releases](https://github.com/icodejoo/arxk/releases).
+Download and run the `.msi` installer from [GitHub Releases](https://github.com/icodejoo/termarx/releases).
 
 ## From source
 
 ```bash
-git clone https://github.com/icodejoo/arxk
+git clone https://github.com/icodejoo/termarx
 cd termy
 cargo run --release -p termy
 ```
 
-This route requires Rust and the platform dependencies used by the desktop app. Prefer a release binary unless you are developing Arxk itself.
+This route requires Rust and the platform dependencies used by the desktop app. Prefer a release binary unless you are developing Termarx itself.
 
 ## First launch
 
@@ -58,4 +58,4 @@ This route requires Rust and the platform dependencies used by the desktop app. 
 | Font | system monospace (Menlo on macOS, Consolas on Windows), 14px |
 | Settings | `Cmd ,` (macOS) · `Ctrl ,` (Linux / Windows) |
 | Command palette | `Cmd P` · `Ctrl P` |
-| Open a folder | file manager **Open new Arxk tab here**, or `arxk /path` |
+| Open a folder | file manager **Open new Termarx tab here**, or `termarx /path` |

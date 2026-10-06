@@ -1,3 +1,3 @@
 pub fn run() {
-    println!("Arxk {}", env!("CARGO_PKG_VERSION"));
+    println!("Termarx {}", env!("CARGO_PKG_VERSION"));
 }

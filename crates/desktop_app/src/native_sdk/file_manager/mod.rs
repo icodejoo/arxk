@@ -1,4 +1,4 @@
-pub const OPEN_TAB_HERE_LABEL: &str = "Open new Arxk tab here";
+pub const OPEN_TAB_HERE_LABEL: &str = "Open new Termarx tab here";
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -9,7 +9,7 @@ mod windows;
 
 use std::path::{Path, PathBuf};
 
-/// Register a file-manager action that opens a Arxk tab in the selected folder.
+/// Register a file-manager action that opens a Termarx tab in the selected folder.
 ///
 /// Windows writes per-user Explorer verbs. Linux installs Nautilus/Nemo/Caja
 /// scripts and KDE service menus. macOS installs a Finder service that resolves
@@ -64,9 +64,9 @@ mod tests {
 
     #[test]
     fn windows_command_passes_the_selected_folder() {
-        let command = explorer_open_tab_command(Path::new(r"C:\Program Files\Arxk\arxk.exe"));
+        let command = explorer_open_tab_command(Path::new(r"C:\Program Files\Termarx\termarx.exe"));
         assert!(command.contains("--working-directory \"%V\""));
-        assert!(command.contains("arxk.exe"));
+        assert!(command.contains("termarx.exe"));
     }
 
     #[test]
@@ -74,8 +74,8 @@ mod tests {
         assert_eq!(posix_single_quote("/tmp/demo"), "'/tmp/demo'");
         assert_eq!(posix_single_quote("/tmp/it's here"), "'/tmp/it'\\''s here'");
         assert_eq!(
-            quoted_windows_path(Path::new(r"C:\Program Files\Arxk\arxk.exe")),
-            r#""C:\Program Files\Arxk\arxk.exe""#
+            quoted_windows_path(Path::new(r"C:\Program Files\Termarx\termarx.exe")),
+            r#""C:\Program Files\Termarx\termarx.exe""#
         );
     }
 }

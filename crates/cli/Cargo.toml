@@ -2,13 +2,13 @@
 name = "termy_cli"
 version = "1.0.3"
 edition = "2024"
-default-run = "arxk-cli"
+default-run = "termarx-cli"
 
 [lints]
 workspace = true
 
 [[bin]]
-name = "arxk-cli"
+name = "termarx-cli"
 path = "src/main.rs"
 
 [[bin]]

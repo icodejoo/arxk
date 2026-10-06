@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Create, install, and develop a Arxk plugin.
+description: Create, install, and develop a Termarx plugin.
 ---
 
 Install [Bun](https://bun.sh/), then scaffold a plugin:
@@ -10,7 +10,7 @@ termy plugin init my-plugin
 termy plugin dev ./my-plugin
 ```
 
-`dev` installs or updates Arxk's managed copy and watches the development folder.
+`dev` installs or updates Termarx's managed copy and watches the development folder.
 Open the command palette after saving to load the latest valid version.
 
 ## Plugin files
@@ -39,17 +39,17 @@ my-plugin/plugin.ts
 `.tsx` path when the entrypoint is not `plugin.ts`; it must stay inside the plugin
 directory and cannot be a symlink.
 
-`$schema` gives compatible editors validation and autocomplete from Arxk's public
+`$schema` gives compatible editors validation and autocomplete from Termarx's public
 [plugin manifest schema](/schemas/plugin.schema.json). `termy plugin init` adds it
 automatically.
 
-`capabilities` declares the Arxk host APIs a plugin uses. Supported values are
+`capabilities` declares the Termarx host APIs a plugin uses. Supported values are
 `storage` for `context.storage` and `context.paths`, and `native-ui` for views and
 `view.open`. Omitting the field means no capabilities; unknown and duplicate values
 are rejected.
 
 <Callout type="info">
-  Capabilities gate Arxk APIs. They are not operating-system permissions: plugins
+  Capabilities gate Termarx APIs. They are not operating-system permissions: plugins
   are still trusted Bun code with normal file, network, and process access.
 </Callout>
 
@@ -64,21 +64,21 @@ export default definePlugin({
       keywords: ["hello", "example"],
       icon: "info",
       run({ context }) {
-        context.toasts.success(`Welcome to Arxk ${context.appVersion}`);
+        context.toasts.success(`Welcome to Termarx ${context.appVersion}`);
       },
     },
   ],
 } satisfies TermyPlugin);
 ```
 
-Arxk manages `plugins/termy.d.ts`, which supplies the global `definePlugin`,
+Termarx manages `plugins/termy.d.ts`, which supplies the global `definePlugin`,
 `TermyPlugin`, `TermyPluginContext`, and JSX types. Do not import an SDK or run a
 build step.
 
 ## Install and manage plugins
 
 Use **Settings → Plugins → Install from folder** to select a plugin directory.
-Arxk validates it and copies it into the managed plugins directory. The same screen
+Termarx validates it and copies it into the managed plugins directory. The same screen
 shows Bun status and lets you refresh, open the folder, enable, disable, or uninstall
 plugins.
 
@@ -95,17 +95,17 @@ termy plugin uninstall my-plugin
 ```
 
 `add` also accepts the `install` alias, while `remove` accepts `uninstall`. Local
-installs copy the source into Arxk's managed directory and leave the development
+installs copy the source into Termarx's managed directory and leave the development
 folder untouched.
 
 GitHub repository URLs, `/tree/<ref>/<path>` URLs, `--ref`, and `--path` are
-supported. Arxk resolves refs to full commits and stores source metadata for
+supported. Termarx resolves refs to full commits and stores source metadata for
 predictable status and updates. A repository with multiple valid plugins requires
 `--path` instead of guessing.
 
 The installer downloads regular files as data. It does not clone the repository,
 run scripts, evaluate plugin code, or install dependencies while installing. The
-plugin becomes trusted Bun code when Arxk loads it, so interactive CLI installs
+plugin becomes trusted Bun code when Termarx loads it, so interactive CLI installs
 require confirmation and automation must pass `--yes`.
 
 ## Develop safely

@@ -8,7 +8,7 @@ The enclosing core package owns its host integrations and Cargo dependencies.
 
 This module owns the experimental Tmon parser, grids and scrollback, terminal
 state, damage model, graphics protocol, and native PTY/ConPTY lifecycle. It
-must remain renderer-neutral and independently usable without Arxk's desktop
+must remain renderer-neutral and independently usable without Termarx's desktop
 application or the existing Alacritty-backed core.
 
 ## Validation
@@ -48,7 +48,7 @@ that do not understand row movement.
 
 ## Compatibility boundary
 
-Tmon is differential-tested against Arxk's Alacritty-backed native wrapper for
+Tmon is differential-tested against Termarx's Alacritty-backed native wrapper for
 the VT sequences that wrapper implements. It intentionally implements several
 standards and xterm extensions that the pinned parser ignores: legacy
 alternate-screen/cursor modes 47, 1047, and 1048; DEC selective erase and
@@ -57,7 +57,7 @@ DECRQSS/XTGETTCAP replies. OSC 52 additionally accepts valid unpadded or
 whitespace-separated base64. These are compatibility extensions, not benchmark
 shortcuts, and are tested separately from strict differential fixtures.
 
-Tmon also keeps combining marks available to selection and search. Arxk's
+Tmon also keeps combining marks available to selection and search. Termarx's
 existing Alacritty cell adapter omits that out-of-line text; its default behavior
 is deliberately unchanged by the experiment. OSC/DCS payloads are bounded to
 64 KiB so an unterminated control string cannot grow without limit.
@@ -65,7 +65,7 @@ Width reflow is differential-tested while scrolled and while changing rows and
 columns together. Tmon additionally keeps its public one-column grid finite for
 wide characters, even though the pinned Alacritty engine supports a minimum of
 two columns.
-Standalone Tmon keeps the conservative `Osc52::OnlyCopy` default; the Arxk
+Standalone Tmon keeps the conservative `Osc52::OnlyCopy` default; the Termarx
 desktop adapter explicitly enables `CopyPaste` so OSC 52 clipboard queries match
 the existing native engine and still pass through the application's reply host.
 Kitty OSC 5522 packets are emitted as bounded protocol events for the host to
@@ -129,7 +129,7 @@ RGB SGR 58 colors; SGR 24, 59, and 0 reset the same independent pieces as the
 pinned VTE parser. Underline color remains directly readable from a copied cell.
 Combining text and OSC 8 identity share one tagged rare-metadata word, keeping
 `Cell` at 24 bytes even when both features are supported together.
-The desktop Tmon adapter carries that state into Arxk's renderer: single and
+The desktop Tmon adapter carries that state into Termarx's renderer: single and
 curly underlines use GPUI's native straight/wavy decoration, while double,
 dotted, and dashed styles use bounded batched paths. Native Alacritty and tmux
 cells retain their previous single-underline rendering behavior.
@@ -198,7 +198,7 @@ Alacritty-backed `termy_core` runtime explicitly; desktop engine environment is
 not used to choose either path. Before timing, an untimed preflight compares up
 to 32
 MiB of every workload across every normalized grid and scrollback cell plus
-cursor, scroll, and screen state. It reports integrated Arxk backend
+cursor, scroll, and screen state. It reports integrated Termarx backend
 throughput, current full-frame API throughput, and static cell sizes. Feed calls
 intentionally keep the original small workload payloads so results remain
 comparable with the saved baseline. The snapshot APIs perform different

@@ -69,14 +69,14 @@ fn find_termy_app_binary() -> Result<PathBuf, String> {
         }
     }
 
-    let app_binary_name = format!("arxk{}", std::env::consts::EXE_SUFFIX);
+    let app_binary_name = format!("termarx{}", std::env::consts::EXE_SUFFIX);
     for candidate in fallback_termy_app_binary_paths(&app_binary_name) {
         if is_executable_file(&candidate) && candidate != exe_path {
             return Ok(candidate);
         }
     }
 
-    Err("Arxk app binary not found. Build it with: cargo build -p termy".to_string())
+    Err("Termarx app binary not found. Build it with: cargo build -p termy".to_string())
 }
 
 fn resolve_executable_path(path: PathBuf) -> PathBuf {
@@ -86,17 +86,17 @@ fn resolve_executable_path(path: PathBuf) -> PathBuf {
 fn sibling_app_binary_names() -> &'static [&'static str] {
     #[cfg(target_os = "macos")]
     {
-        &["Arxk", "arxk"]
+        &["Termarx", "termarx"]
     }
 
     #[cfg(target_os = "windows")]
     {
-        &["arxk.exe"]
+        &["termarx.exe"]
     }
 
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     {
-        &["arxk"]
+        &["termarx"]
     }
 }
 
@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn bundled_native_app_binary_is_a_sibling_candidate() {
         #[cfg(target_os = "macos")]
-        assert_eq!(sibling_app_binary_names().first(), Some(&"Arxk"));
+        assert_eq!(sibling_app_binary_names().first(), Some(&"Termarx"));
     }
 
     #[cfg(unix)]
@@ -147,10 +147,10 @@ mod tests {
         use std::os::unix::fs::symlink;
 
         let temp = tempfile::tempdir().unwrap();
-        let bundled = temp.path().join("Arxk.app/Contents/MacOS/arxk-cli");
+        let bundled = temp.path().join("Termarx.app/Contents/MacOS/termarx-cli");
         std::fs::create_dir_all(bundled.parent().unwrap()).unwrap();
         std::fs::write(&bundled, b"cli").unwrap();
-        let installed = temp.path().join("home/.local/bin/arxk");
+        let installed = temp.path().join("home/.local/bin/termarx");
         std::fs::create_dir_all(installed.parent().unwrap()).unwrap();
         symlink(&bundled, &installed).unwrap();
 

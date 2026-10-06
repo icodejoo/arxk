@@ -55,7 +55,7 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Switch Theme", "切换主题"),
     ("Saved Layouts", "已保存的布局"),
     ("Minimize Window", "最小化窗口"),
-    ("Quit Arxk", "退出 Arxk"),
+    ("Quit Termarx", "退出 Termarx"),
     // 标签右键菜单
     ("Pin Tab", "固定标签页"),
     ("Unpin Tab", "取消固定标签页"),

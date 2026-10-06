@@ -1,4 +1,4 @@
-//! Terminal search utilities for Arxk.
+//! Terminal search utilities for Termarx.
 
 mod engine;
 mod matcher;

@@ -1,4 +1,4 @@
-# Arxk Shell Integration for Zsh
+# Termarx Shell Integration for Zsh
 # This file should be sourced in your ~/.zshrc
 # It enables OSC 133 shell integration for command lifecycle tracking
 

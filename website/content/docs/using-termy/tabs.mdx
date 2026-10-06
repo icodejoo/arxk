@@ -25,22 +25,22 @@ Right-click a tab and choose **Tab Color** to tint it with one of eight preset
 colors. The first, hollow swatch restores the default. The active tab is tinted
 more strongly than the others.
 
-Tab colors are not saved; they reset when Arxk restarts. The item is in the
+Tab colors are not saved; they reset when Termarx restarts. The item is in the
 in-app tab menu on Windows and Linux. macOS uses a native tab menu, which does
 not include it.
 
 ## Open a tab from your file manager
 
 On macOS, go to **Settings → General → System integration → Default terminal**
-and click **Set as default**. This sets Arxk as the system's terminal handler.
-Run the installed `Arxk.app` to use this option. Apps with their own external
-terminal preference must be configured separately. Finder's **Open new Arxk tab
-here** service remains available; opening a file in Arxk opens its containing
+and click **Set as default**. This sets Termarx as the system's terminal handler.
+Run the installed `Termarx.app` to use this option. Apps with their own external
+terminal preference must be configured separately. Finder's **Open new Termarx tab
+here** service remains available; opening a file in Termarx opens its containing
 folder without running the file.
 
-After Arxk is installed, file managers expose **Open new Arxk tab here**:
+After Termarx is installed, file managers expose **Open new Termarx tab here**:
 
-On macOS, launch Arxk once after updating to refresh the Finder service.
+On macOS, launch Termarx once after updating to refresh the Finder service.
 The action finds the installed app by its identifier, so it continues to work
 after the app bundle is replaced or moved.
 
@@ -50,7 +50,7 @@ after the app bundle is replaced or moved.
 | macOS | Finder Services, and Open With on a folder |
 | Linux | Nautilus/Caja Scripts, Nemo actions, KDE/Dolphin folder menus, and Open With |
 
-If Arxk is already running, the action adds a tab in that folder. You can also request a tab from a shell:
+If Termarx is already running, the action adds a tab in that folder. You can also request a tab from a shell:
 
 ```bash
 termy --new-tab --working-directory /path/to/project
@@ -81,7 +81,7 @@ On macOS and Windows, launches without either flag keep their existing behavior.
 ## Move tabs between windows
 
 Drag a tab outside its window and release to open it in a new window. Drop it
-onto another Arxk terminal window to move it there. The tab keeps its running
+onto another Termarx terminal window to move it there. The tab keeps its running
 shells, split panes, and scrollback. Moving the last tab closes the empty window.
 Press Escape before releasing to cancel a drag. If the tab bar is hidden for a
 single tab, turn off `auto_hide_tabbar` to make that tab available to drag.

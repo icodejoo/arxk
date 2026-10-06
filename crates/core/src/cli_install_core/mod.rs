@@ -219,11 +219,11 @@ fn install_cli_profile_block(shell: InstallShell, install_dir: &str) -> String {
 
     match shell {
         InstallShell::Zsh | InstallShell::Bash => format!(
-            "{START}\n# Added by Arxk Install CLI\nTERMY_CLI_PATH={}\ncase \":$PATH:\" in\n  *\":$TERMY_CLI_PATH:\"*) ;;\n  *) export PATH=\"$TERMY_CLI_PATH:$PATH\" ;;\nesac\n{END}",
+            "{START}\n# Added by Termarx Install CLI\nTERMY_CLI_PATH={}\ncase \":$PATH:\" in\n  *\":$TERMY_CLI_PATH:\"*) ;;\n  *) export PATH=\"$TERMY_CLI_PATH:$PATH\" ;;\nesac\n{END}",
             single_quote_shell_value(install_dir)
         ),
         InstallShell::Fish => format!(
-            "{START}\n# Added by Arxk Install CLI\nset -l termy_cli_path {}\nif not contains -- $termy_cli_path $PATH\n    set -gx PATH $termy_cli_path $PATH\nend\n{END}",
+            "{START}\n# Added by Termarx Install CLI\nset -l termy_cli_path {}\nif not contains -- $termy_cli_path $PATH\n    set -gx PATH $termy_cli_path $PATH\nend\n{END}",
             double_quote_fish_value(install_dir)
         ),
     }
@@ -379,15 +379,15 @@ fn paths_match_with_canonicalization(path_a: &Path, path_b: &Path) -> bool {
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 fn resolve_install_cli_target_for_unix(home_dir: Option<&Path>) -> (PathBuf, bool) {
     if let Some(home_dir) = home_dir {
-        (home_dir.join(".local").join("bin").join("arxk"), false)
+        (home_dir.join(".local").join("bin").join("termarx"), false)
     } else {
-        (PathBuf::from("/usr/local/bin/arxk"), true)
+        (PathBuf::from("/usr/local/bin/termarx"), true)
     }
 }
 
 #[cfg(target_os = "windows")]
 fn resolve_install_cli_target_for_windows(local_app_data: Option<&Path>) -> Option<PathBuf> {
-    local_app_data.map(|path| path.join("Arxk").join("bin").join("arxk.exe"))
+    local_app_data.map(|path| path.join("Termarx").join("bin").join("termarx.exe"))
 }
 
 #[cfg(any(target_os = "macos", target_os = "linux"))]
@@ -493,9 +493,9 @@ fn find_cli_binary() -> Result<PathBuf, String> {
             .ok_or("Failed to get executable directory")?;
 
         #[cfg(target_os = "windows")]
-        let cli_name = "arxk-cli.exe";
+        let cli_name = "termarx-cli.exe";
         #[cfg(not(target_os = "windows"))]
-        let cli_name = "arxk-cli";
+        let cli_name = "termarx-cli";
 
         let cli_path = exe_dir.join(cli_name);
         if cli_path.exists() {
@@ -505,7 +505,7 @@ fn find_cli_binary() -> Result<PathBuf, String> {
         #[cfg(target_os = "macos")]
         {
             if exe_dir.ends_with("Contents/MacOS") {
-                let bundle_cli = exe_dir.join("arxk-cli");
+                let bundle_cli = exe_dir.join("termarx-cli");
                 if bundle_cli.exists() {
                     return Ok(bundle_cli);
                 }
@@ -527,8 +527,8 @@ fn find_cli_binary() -> Result<PathBuf, String> {
 fn fallback_cli_binary_paths() -> [PathBuf; 2] {
     let exe_suffix = std::env::consts::EXE_SUFFIX;
     [
-        PathBuf::from(format!("./target/release/arxk-cli{exe_suffix}")),
-        PathBuf::from(format!("./target/debug/arxk-cli{exe_suffix}")),
+        PathBuf::from(format!("./target/release/termarx-cli{exe_suffix}")),
+        PathBuf::from(format!("./target/debug/termarx-cli{exe_suffix}")),
     ]
 }
 
@@ -652,7 +652,7 @@ mod tests {
     #[cfg(any(target_os = "macos", target_os = "linux"))]
     #[test]
     fn install_cli_source_path_is_absolutized_for_relative_paths() {
-        let rel = Path::new("target/debug/arxk-cli");
+        let rel = Path::new("target/debug/termarx-cli");
         let abs = absolute_install_cli_source_path(rel).unwrap();
         assert!(abs.is_absolute());
         assert!(abs.ends_with(rel));
@@ -664,11 +664,11 @@ mod tests {
         let exe_suffix = std::env::consts::EXE_SUFFIX;
         assert_eq!(
             paths[0],
-            PathBuf::from(format!("./target/release/arxk-cli{exe_suffix}"))
+            PathBuf::from(format!("./target/release/termarx-cli{exe_suffix}"))
         );
         assert_eq!(
             paths[1],
-            PathBuf::from(format!("./target/debug/arxk-cli{exe_suffix}"))
+            PathBuf::from(format!("./target/debug/termarx-cli{exe_suffix}"))
         );
     }
 
@@ -677,7 +677,7 @@ mod tests {
     fn unix_install_target_prefers_home_local_bin() {
         let home = Path::new("/tmp/termy-home");
         let (target, using_fallback) = resolve_install_cli_target_for_unix(Some(home));
-        assert_eq!(target, home.join(".local").join("bin").join("arxk"));
+        assert_eq!(target, home.join(".local").join("bin").join("termarx"));
         assert!(!using_fallback);
     }
 
@@ -685,7 +685,7 @@ mod tests {
     #[test]
     fn unix_install_target_uses_system_fallback_without_home() {
         let (target, using_fallback) = resolve_install_cli_target_for_unix(None);
-        assert_eq!(target, PathBuf::from("/usr/local/bin/arxk"));
+        assert_eq!(target, PathBuf::from("/usr/local/bin/termarx"));
         assert!(using_fallback);
     }
 
@@ -693,7 +693,7 @@ mod tests {
     #[test]
     fn explicit_source_install_stays_inside_supplied_home() {
         let temp = TempDir::new().unwrap();
-        let source = temp.path().join("bundle").join("arxk-cli");
+        let source = temp.path().join("bundle").join("termarx-cli");
         std::fs::create_dir_all(source.parent().unwrap()).unwrap();
         std::fs::write(&source, b"cli").unwrap();
         let home = temp.path().join("home");
@@ -701,7 +701,7 @@ mod tests {
         let result = install_cli_from_source_for_home(&source, &home, Some("/bin/zsh"))
             .expect("isolated install should succeed");
 
-        assert_eq!(result.install_path, home.join(".local/bin/arxk"));
+        assert_eq!(result.install_path, home.join(".local/bin/termarx"));
         assert_eq!(std::fs::read_link(&result.install_path).unwrap(), source);
         assert!(home.join(".zshrc").is_file());
     }
@@ -711,7 +711,7 @@ mod tests {
     fn windows_install_target_uses_local_app_data() {
         let base = Path::new("C:/Users/Test/AppData/Local");
         let target = resolve_install_cli_target_for_windows(Some(base)).unwrap();
-        assert_eq!(target, base.join("Arxk").join("bin").join("arxk.exe"));
+        assert_eq!(target, base.join("Termarx").join("bin").join("termarx.exe"));
     }
 
     #[cfg(target_os = "windows")]
@@ -723,7 +723,7 @@ mod tests {
     #[test]
     fn managed_target_binary_exists_detects_existing_file() {
         let temp = TempDir::new().unwrap();
-        let file = temp.path().join("arxk");
+        let file = temp.path().join("termarx");
         std::fs::write(&file, b"test").unwrap();
         assert!(managed_target_binary_exists(&file));
     }
@@ -741,7 +741,7 @@ mod tests {
         use std::os::unix::fs::symlink;
 
         let temp = TempDir::new().unwrap();
-        let broken_link = temp.path().join("arxk");
+        let broken_link = temp.path().join("termarx");
         symlink(temp.path().join("does-not-exist"), &broken_link).unwrap();
         assert!(!managed_target_binary_exists(&broken_link));
     }
@@ -788,7 +788,7 @@ mod tests {
     #[test]
     fn path_exists_or_symlink_detects_existing_file() {
         let temp = TempDir::new().unwrap();
-        let file = temp.path().join("arxk");
+        let file = temp.path().join("termarx");
         std::fs::write(&file, b"test").unwrap();
         assert!(path_exists_or_symlink(&file));
     }

@@ -541,7 +541,7 @@ impl TerminalView {
             let askpass = std::env::current_exe()
                 .map_err(|error| {
                     t!(
-                        "Unable to locate the Arxk executable: {error}",
+                        "Unable to locate the Termarx executable: {error}",
                         error = error
                     )
                 })

@@ -1,9 +1,9 @@
 ---
 title: Built-in multiplexer
-description: Keep programs running when Arxk closes and restore your windows, tabs, and panes.
+description: Keep programs running when Termarx closes and restore your windows, tabs, and panes.
 ---
 
-Enable **Built-in Multiplexer** in **Settings → Terminal → Sessions**, then restart Arxk. You can also set it in your config file:
+Enable **Built-in Multiplexer** in **Settings → Terminal → Sessions**, then restart Termarx. You can also set it in your config file:
 
 ```txt
 multiplexer_enabled = true
@@ -13,7 +13,7 @@ It is off by default. No tmux installation or session commands are needed.
 
 ## Quit and return
 
-Quitting Arxk or closing a window leaves its programs running in a background Arxk process. Reopening Arxk restores your windows, workspaces, tabs, split layouts, active panes, zoom, pins, and custom tab names.
+Quitting Termarx or closing a window leaves its programs running in a background Termarx process. Reopening Termarx restores your windows, workspaces, tabs, split layouts, active panes, zoom, pins, and custom tab names.
 
 Each terminal reconnects to its original running process. Its scrollback, scroll position, cursor, colors, alternate screen, input modes, links, and images remain in the background host. Programs can continue producing output while the app is closed. Configured scrollback limits still apply.
 
@@ -23,9 +23,9 @@ Sessions last while the background host and your operating-system session are ru
 
 ## Change back to regular terminals
 
-Turn **Built-in Multiplexer** off and restart Arxk. Existing background sessions remain available if you enable it again; close their tabs or panes first if you want to end them.
+Turn **Built-in Multiplexer** off and restart Termarx. Existing background sessions remain available if you enable it again; close their tabs or panes first if you want to end them.
 
-The built-in multiplexer takes precedence over `tmux_enabled`. To use [tmux sessions](/docs/using-termy/tmux-sessions), disable the built-in multiplexer and restart Arxk.
+The built-in multiplexer takes precedence over `tmux_enabled`. To use [tmux sessions](/docs/using-termy/tmux-sessions), disable the built-in multiplexer and restart Termarx.
 
 ## How it stays responsive
 

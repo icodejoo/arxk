@@ -112,7 +112,7 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $repoRoot
 
 $cargoToml = Join-Path $repoRoot "crates\desktop_app\Cargo.toml"
-$issPath = Join-Path $repoRoot "scripts\installer\arxk.iss"
+$issPath = Join-Path $repoRoot "scripts\installer\termarx.iss"
 $iconPath = Join-Path $repoRoot "assets\termy.ico"
 
 if (-not (Test-Path $cargoToml)) {
@@ -143,11 +143,11 @@ if (-not $Arch) {
     $Arch = Arch-FromTarget -TargetTriple $Target
 }
 
-$exePath = Join-Path $repoRoot "target\$Target\release\arxk.exe"
-$cliExePath = Join-Path $repoRoot "target\$Target\release\arxk-cli.exe"
+$exePath = Join-Path $repoRoot "target\$Target\release\termarx.exe"
+$cliExePath = Join-Path $repoRoot "target\$Target\release\termarx-cli.exe"
 
 if (-not $NoBuild) {
-    Write-Host "Building arxk.exe and arxk-cli.exe for target '$Target'..."
+    Write-Host "Building termarx.exe and termarx-cli.exe for target '$Target'..."
     & cargo build --release --target $Target -p termy -p termy_cli
     if ($LASTEXITCODE -ne 0) {
         throw "cargo build failed with exit code $LASTEXITCODE"
@@ -163,21 +163,21 @@ if (-not (Test-Path $cliExePath)) {
 
 $isccPath = Resolve-IsccPath
 Write-Host "Using ISCC at $isccPath"
-Write-Host "Packaging Arxk $Version ($Arch)..."
+Write-Host "Packaging Termarx $Version ($Arch)..."
 
 & $isccPath `
     "/DMyAppVersion=$Version" `
     "/DMyArch=$Arch" `
     "/DMyTarget=$Target" `
-    "/DMyExeName=arxk.exe" `
-    "/DMyCliExeName=arxk-cli.exe" `
+    "/DMyExeName=termarx.exe" `
+    "/DMyCliExeName=termarx-cli.exe" `
     $issPath
 
 if ($LASTEXITCODE -ne 0) {
     throw "ISCC failed with exit code $LASTEXITCODE"
 }
 
-$outputFile = Join-Path $repoRoot "target\dist\Arxk-$Version-windows-$Arch-Setup.exe"
+$outputFile = Join-Path $repoRoot "target\dist\Termarx-$Version-windows-$Arch-Setup.exe"
 if (-not (Test-Path $outputFile)) {
     throw "Installer build finished, but expected output was not found: $outputFile"
 }

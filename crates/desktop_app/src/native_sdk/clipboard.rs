@@ -321,7 +321,7 @@ mod tests {
     #[test]
     fn file_uri_lists_round_trip() {
         let path = if cfg!(target_os = "windows") {
-            "C:\\Users\\Arxk\\clipboard.png"
+            "C:\\Users\\Termarx\\clipboard.png"
         } else {
             "/tmp/termy clipboard.png"
         };

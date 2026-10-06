@@ -1365,10 +1365,10 @@ mod tests {
         let option = SettingsWindow::dropdown_option_for_enum_choice(
             termy_core::config_core::RootSettingId::AppIcon,
             "default",
-            "Arxk Default",
+            "Termarx Default",
         );
 
-        assert_eq!(option.display_text(), "Arxk Default");
+        assert_eq!(option.display_text(), "Termarx Default");
     }
 
     #[test]

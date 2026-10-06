@@ -1,8 +1,8 @@
-export const appName = 'Arxk';
+export const appName = 'Termarx';
 export const docsRoute = '/docs';
 
 export const gitConfig = {
   user: 'icodejoo',
-  repo: 'arxk',
+  repo: 'termarx',
   branch: 'main',
 };

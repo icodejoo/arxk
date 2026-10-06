@@ -6,6 +6,6 @@ Actions=openTabHere;
 X-KDE-Priority=TopLevel
 
 [Desktop Action openTabHere]
-Name=Open new Arxk tab here
-Icon=arxk
-Exec=arxk --new-tab --working-directory %f
+Name=Open new Termarx tab here
+Icon=termarx
+Exec=termarx --new-tab --working-directory %f

@@ -1,15 +1,15 @@
 pub fn run() {
     println!("Usage:");
     println!();
-    println!("  arxk /path/to/project");
-    println!("  arxk --working-directory /path/to/project");
+    println!("  termarx /path/to/project");
+    println!("  termarx --working-directory /path/to/project");
     println!();
-    println!("  arxk --new-window [--working-directory /path/to/project]");
-    println!("  arxk --new-tab [--working-directory /path/to/project]");
+    println!("  termarx --new-window [--working-directory /path/to/project]");
+    println!("  termarx --new-tab [--working-directory /path/to/project]");
     println!();
-    println!("On Linux, launching Arxk opens a new window by default.");
+    println!("On Linux, launching Termarx opens a new window by default.");
     println!("Use --new-tab to add a tab to the running window.");
-    println!("File managers use the same path via Open new Arxk tab here.");
+    println!("File managers use the same path via Open new Termarx tab here.");
     println!();
     println!("Available commands:");
     println!();

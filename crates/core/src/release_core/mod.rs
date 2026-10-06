@@ -4,7 +4,7 @@ pub mod service;
 pub mod source;
 pub mod transport;
 
-pub const DEFAULT_GITHUB_REPO: &str = "icodejoo/arxk";
+pub const DEFAULT_GITHUB_REPO: &str = "icodejoo/termarx";
 
 pub use notes::{
     ReleaseNotes, ReleaseSummary, fetch_release_list, fetch_release_list_for_repo,

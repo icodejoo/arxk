@@ -101,9 +101,9 @@ fn main() {
         if std::path::Path::new(icon_path).exists() {
             let mut res = winresource::WindowsResource::new();
             res.set_icon(icon_path);
-            res.set("ProductName", "Arxk");
-            res.set("FileDescription", "Arxk");
-            res.set("OriginalFilename", "arxk.exe");
+            res.set("ProductName", "Termarx");
+            res.set("FileDescription", "Termarx");
+            res.set("OriginalFilename", "termarx.exe");
             if let Err(err) = res.compile() {
                 panic!("failed to compile Windows resources: {err}");
             }

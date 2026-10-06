@@ -975,7 +975,7 @@ impl TerminalView {
         cx: &mut Context<Self>,
     ) {
         let Some(window_handle) = window.window_handle().downcast::<Self>() else {
-            crate::ui::toast::error(t!("Plugin keybinding lost its Arxk window"));
+            crate::ui::toast::error(t!("Plugin keybinding lost its Termarx window"));
             self.notify_overlay(cx);
             return;
         };
@@ -1115,7 +1115,7 @@ impl TerminalView {
         let command_id = command.id.clone();
         let title = command.title;
         let Some(window_handle) = window.window_handle().downcast::<Self>() else {
-            crate::ui::toast::error(t!("Plugin command lost its Arxk window"));
+            crate::ui::toast::error(t!("Plugin command lost its Termarx window"));
             self.notify_overlay(cx);
             return;
         };
@@ -1248,7 +1248,7 @@ impl TerminalView {
                 && CommandAction::from_config_name(command).is_none()
             {
                 return Err(t!(
-                    "Plugin returned unknown Arxk command `{command}`",
+                    "Plugin returned unknown Termarx command `{command}`",
                     command = command
                 ));
             }
@@ -1371,8 +1371,9 @@ impl TerminalView {
                     }
                 }
                 PluginAction::TermyCommand { command } => {
-                    let action = CommandAction::from_config_name(&command)
-                        .ok_or_else(|| t!("Unknown Arxk command `{command}`", command = command))?;
+                    let action = CommandAction::from_config_name(&command).ok_or_else(|| {
+                        t!("Unknown Termarx command `{command}`", command = command)
+                    })?;
                     self.execute_command_action(action, false, window, cx);
                 }
                 PluginAction::ClipboardWrite { text } => {

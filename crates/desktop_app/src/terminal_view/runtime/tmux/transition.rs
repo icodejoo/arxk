@@ -61,7 +61,7 @@ impl TerminalView {
     ) -> bool {
         if self.multiplexer.is_some() {
             crate::ui::toast::info(t!(
-                "Disable the built-in multiplexer and restart Arxk to switch to tmux"
+                "Disable the built-in multiplexer and restart Termarx to switch to tmux"
             ));
             return false;
         }
@@ -247,7 +247,7 @@ impl TerminalView {
         }
         if self.tmux_exclusive {
             crate::ui::toast::info(t!(
-                "tmux_exclusive keeps Arxk in control mode; disable it to detach to a classic terminal"
+                "tmux_exclusive keeps Termarx in control mode; disable it to detach to a classic terminal"
             ));
             return false;
         }

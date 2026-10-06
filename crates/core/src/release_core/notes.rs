@@ -189,12 +189,12 @@ mod tests {
         );
 
         let from_api = parse_release_json(
-            r#"{"tag_name":"v1.2.3","name":"Arxk 1.2.3","body":"hello from api"}"#,
+            r#"{"tag_name":"v1.2.3","name":"Termarx 1.2.3","body":"hello from api"}"#,
             "v1.2.3",
         )
         .expect("api payload");
         assert_eq!(from_api.markdown, "hello from api");
-        assert_eq!(from_api.title, "Arxk 1.2.3");
+        assert_eq!(from_api.title, "Termarx 1.2.3");
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
     fn lists_published_releases_and_skips_drafts() {
         let releases = parse_release_list_json(
             r#"[
-                {"tag_name":"v2.0.0","name":"Arxk 2.0.0","prerelease":false},
+                {"tag_name":"v2.0.0","name":"Termarx 2.0.0","prerelease":false},
                 {"tag_name":"v2.0.0-rc.1","name":"","prerelease":true},
                 {"tag_name":"v1.9.0","name":"1.9.0","draft":true},
                 {"tag_name":"","name":"ignored"}
@@ -244,7 +244,7 @@ mod tests {
             vec![
                 ReleaseSummary {
                     tag: "v2.0.0".to_string(),
-                    title: "Arxk 2.0.0".to_string(),
+                    title: "Termarx 2.0.0".to_string(),
                     prerelease: false,
                 },
                 ReleaseSummary {

@@ -118,8 +118,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Update v{version} available", "有新版本 v{version} 可更新"),
     ("Installing v{version}", "正在安装 v{version}"),
     (
-        "Installer launched for v{version}; Arxk will reopen when setup finishes",
-        "已启动 v{version} 的安装程序，安装完成后 Arxk 会自动重新打开",
+        "Installer launched for v{version}; Termarx will reopen when setup finishes",
+        "已启动 v{version} 的安装程序，安装完成后 Termarx 会自动重新打开",
     ),
     ("Update failed: {message}", "更新失败：{message}"),
     (
@@ -214,8 +214,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "{count} 个窗格的 tmux 恢复不完整：{preview}{suffix}",
     ),
     (
-        "Disable the built-in multiplexer and restart Arxk to switch to tmux",
-        "请先停用内置多路复用器并重启 Arxk，再切换到 tmux",
+        "Disable the built-in multiplexer and restart Termarx to switch to tmux",
+        "请先停用内置多路复用器并重启 Termarx，再切换到 tmux",
     ),
     (
         "failed to start tmux control runtime: {error}",
@@ -242,8 +242,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "无法启动原生运行时：{error}",
     ),
     (
-        "tmux_exclusive keeps Arxk in control mode; disable it to detach to a classic terminal",
-        "tmux_exclusive 会让 Arxk 一直处于控制模式；停用它才能断开并回到经典终端",
+        "tmux_exclusive keeps Termarx in control mode; disable it to detach to a classic terminal",
+        "tmux_exclusive 会让 Termarx 一直处于控制模式；停用它才能断开并回到经典终端",
     ),
     (
         "Failed to detach tmux session: {error}",
@@ -309,8 +309,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "无法读取“{name}”已保存的凭据，SSH 会在终端里提示输入：{error}",
     ),
     (
-        "Unable to locate the Arxk executable: {error}",
-        "找不到 Arxk 可执行文件：{error}",
+        "Unable to locate the Termarx executable: {error}",
+        "找不到 Termarx 可执行文件：{error}",
     ),
     (
         "Could not prepare the saved credential for “{name}”; SSH will prompt in the terminal: {error}",
@@ -348,8 +348,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "运行任务“{task_name}”前，请先载入已保存的布局“{layout_name}”",
     ),
     (
-        "Arxk v{version} | {os}-{arch} | config: {config_path}",
-        "Arxk v{version} | {os}-{arch} | 配置：{config_path}",
+        "Termarx v{version} | {os}-{arch} | config: {config_path}",
+        "Termarx v{version} | {os}-{arch} | 配置：{config_path}",
     ),
     (
         "Auto updates are only available on macOS and Windows",
@@ -371,8 +371,8 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "命令行工具已安装到 {path}。已更新 {profile}，并在当前 Shell 中生效 PATH。",
     ),
     (
-        "CLI installed to {path}. {profile} already configures Arxk PATH; activated PATH in this shell.",
-        "命令行工具已安装到 {path}。{profile} 已配置好 Arxk 的 PATH，并已在当前 Shell 中生效。",
+        "CLI installed to {path}. {profile} already configures Termarx PATH; activated PATH in this shell.",
+        "命令行工具已安装到 {path}。{profile} 已配置好 Termarx 的 PATH，并已在当前 Shell 中生效。",
     ),
     (
         "CLI installed to {path}. Add {dir} to PATH: setx PATH \"%PATH%;{dir}\"",
@@ -393,7 +393,7 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "固定的标签页需要先取消固定才能关闭",
     ),
     // 退出 / 关闭确认
-    ("Quit Arxk?", "退出 Arxk？"),
+    ("Quit Termarx?", "退出 Termarx？"),
     ("Close Window?", "关闭窗口？"),
     ("Close Tab?", "关闭标签页？"),
     ("Delete Workspace?", "删除工作区？"),

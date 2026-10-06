@@ -26,7 +26,7 @@ impl StartupBlocker {
     pub(crate) fn message(&self) -> String {
         if let Self::MainWindowOpen(error) = self {
             return t!(
-                "Arxk cannot continue because it failed to open the main window.\n\nError:\n{error}\n\nRecovery:\n- Restart Arxk and try again.\n- If this was launched from a terminal, keep this stderr message for support.\n- If the problem repeats, include your OS, display/GPU setup, and recent Arxk logs in the bug report.",
+                "Termarx cannot continue because it failed to open the main window.\n\nError:\n{error}\n\nRecovery:\n- Restart Termarx and try again.\n- If this was launched from a terminal, keep this stderr message for support.\n- If the problem repeats, include your OS, display/GPU setup, and recent Termarx logs in the bug report.",
                 error = error
             );
         }
@@ -34,7 +34,7 @@ impl StartupBlocker {
         let (reason, error) = self.tmux_reason_and_error();
 
         t!(
-            "Arxk cannot continue because {reason}.\n\nError:\n{error}\n\nRecovery:\n- Open your config and set tmux_enabled = false to start in native mode.\n- Finder/DMG launches use a minimal environment; set tmux_binary to an absolute path (for example /opt/homebrew/bin/tmux) if tmux is not on the default PATH.\n- If tmux integration is desired, ensure tmux 3.3 or newer is installed.\n- Save the config and restart Arxk, then use tmux Sessions… when ready.",
+            "Termarx cannot continue because {reason}.\n\nError:\n{error}\n\nRecovery:\n- Open your config and set tmux_enabled = false to start in native mode.\n- Finder/DMG launches use a minimal environment; set tmux_binary to an absolute path (for example /opt/homebrew/bin/tmux) if tmux is not on the default PATH.\n- If tmux integration is desired, ensure tmux 3.3 or newer is installed.\n- Save the config and restart Termarx, then use tmux Sessions… when ready.",
             reason = reason,
             error = error
         )
@@ -42,8 +42,8 @@ impl StartupBlocker {
 
     pub(crate) fn present_alert_and_exit(self) -> ! {
         let message = self.message();
-        eprintln!("Arxk startup blocked:\n{message}");
-        crate::native_sdk::show_alert(t!("Arxk Startup Error"), &message);
+        eprintln!("Termarx startup blocked:\n{message}");
+        crate::native_sdk::show_alert(t!("Termarx Startup Error"), &message);
         std::process::exit(1);
     }
 }
@@ -76,7 +76,7 @@ mod tests {
         let message = StartupBlocker::MainWindowOpen("no display available".to_string()).message();
         assert!(message.contains("failed to open the main window"));
         assert!(message.contains("no display available"));
-        assert!(message.contains("Restart Arxk"));
+        assert!(message.contains("Restart Termarx"));
         assert!(message.contains("stderr"));
         assert!(message.contains("display/GPU"));
     }

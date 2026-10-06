@@ -44,11 +44,13 @@ fn application_bundle_url() -> Result<CFURL, String> {
         .find(CFString::new("CFBundleIdentifier"))
         .and_then(|value| value.downcast::<CFString>());
     if identifier.as_ref().map(ToString::to_string).as_deref() != Some(BUNDLE_ID) {
-        return Err(t!("Open the installed Arxk.app to set it as your default terminal.").into());
+        return Err(
+            t!("Open the installed Termarx.app to set it as your default terminal.").into(),
+        );
     }
     bundle
         .bundle_url()
-        .ok_or_else(|| t!("Could not locate the Arxk app bundle.").into())
+        .ok_or_else(|| t!("Could not locate the Termarx app bundle.").into())
 }
 
 pub(crate) fn set_default() -> Result<(), String> {
@@ -57,7 +59,7 @@ pub(crate) fn set_default() -> Result<(), String> {
     let status = unsafe { LSRegisterURL(url.as_concrete_TypeRef(), 1) };
     if status != 0 {
         return Err(t!(
-            "Could not register Arxk with macOS (error {status}).",
+            "Could not register Termarx with macOS (error {status}).",
             status = status
         ));
     }
@@ -90,6 +92,6 @@ mod tests {
         // This test binary is not an app bundle. Exercise the guard without
         // registering an application or changing the user's system preference.
         let error = super::application_bundle_url().unwrap_err();
-        assert!(error.contains("Open the installed Arxk.app"));
+        assert!(error.contains("Open the installed Termarx.app"));
     }
 }

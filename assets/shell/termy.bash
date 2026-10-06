@@ -1,4 +1,4 @@
-# Arxk Shell Integration for Bash
+# Termarx Shell Integration for Bash
 # This file should be sourced in your ~/.bashrc or ~/.bash_profile
 # It enables OSC 133 shell integration for command lifecycle tracking
 

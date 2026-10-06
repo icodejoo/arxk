@@ -58,7 +58,7 @@
           };
 
           postInstall = ''
-            wrapProgram $out/bin/arxk \
+            wrapProgram $out/bin/termarx \
               --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath buildInputs}
           '';
 
@@ -66,7 +66,7 @@
             description = "A fast, minimal terminal emulator built with GPUI and alacritty_terminal";
             homepage = "https://github.com/termy-org/termy";
             license = pkgs.lib.licenses.mit;
-            mainProgram = "arxk";
+            mainProgram = "termarx";
             platforms = [
               "x86_64-linux"
               "aarch64-linux"

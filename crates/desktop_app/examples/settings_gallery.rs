@@ -70,7 +70,7 @@ impl Gallery {
             .children((4..7).map(|index| item(index, self.selected == index, cx)))
             .child(group("SYSTEM", false))
             .children((7..9).map(|index| item(index, self.selected == index, cx)))
-            .footer("Arxk v0.2.6")
+            .footer("Termarx v0.2.6")
     }
 
     fn theme_group(&self, cx: &mut Context<Self>) -> SettingsGroup {
@@ -281,7 +281,7 @@ fn main() {
                 WindowOptions {
                     window_bounds: Some(WindowBounds::Windowed(bounds)),
                     titlebar: Some(TitlebarOptions {
-                        title: Some("Arxk — Settings".into()),
+                        title: Some("Termarx — Settings".into()),
                         appears_transparent: true,
                         traffic_light_position: Some(point(px(14.0), px(13.0))),
                     }),

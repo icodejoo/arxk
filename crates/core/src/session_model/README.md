@@ -13,7 +13,7 @@ filesystem, or terminal runtime dependency.
 
 ```sh
 cargo test -p termy_core
-cargo test -p termy --bin arxk workspace_store
+cargo test -p termy --bin termarx workspace_store
 ```
 
 ## Boundaries

@@ -90,7 +90,7 @@ fn add_from_github(
         .any(|plugin| plugin.id == candidate.id)
     {
         return Err(format!(
-            "plugin `{}` is already installed; use `arxk plugin update {}` instead",
+            "plugin `{}` is already installed; use `termarx plugin update {}` instead",
             candidate.id, candidate.id
         ));
     }
@@ -310,7 +310,7 @@ fn init(
             let _ = fs::remove_dir(path);
         }
         return Err(
-            "plugin.json or plugin.ts already exists; Arxk will not overwrite plugin source"
+            "plugin.json or plugin.ts already exists; Termarx will not overwrite plugin source"
                 .to_string(),
         );
     }
@@ -341,7 +341,7 @@ fn init(
 
     println!("Initialized plugin `{id}` in {}", path.display());
     println!(
-        "Edit plugin.ts, then run `arxk plugin dev {}`.",
+        "Edit plugin.ts, then run `termarx plugin dev {}`.",
         path.display()
     );
     Ok(())
@@ -400,7 +400,7 @@ fn plugin_template() -> &'static str {
     greeting: {
       type: "text",
       title: "Greeting",
-      defaultValue: "Hello from Arxk",
+      defaultValue: "Hello from Termarx",
     },
   },
   commands: [
@@ -410,7 +410,7 @@ fn plugin_template() -> &'static str {
       keywords: ["hello"],
       icon: "info",
       run({ context }) {
-        context.toasts.success(context.settings.get("greeting") ?? "Hello from Arxk");
+        context.toasts.success(context.settings.get("greeting") ?? "Hello from Termarx");
       },
     },
   ],
@@ -506,12 +506,12 @@ fn remove(id: &str, yes: bool) -> Result<(), String> {
 
 fn plugin_runtime() -> Result<PluginRuntime, String> {
     let config_path = termy_core::config_core::config_path()
-        .ok_or_else(|| "Arxk config path is unavailable".to_string())?;
+        .ok_or_else(|| "Termarx config path is unavailable".to_string())?;
     Ok(PluginRuntime::new(Some(&config_path)))
 }
 
 fn print_trusted_code_warning(candidate: &PluginCandidate, source: &GitHubSource, revision: &str) {
-    eprintln!("WARNING: Arxk plugins are trusted code.");
+    eprintln!("WARNING: Termarx plugins are trusted code.");
     eprintln!(
         "`{}` can run arbitrary Bun code with your user permissions.",
         candidate.name
@@ -877,7 +877,7 @@ impl GitHubClient {
                 } else {
                     format!(": {details}")
                 };
-                Err(format!("no valid Arxk plugin found{details}"))
+                Err(format!("no valid Termarx plugin found{details}"))
             }
             _ => {
                 candidates.sort_by(|left, right| left.directory.cmp(&right.directory));
@@ -894,7 +894,7 @@ impl GitHubClient {
                     .collect::<Vec<_>>()
                     .join(", ");
                 Err(format!(
-                    "repository contains multiple Arxk plugins: {choices}; rerun with --path <directory>"
+                    "repository contains multiple Termarx plugins: {choices}; rerun with --path <directory>"
                 ))
             }
         }

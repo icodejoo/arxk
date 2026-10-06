@@ -1,10 +1,10 @@
 # termy_cli
 
-Command-line companion for Arxk.
+Command-line companion for Termarx.
 
 ## Owner
 
-This crate owns the `arxk-cli` binary, including user-facing terminal commands, config inspection helpers, theme/config utilities, and install/update commands that belong outside the desktop app.
+This crate owns the `termarx-cli` binary, including user-facing terminal commands, config inspection helpers, theme/config utilities, and install/update commands that belong outside the desktop app.
 
 Keep reusable install logic in `termy_core::cli_install_core`, release metadata logic in `termy_core::release_core`, and desktop UI actions in `crates/desktop_app/`.
 

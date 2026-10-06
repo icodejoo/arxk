@@ -59,7 +59,7 @@ impl UpdateBannerModel {
             UpdateState::Available { version, .. } => Some(Self {
                 badge: t!("Update"),
                 message: t!("Version {version} is ready", version = version),
-                detail: Some(t!("Install now to get the latest Arxk.").to_string()),
+                detail: Some(t!("Install now to get the latest Termarx.").to_string()),
                 version: Some(version.clone()),
                 progress: None,
                 tone: UpdateBannerTone::Info,
@@ -106,7 +106,7 @@ impl UpdateBannerModel {
                 Some(Self {
                     badge: t!("Downloading"),
                     message: t!("Fetching version {version}", version = version),
-                    detail: Some(t!("Keeping Arxk current.").to_string()),
+                    detail: Some(t!("Keeping Termarx current.").to_string()),
                     version: Some(version.clone()),
                     progress: Some(progress),
                     tone: UpdateBannerTone::Info,
@@ -139,7 +139,7 @@ impl UpdateBannerModel {
             UpdateState::InstallerLaunched { version } => Some(Self {
                 badge: t!("Installer"),
                 message: t!("Version {version} installer launched", version = version),
-                detail: Some(t!("Arxk will quit and reopen when setup finishes.").to_string()),
+                detail: Some(t!("Termarx will quit and reopen when setup finishes.").to_string()),
                 version: Some(version.clone()),
                 progress: None,
                 tone: UpdateBannerTone::Info,
@@ -148,7 +148,7 @@ impl UpdateBannerModel {
             UpdateState::Installed { version } => Some(Self {
                 badge: t!("Installed"),
                 message: t!("Version {version} is installed", version = version),
-                detail: Some(t!("Restart Arxk to start using it.").to_string()),
+                detail: Some(t!("Restart Termarx to start using it.").to_string()),
                 version: Some(version.clone()),
                 progress: None,
                 tone: UpdateBannerTone::Success,
@@ -232,8 +232,8 @@ mod tests {
     fn available_state_exposes_install_and_release_notes() {
         let model = UpdateBannerModel::from_state(&UpdateState::Available {
             version: "1.2.3".to_string(),
-            asset_name: "Arxk.dmg".to_string(),
-            url: "https://example.com/Arxk.dmg".to_string(),
+            asset_name: "Termarx.dmg".to_string(),
+            url: "https://example.com/Termarx.dmg".to_string(),
             checksum_asset_name: None,
             checksum_url: None,
             extension: "dmg".to_string(),
@@ -281,7 +281,7 @@ mod tests {
         assert_eq!(model.badge, "Installer");
         assert_eq!(
             model.detail.as_deref(),
-            Some("Arxk will quit and reopen when setup finishes.")
+            Some("Termarx will quit and reopen when setup finishes.")
         );
         assert!(model.buttons.is_empty());
     }

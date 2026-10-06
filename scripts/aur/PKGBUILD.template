@@ -4,43 +4,43 @@ pkgver=@PKGVER@
 pkgrel=1
 pkgdesc="Minimal GPUI-powered terminal (pre-compiled binary)"
 arch=('x86_64')
-url="https://github.com/icodejoo/arxk"
+url="https://github.com/icodejoo/termarx"
 license=('MIT')
 depends=('bash' 'glibc' 'gcc-libs' 'glib2'
          'freetype2' 'fontconfig' 'libxcb' 'wayland' 'libxkbcommon'
          'libxkbcommon-x11' 'vulkan-icd-loader')
 provides=('termy')
 conflicts=('termy')
-source=("arxk.desktop"
-        "LICENSE::https://raw.githubusercontent.com/icodejoo/arxk/v${pkgver}/LICENSE"
-        "termy_icon.png::https://raw.githubusercontent.com/icodejoo/arxk/v${pkgver}/assets/termy_icon.png")
+source=("termarx.desktop"
+        "LICENSE::https://raw.githubusercontent.com/icodejoo/termarx/v${pkgver}/LICENSE"
+        "termy_icon.png::https://raw.githubusercontent.com/icodejoo/termarx/v${pkgver}/assets/termy_icon.png")
 b2sums=('@DESKTOP_B2SUM@'
         '@LICENSE_B2SUM@'
         '@ICON_B2SUM@')
-source_x86_64=("termy-${pkgver}-${CARCH}.tar.gz::https://github.com/icodejoo/arxk/releases/download/v${pkgver}/Arxk-v${pkgver}-linux-${CARCH}.tar.gz")
+source_x86_64=("termy-${pkgver}-${CARCH}.tar.gz::https://github.com/icodejoo/termarx/releases/download/v${pkgver}/Termarx-v${pkgver}-linux-${CARCH}.tar.gz")
 b2sums_x86_64=('@TARBALL_B2SUM@')
 
 package() {
-  cd "$srcdir/arxk"
+  cd "$srcdir/termarx"
 
-  # The launcher execs the sibling arxk-bin binary, and the CLI integration
-  # expects arxk-cli to be installed alongside it.
-  install -Dm755 "arxk" "$pkgdir/usr/bin/arxk"
-  install -Dm755 "arxk-bin" "$pkgdir/usr/bin/arxk-bin"
-  install -Dm755 "arxk-cli" "$pkgdir/usr/bin/arxk-cli"
+  # The launcher execs the sibling termarx-bin binary, and the CLI integration
+  # expects termarx-cli to be installed alongside it.
+  install -Dm755 "termarx" "$pkgdir/usr/bin/termarx"
+  install -Dm755 "termarx-bin" "$pkgdir/usr/bin/termarx-bin"
+  install -Dm755 "termarx-cli" "$pkgdir/usr/bin/termarx-cli"
 
   # Install desktop file, icon, and file-manager context actions
-  install -Dm644 "$srcdir/arxk.desktop" "$pkgdir/usr/share/applications/arxk.desktop"
-  install -Dm644 "$srcdir/termy_icon.png" "$pkgdir/usr/share/pixmaps/arxk.png"
+  install -Dm644 "$srcdir/termarx.desktop" "$pkgdir/usr/share/applications/termarx.desktop"
+  install -Dm644 "$srcdir/termy_icon.png" "$pkgdir/usr/share/pixmaps/termarx.png"
   install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -Dm644 "$srcdir/arxk/file-manager/arxk-open-tab.desktop" \
-    "$pkgdir/usr/share/kio/servicemenus/arxk-open-tab.desktop"
-  install -Dm644 "$srcdir/arxk/file-manager/arxk-open-tab.desktop" \
-    "$pkgdir/usr/share/kservices5/ServiceMenus/arxk-open-tab.desktop"
-  install -Dm644 "$srcdir/arxk/file-manager/arxk-open-tab.nemo_action" \
-    "$pkgdir/usr/share/nemo/actions/arxk-open-tab.nemo_action"
-  install -Dm755 "$srcdir/arxk/file-manager/nautilus-open-tab.sh" \
-    "$pkgdir/usr/share/nautilus/scripts/Open new Arxk tab here"
-  install -Dm755 "$srcdir/arxk/file-manager/nautilus-open-tab.sh" \
-    "$pkgdir/usr/share/caja/scripts/Open new Arxk tab here"
+  install -Dm644 "$srcdir/termarx/file-manager/termarx-open-tab.desktop" \
+    "$pkgdir/usr/share/kio/servicemenus/termarx-open-tab.desktop"
+  install -Dm644 "$srcdir/termarx/file-manager/termarx-open-tab.desktop" \
+    "$pkgdir/usr/share/kservices5/ServiceMenus/termarx-open-tab.desktop"
+  install -Dm644 "$srcdir/termarx/file-manager/termarx-open-tab.nemo_action" \
+    "$pkgdir/usr/share/nemo/actions/termarx-open-tab.nemo_action"
+  install -Dm755 "$srcdir/termarx/file-manager/nautilus-open-tab.sh" \
+    "$pkgdir/usr/share/nautilus/scripts/Open new Termarx tab here"
+  install -Dm755 "$srcdir/termarx/file-manager/nautilus-open-tab.sh" \
+    "$pkgdir/usr/share/caja/scripts/Open new Termarx tab here"
 }

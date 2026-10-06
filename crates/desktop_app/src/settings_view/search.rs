@@ -206,7 +206,7 @@ static SETTINGS_METADATA: LazyLock<Vec<SettingMetadata>> = LazyLock::new(|| {
         key: "default_terminal",
         section: SettingsSection::Advanced,
         title: "Default terminal",
-        description: "Use Arxk when macOS requests the default terminal.",
+        description: "Use Termarx when macOS requests the default terminal.",
         keywords: &["default", "terminal", "macos", "system"],
     });
 
@@ -889,7 +889,7 @@ impl SettingsWindow {
                 div()
                     .text_xs()
                     .text_color(text_muted)
-                    .child(format!("Arxk v{}", crate::APP_VERSION)),
+                    .child(format!("Termarx v{}", crate::APP_VERSION)),
             );
 
         if let Some(error) = self.theme_store_auth_error.clone() {

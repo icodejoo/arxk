@@ -12,10 +12,10 @@ pub(crate) fn hosts_path(config_path: Option<&Path>) -> Result<PathBuf, String> 
     let config_path = config_path
         .map(Path::to_path_buf)
         .or_else(termy_core::config_core::config_path)
-        .ok_or_else(|| t!("Unable to resolve the Arxk configuration directory").to_string())?;
+        .ok_or_else(|| t!("Unable to resolve the Termarx configuration directory").to_string())?;
     let parent = config_path
         .parent()
-        .ok_or_else(|| t!("The Arxk configuration path has no parent directory").to_string())?;
+        .ok_or_else(|| t!("The Termarx configuration path has no parent directory").to_string())?;
     Ok(parent.join(HOSTS_FILE_NAME))
 }
 
@@ -41,7 +41,7 @@ pub(crate) fn run_askpass_if_requested(cli_args: &[String]) -> Option<i32> {
     };
 
     if !askpass_process_lineage_is_valid(&request) {
-        eprintln!("Arxk rejected an SSH credential request from an unexpected process");
+        eprintln!("Termarx rejected an SSH credential request from an unexpected process");
         return Some(1);
     }
 

@@ -1244,7 +1244,7 @@ pub fn terminal_environment_overrides(
     }
 
     // Claude Code and similar CLIs gate terminal progress escape sequences on
-    // known terminal identities. Arxk supports Ghostty's OSC progress
+    // known terminal identities. Termarx supports Ghostty's OSC progress
     // protocol, so advertise that compatibility to child processes while
     // keeping TERM conservative for terminfo.
     env_overrides.insert(

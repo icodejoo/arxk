@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=Arxk
+Name=Termarx
 GenericName=Terminal Emulator
 Comment=Minimal GPUI-powered terminal
-Exec=arxk %F
-Icon=arxk
+Exec=termarx %F
+Icon=termarx
 Terminal=false
 Type=Application
 Categories=System;TerminalEmulator;
@@ -12,5 +12,5 @@ MimeType=inode/directory;x-scheme-handler/termy;
 Actions=open-tab-here;
 
 [Desktop Action open-tab-here]
-Name=Open new Arxk tab here
-Exec=arxk --new-tab --working-directory %f
+Name=Open new Termarx tab here
+Exec=termarx --new-tab --working-directory %f

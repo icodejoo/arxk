@@ -742,7 +742,7 @@ impl Parser {
                     self.kitty_payload_started = false;
                     self.state = State::Kitty;
                 } else {
-                    // Arxk's native Kitty interceptor forwards non-Kitty
+                    // Termarx's native Kitty interceptor forwards non-Kitty
                     // 8-bit APC input to vte. The raw C1 introducer is ignored
                     // in UTF-8 mode and this byte is parsed as ordinary input.
                     self.state = State::Ground;
@@ -805,7 +805,7 @@ impl Parser {
             0x1a => {}
             0x1b => self.state = State::Escape,
             0x20..=0x7e => self.print(grid, char::from(byte)),
-            // Arxk's native Kitty interceptor accepts the 8-bit APC introducer
+            // Termarx's native Kitty interceptor accepts the 8-bit APC introducer
             // even though other standalone C1 bytes are ignored in UTF-8 mode.
             0x9f => self.state = State::ApcStart8Bit,
             // The PTY stream is UTF-8. Match Alacritty by ignoring standalone

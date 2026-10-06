@@ -1,4 +1,4 @@
-//! A small experimental terminal engine for Arxk.
+//! A small experimental terminal engine for Termarx.
 //!
 //! Tmon deliberately uses only the Rust standard library. It owns its VT parser,
 //! bounded grid/scrollback, damage tracking, and native PTY lifecycle. The
@@ -133,7 +133,7 @@ pub struct TerminalStateSnapshot {
 /// Whether this host can start a native Tmon PTY session.
 ///
 /// Native PTYs are available on Linux, Android, and macOS. Windows support
-/// is detected at runtime so loading Arxk on a pre-ConPTY Windows build does
+/// is detected at runtime so loading Termarx on a pre-ConPTY Windows build does
 /// not make the regular Alacritty engine unavailable.
 pub fn native_pty_available() -> bool {
     #[cfg(any(target_os = "linux", target_os = "android", target_os = "macos"))]

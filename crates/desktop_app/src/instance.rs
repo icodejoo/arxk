@@ -93,7 +93,7 @@ pub(crate) fn claim_or_forward_in(home: &Path, urls: &[String]) -> io::Result<In
         std::thread::sleep(CONNECT_WAIT);
     }
     Err(io::Error::other(
-        "another Arxk instance is starting; try again",
+        "another Termarx instance is starting; try again",
     ))
 }
 
@@ -102,7 +102,7 @@ pub(crate) fn spawn_listener(guard: InstanceGuard, tx: flume::Sender<Vec<String>
         .name("termy-instance".to_string())
         .spawn(move || listen_for_handoffs(guard, tx))
     {
-        log::warn!("Failed to start Arxk instance listener: {error}");
+        log::warn!("Failed to start Termarx instance listener: {error}");
     }
 }
 
@@ -123,12 +123,12 @@ fn listen_for_handoffs(guard: InstanceGuard, tx: flume::Sender<Vec<String>>) {
         match stream.and_then(read_forwarded_urls) {
             Ok(urls) if !urls.is_empty() => {
                 if let Err(error) = tx.send(urls) {
-                    log::error!("Failed to enqueue forwarded Arxk request: {error}");
+                    log::error!("Failed to enqueue forwarded Termarx request: {error}");
                 }
             }
             Ok(_) => {}
             Err(error) => {
-                log::warn!("Failed to read forwarded Arxk request: {error}");
+                log::warn!("Failed to read forwarded Termarx request: {error}");
             }
         }
     }
@@ -227,10 +227,10 @@ fn instance_home() -> io::Result<PathBuf> {
     }
     // Prefer the per-user data dir so GUI launches (file managers) and
     // terminal launches share the same instance lock. XDG_RUNTIME_DIR is
-    // often unset when Explorer/Nemo/Finder spawn Arxk.
+    // often unset when Explorer/Nemo/Finder spawn Termarx.
     let base = dirs::data_local_dir()
         .or_else(dirs::runtime_dir)
-        .ok_or_else(|| io::Error::other("could not resolve Arxk instance directory"))?;
+        .ok_or_else(|| io::Error::other("could not resolve Termarx instance directory"))?;
     Ok(base.join("termy").join("instance"))
 }
 

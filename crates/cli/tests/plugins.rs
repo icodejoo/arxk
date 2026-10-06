@@ -12,7 +12,7 @@ fn init_add_and_dev_sync_a_managed_local_copy() {
     let temporary = tempfile::tempdir().expect("temporary directory");
     let source = temporary.path().join("my-plugin");
     let config_home = temporary.path().join("config");
-    let cli = env!("CARGO_BIN_EXE_arxk-cli");
+    let cli = env!("CARGO_BIN_EXE_termarx-cli");
 
     let initialized = Command::new(cli)
         .env("XDG_CONFIG_HOME", &config_home)
@@ -26,7 +26,7 @@ fn init_add_and_dev_sync_a_managed_local_copy() {
         "plugin init failed: {}",
         String::from_utf8_lossy(&initialized.stderr)
     );
-    assert!(String::from_utf8_lossy(&initialized.stdout).contains("arxk plugin dev"));
+    assert!(String::from_utf8_lossy(&initialized.stdout).contains("termarx plugin dev"));
     let manifest: serde_json::Value = serde_json::from_slice(
         &fs::read(source.join("plugin.json")).expect("read initialized manifest"),
     )

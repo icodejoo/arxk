@@ -76,7 +76,7 @@ function MarketingNav() {
           >
             ❯_
           </span>
-          <span className="text-[15px] font-medium tracking-tight">arxk</span>
+          <span className="text-[15px] font-medium tracking-tight">termarx</span>
         </Link>
 
         <nav className="hidden items-center gap-8 sm:flex">
@@ -90,7 +90,7 @@ function MarketingNav() {
             Sponsors
           </Link>
           <a
-            href="https://github.com/icodejoo/arxk"
+            href="https://github.com/icodejoo/termarx"
             target="_blank"
             rel="noreferrer"
             className={navLinkClass}

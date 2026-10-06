@@ -85,7 +85,7 @@ html > body[data-scroll-locked] {
   --removed-body-scroll-bar-size: 0px !important;
 }
 
-/* The public Arxk pages use a deliberately dark product palette by default.
+/* The public Termarx pages use a deliberately dark product palette by default.
    These semantic light overrides keep that identity without simply inverting it. */
 .marketing-theme {
   transition:
@@ -272,7 +272,7 @@ html:not(.dark) .marketing-theme .release-notes :where(p, li) {
   }
 }
 
-/* Documentation shell — same Arxk atmosphere, with denser reading surfaces. */
+/* Documentation shell — same Termarx atmosphere, with denser reading surfaces. */
 .docs-theme {
   --color-fd-background: #f5f7fc;
   --color-fd-foreground: #18233d;

@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-/// Returns true when argv should be handled by `arxk-cli` instead of launching GPUI.
+/// Returns true when argv should be handled by `termarx-cli` instead of launching GPUI.
 pub(crate) fn should_delegate_to_cli(args: &[String]) -> bool {
     let mut index = 0;
 
@@ -86,7 +86,7 @@ fn find_termy_cli_binary() -> Result<PathBuf, String> {
         .parent()
         .ok_or_else(|| format!("App path {} has no parent directory", exe_path.display()))?;
 
-    let cli_name = format!("arxk-cli{}", std::env::consts::EXE_SUFFIX);
+    let cli_name = format!("termarx-cli{}", std::env::consts::EXE_SUFFIX);
     let sibling = exe_dir.join(&cli_name);
     if is_executable_file(&sibling) && sibling != exe_path {
         return Ok(sibling);
@@ -98,7 +98,7 @@ fn find_termy_cli_binary() -> Result<PathBuf, String> {
         }
     }
 
-    Err("arxk-cli binary not found. Build it with: cargo build -p termy_cli".to_string())
+    Err("termarx-cli binary not found. Build it with: cargo build -p termy_cli".to_string())
 }
 
 fn fallback_termy_cli_binary_paths(cli_name: &str) -> [PathBuf; 2] {

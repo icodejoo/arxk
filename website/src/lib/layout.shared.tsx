@@ -18,7 +18,7 @@ function TermyNavTitle({
       >
         ❯_
       </span>
-      <span className="text-[15px] font-medium tracking-tight">arxk</span>
+      <span className="text-[15px] font-medium tracking-tight">termarx</span>
     </a>
   );
 }

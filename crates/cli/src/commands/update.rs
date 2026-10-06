@@ -18,7 +18,7 @@ pub fn run() {
             println!();
             println!("Download at: {}", release.release_url);
             println!();
-            println!("Or update via the Arxk app: Command Palette > Check for Updates");
+            println!("Or update via the Termarx app: Command Palette > Check for Updates");
         }
         Err(error) => {
             eprintln!("Failed to check for updates: {error}");

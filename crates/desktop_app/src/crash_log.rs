@@ -14,7 +14,7 @@ pub(crate) fn install_panic_hook() {
 
     panic::set_hook(Box::new(move |info| {
         if let Err(error) = append_panic_report(info) {
-            eprintln!("Failed to write Arxk crash log: {error}");
+            eprintln!("Failed to write Termarx crash log: {error}");
         }
         previous_hook(info);
     }));
@@ -79,7 +79,7 @@ fn append_crash_report(
         .create(true)
         .append(true)
         .open(path)?;
-    writeln!(file, "===== Arxk panic =====")?;
+    writeln!(file, "===== Termarx panic =====")?;
     writeln!(file, "time_unix_secs={}", unix_timestamp_secs())?;
     writeln!(file, "version={}", crate::APP_VERSION)?;
     writeln!(file, "thread={:?}", std::thread::current().name())?;
@@ -157,6 +157,6 @@ mod tests {
         assert!(contents.contains("second panic"));
         assert!(contents.contains("second.rs:3:4"));
         assert!(contents.contains("second trace"));
-        assert_eq!(contents.matches("===== Arxk panic =====").count(), 2);
+        assert_eq!(contents.matches("===== Termarx panic =====").count(), 2);
     }
 }

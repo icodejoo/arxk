@@ -4,7 +4,7 @@ set shell := ["bash", "-cu"]
 @default:
     just --list
 
-# Checkout-local instance lock so this does not silently attach to Arxk.app.
+# Checkout-local instance lock so this does not silently attach to Termarx.app.
 run:
     TERMY_INSTANCE_HOME="${TERMY_INSTANCE_HOME:-{{ justfile_directory() }}/target/termy-dev-instance}" cargo run -p termy --release
 
@@ -25,7 +25,7 @@ benchmark-tmon:
     } 2>&1 | tee -a "$report"
 
 run-cli *args:
-    cargo run --bin arxk-cli --release {{ args }}
+    cargo run --bin termarx-cli --release {{ args }}
 
 # Check a benchmark summary against regression gates
 check-performance *args:
@@ -62,7 +62,7 @@ clean:
 generate-icon:
     ./scripts/generate-icon.sh
 
-# Build the GPUI Arxk app bundle and DMG (unsigned by default)
+# Build the GPUI Termarx app bundle and DMG (unsigned by default)
 # Example:
 
 # just build-dmg -- --version 0.1.0 --arch arm64 --sign-identity "Developer ID Application: ..."
@@ -133,7 +133,7 @@ test-tmux-integration:
       "termy|integration|tmux_split_integration|repeated_reconnect_does_not_increase_client_count"
       "termy_core|lib||tmux_control_core::session::tests::launches_and_drives_control_mode"
       "termy_core|integration|tmux_control_ffi|ffi_control_open_poll_send_close"
-      "termy|bin|arxk|terminal_view::working_dir_tests::new_tmux_tab_inherits_live_pane_cwd_with_foreground_app"
+      "termy|bin|termarx|terminal_view::working_dir_tests::new_tmux_tab_inherits_live_pane_cwd_with_foreground_app"
     )
     if (( ${#tmux_tests[@]} != 11 )); then
       echo "Tmux integration configuration error: expected 11 tests, got ${#tmux_tests[@]}" >&2

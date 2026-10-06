@@ -21,7 +21,7 @@ impl Host {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path().join("host");
         let executable = std::env::var_os("TERMY_MUX_TEST_HOST_BINARY").map_or_else(
-            || Path::new(env!("CARGO_BIN_EXE_arxk-session-host")).to_owned(),
+            || Path::new(env!("CARGO_BIN_EXE_termarx-session-host")).to_owned(),
             std::path::PathBuf::from,
         );
         let client = connect_or_start(&root, &executable).unwrap();

@@ -15,7 +15,7 @@ app_icon = default
 chrome_contrast = false
 # Enable automatic update checks
 auto_update = true
-# Keep programs running after quitting and restore tabs, panes, and terminal state when reopening. Applies after restarting Arxk.
+# Keep programs running after quitting and restore tabs, panes, and terminal state when reopening. Applies after restarting Termarx.
 multiplexer_enabled = false
 # Enable tmux runtime integration
 tmux_enabled = false

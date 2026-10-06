@@ -14,7 +14,7 @@ usage() {
   cat <<EOF
 Usage: $0 [options]
 
-Build the GPUI Arxk app as a drag-to-Applications DMG.
+Build the GPUI Termarx app as a drag-to-Applications DMG.
 
 Build options:
   --version VERSION       Version (default: read from crates/desktop_app/Cargo.toml)
@@ -41,7 +41,7 @@ Environment variable defaults:
   TERMY_NOTARY_PROFILE TERMY_NOTARY_KEY TERMY_NOTARY_KEY_ID TERMY_NOTARY_ISSUER
 
 Output:
-  dist/Arxk-<version>-macos-<arch>[-signed].dmg
+  dist/Termarx-<version>-macos-<arch>[-signed].dmg
 EOF
 }
 
@@ -120,7 +120,7 @@ ensure_folder_document_type() {
 install_finder_open_tab_service() {
   local app_path="$1"
   local exe_path="$app_path/Contents/MacOS/$APP_NAME"
-  local service_root="$app_path/Contents/Library/Services/Open new Arxk tab here.workflow"
+  local service_root="$app_path/Contents/Library/Services/Open new Termarx tab here.workflow"
   local service_contents="$service_root/Contents"
   local info_source="$REPO_ROOT/scripts/file-manager/macos/Info.plist"
   local workflow_source="$REPO_ROOT/scripts/file-manager/macos/document.wflow"
@@ -242,14 +242,14 @@ if [[ -n "$ENTITLEMENTS" ]]; then
   [[ -f "$ENTITLEMENTS" ]] || die "Entitlements file not found: $ENTITLEMENTS"
 fi
 
-APP_NAME="Arxk"
+APP_NAME="Termarx"
 SUFFIX=""
 [[ "$SIGN" -eq 1 ]] && SUFFIX="-signed"
 DMG_NAME="${APP_NAME}-${VERSION}-macos-${ARCH}${SUFFIX}"
 VOLUME_NAME="${APP_NAME}-${VERSION}"
 
 TARGET_RELEASE_DIR="$REPO_ROOT/target/$TARGET/release"
-CLI_BINARY_PATH="$TARGET_RELEASE_DIR/arxk-cli"
+CLI_BINARY_PATH="$TARGET_RELEASE_DIR/termarx-cli"
 DIST_DIR="$REPO_ROOT/dist"
 DMG_ROOT="$REPO_ROOT/target/dmg-root-$ARCH"
 RW_DMG="$DIST_DIR/${DMG_NAME}-rw.dmg"
@@ -291,9 +291,9 @@ fi
 [[ -n "$APP_PATH" && -d "$APP_PATH" ]] || die "Could not find built app bundle"
 [[ -f "$CLI_BINARY_PATH" ]] || die "CLI binary not found at $CLI_BINARY_PATH"
 
-log "Installing arxk-cli into app bundle"
-cp "$CLI_BINARY_PATH" "$APP_PATH/Contents/MacOS/arxk-cli"
-chmod +x "$APP_PATH/Contents/MacOS/arxk-cli"
+log "Installing termarx-cli into app bundle"
+cp "$CLI_BINARY_PATH" "$APP_PATH/Contents/MacOS/termarx-cli"
+chmod +x "$APP_PATH/Contents/MacOS/termarx-cli"
 
 log "Registering termy:// URL scheme in app bundle"
 ensure_termy_url_scheme "$APP_PATH"
@@ -301,7 +301,7 @@ ensure_termy_url_scheme "$APP_PATH"
 log "Registering folder Open With support in app bundle"
 ensure_folder_document_type "$APP_PATH"
 
-log "Installing Finder Open new Arxk tab here service"
+log "Installing Finder Open new Termarx tab here service"
 install_finder_open_tab_service "$APP_PATH"
 
 log "Embedding app icon in bundle"
@@ -312,7 +312,7 @@ if [[ "$SIGN" -eq 1 ]]; then
   xattr -rc "$APP_PATH"
   # The bundled CLI is a separate executable. Sign it before the enclosing app.
   codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" \
-    "$APP_PATH/Contents/MacOS/arxk-cli"
+    "$APP_PATH/Contents/MacOS/termarx-cli"
   CODESIGN_ARGS=(--force --options runtime --timestamp --sign "$SIGN_IDENTITY")
   [[ -n "$ENTITLEMENTS" ]] && CODESIGN_ARGS+=(--entitlements "$ENTITLEMENTS")
   codesign "${CODESIGN_ARGS[@]}" "$APP_PATH"

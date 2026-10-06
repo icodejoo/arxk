@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://termy.sh/schemas/plugin.schema.json",
-  "title": "Arxk Plugin Manifest",
-  "description": "Manifest for a Arxk plugin.",
+  "title": "Termarx Plugin Manifest",
+  "description": "Manifest for a Termarx plugin.",
   "type": "object",
   "additionalProperties": false,
   "required": ["apiVersion", "id", "name"],
@@ -15,7 +15,7 @@
     "apiVersion": {
       "type": "integer",
       "const": 1,
-      "description": "Arxk plugin API version."
+      "description": "Termarx plugin API version."
     },
     "id": {
       "type": "string",
@@ -28,7 +28,7 @@
       "minLength": 1,
       "maxLength": 200,
       "pattern": "\\S",
-      "description": "Human-readable plugin name shown by Arxk."
+      "description": "Human-readable plugin name shown by Termarx."
     },
     "version": {
       "type": "string",
@@ -62,7 +62,7 @@
       "default": [],
       "maxItems": 2,
       "uniqueItems": true,
-      "description": "Arxk host APIs used by the plugin. These are not operating-system permissions.",
+      "description": "Termarx host APIs used by the plugin. These are not operating-system permissions.",
       "items": {
         "type": "string",
         "enum": ["storage", "native-ui"]

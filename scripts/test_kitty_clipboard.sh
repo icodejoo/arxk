@@ -6,7 +6,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   printf '%s\n' \
     'Usage: scripts/test_kitty_clipboard.sh [--file-url-repro]' \
     '' \
-    'Run this inside Arxk. The script tests OSC 5522 mode negotiation and' \
+    'Run this inside Termarx. The script tests OSC 5522 mode negotiation and' \
     'clipboard format listing, then offers interactive read, paste-event,' \
     'and multi-format write tests.' \
     '' \
@@ -27,7 +27,7 @@ if [[ $# -ne 0 ]]; then
 fi
 
 if [[ ! -t 0 || ! -e /dev/tty ]]; then
-  printf 'Run this script interactively inside Arxk.\n' >&2
+  printf 'Run this script interactively inside Termarx.\n' >&2
   exit 1
 fi
 
@@ -278,18 +278,18 @@ verify_uri_list_target() {
   fi
   if ! prefix="$(dd if="${path}" bs=1 count=8 status=none 2>/dev/null | od -An -tx1 | tr -d '[:space:]')"; then
     if [[ "${path}" == *'/TemporaryItems/NSIRD_'* ]]; then
-      printf 'REPRODUCED: Arxk exposed an unreadable macOS screenshot temporary URL.\n' >&2
+      printf 'REPRODUCED: Termarx exposed an unreadable macOS screenshot temporary URL.\n' >&2
     else
-      printf 'REPRODUCED: Arxk exposed a clipboard file URL the child process cannot read.\n' >&2
+      printf 'REPRODUCED: Termarx exposed a clipboard file URL the child process cannot read.\n' >&2
     fi
     return 1
   fi
   if [[ -z "${prefix}" ]]; then
-    printf 'REPRODUCED: Arxk exposed an empty clipboard file URL target.\n' >&2
+    printf 'REPRODUCED: Termarx exposed an empty clipboard file URL target.\n' >&2
     return 1
   fi
   if [[ "${path}" == *'/TemporaryItems/NSIRD_'* ]]; then
-    printf 'REPRODUCED: Arxk forwarded a provider-owned macOS screenshot temporary URL.\n' >&2
+    printf 'REPRODUCED: Termarx forwarded a provider-owned macOS screenshot temporary URL.\n' >&2
     return 1
   fi
   if [[ "${prefix}" != 89504e470d0a1a0a* ]]; then
@@ -309,7 +309,7 @@ print_read_summary() {
 
 printf '%s\n' \
   'Kitty clipboard protocol test' \
-  'Run this in Arxk and keep this terminal focused while answering prompts.' \
+  'Run this in Termarx and keep this terminal focused while answering prompts.' \
   ''
 
 if ((file_url_repro)); then
@@ -320,7 +320,7 @@ else
   enter_raw_mode
   if ! query_mode; then
     leave_raw_mode
-    printf 'FAIL: Arxk did not answer the private mode 5522 query.\n' >&2
+    printf 'FAIL: Termarx did not answer the private mode 5522 query.\n' >&2
     exit 1
   fi
   initial_mode="${queried_mode}"
@@ -328,7 +328,7 @@ else
   mode_touched=1
   if ! query_mode || [[ "${queried_mode}" != "1" ]]; then
     leave_raw_mode
-    printf 'FAIL: Arxk did not enable private mode 5522.\n' >&2
+    printf 'FAIL: Termarx did not enable private mode 5522.\n' >&2
     exit 1
   fi
   leave_raw_mode
@@ -352,7 +352,7 @@ if ((!file_url_repro)); then
   fi
 fi
 
-test_name="$(printf 'Arxk clipboard test' | base64_encode)"
+test_name="$(printf 'Termarx clipboard test' | base64_encode)"
 test_password="$(printf 'termy-clipboard-test-%s' "$$" | base64_encode)"
 
 printf '\n'
@@ -430,7 +430,7 @@ fi
 
 printf '\n'
 if ((!file_url_repro)) && prompt_yes 'Overwrite the clipboard with test text and a 1x1 PNG?'; then
-  text_payload="$(printf 'Arxk Kitty clipboard protocol test %s' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" | base64_encode)"
+  text_payload="$(printf 'Termarx Kitty clipboard protocol test %s' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" | base64_encode)"
   png_payload='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
   alias_payload="$(printf 'text/utf8' | base64_encode)"
 
