@@ -1,5 +1,5 @@
 # Maintainer: Lasse Vestergaard <hello@lassejlv.dk>
-pkgname=termy-bin
+pkgname=termarx-bin
 pkgver=@PKGVER@
 pkgrel=1
 pkgdesc="Minimal GPUI-powered terminal (pre-compiled binary)"
@@ -9,8 +9,8 @@ license=('MIT')
 depends=('bash' 'glibc' 'gcc-libs' 'glib2'
          'freetype2' 'fontconfig' 'libxcb' 'wayland' 'libxkbcommon'
          'libxkbcommon-x11' 'vulkan-icd-loader')
-provides=('termy')
-conflicts=('termy')
+provides=('termarx')
+conflicts=('termarx')
 source=("termarx.desktop"
         "LICENSE::https://raw.githubusercontent.com/icodejoo/termarx/v${pkgver}/LICENSE"
         "termy_icon.png::https://raw.githubusercontent.com/icodejoo/termarx/v${pkgver}/assets/termy_icon.png")

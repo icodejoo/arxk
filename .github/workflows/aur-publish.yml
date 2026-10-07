@@ -1,4 +1,4 @@
-name: Publish AUR package (termy-bin)
+name: Publish AUR package (termarx-bin)
 
 on:
   workflow_dispatch:
@@ -44,7 +44,7 @@ jobs:
       - name: Publish to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
-          pkgname: termy-bin
+          pkgname: termarx-bin
           pkgbuild: scripts/aur/PKGBUILD
           assets: |
             scripts/aur/termarx.desktop

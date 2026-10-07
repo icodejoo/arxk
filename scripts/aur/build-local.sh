@@ -8,7 +8,7 @@ usage() {
   cat <<EOF
 Usage: $0 <render|build|install> [version]
 
-Renders scripts/aur/PKGBUILD.template into target/aur/termy-bin-<version>-<arch>,
+Renders scripts/aur/PKGBUILD.template into target/aur/termarx-bin-<version>-<arch>,
 downloads the release sources needed for checksum substitution, and optionally
 builds or installs the package.
 
@@ -76,7 +76,7 @@ if [[ "$mode" == "install" ]]; then
   fi
 fi
 
-aur_dir="$REPO_ROOT/target/aur/termy-bin-${version}-${carch}"
+aur_dir="$REPO_ROOT/target/aur/termarx-bin-${version}-${carch}"
 mkdir -p "$aur_dir"
 
 desktop_path="$aur_dir/termarx.desktop"
@@ -112,7 +112,7 @@ fi
 read -r -a makepkg_flags <<< "${MAKEPKG_FLAGS:---nodeps --force --noconfirm --skippgpcheck -C}"
 (cd "$aur_dir" && makepkg "${makepkg_flags[@]}")
 
-pkgfile="$(find "$aur_dir" -maxdepth 1 -type f -name "termy-bin-${version}-*.pkg.tar.*" | sort -V | tail -n1)"
+pkgfile="$(find "$aur_dir" -maxdepth 1 -type f -name "termarx-bin-${version}-*.pkg.tar.*" | sort -V | tail -n1)"
 [[ -n "$pkgfile" ]] || die "package artifact not found in $aur_dir"
 
 echo "Built $pkgfile"

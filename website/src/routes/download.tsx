@@ -20,7 +20,7 @@ import {
   type PlatformAssetGroup,
 } from '@/lib/github-release';
 
-const AUR_PACKAGE_URL = 'https://aur.archlinux.org/packages/termy-bin';
+const AUR_PACKAGE_URL = 'https://aur.archlinux.org/packages/termarx-bin';
 
 /**
  * The AUR package is published independently of the GitHub release assets, so
@@ -365,7 +365,7 @@ function LinuxInstallHints({ assets }: { assets: GitHubReleaseAsset[] }) {
       {/* Packaged in the AUR rather than attached to the release. */}
       <InstallCommand
         label="Arch Linux (AUR)"
-        command="yay -S termy-bin"
+        command="yay -S termarx-bin"
         href={AUR_PACKAGE_URL}
       />
     </div>
