@@ -4364,13 +4364,8 @@ impl TerminalView {
                             // 目录变了、恢复会话后还没建监听、或仓库缓存过期（嵌套 git init、
                             // 删除 .git）时都要重新对齐，否则分支后缀出不来或停在旧值。
                             if cwd_changed || self.git_watch_needs_sync(pane_id.as_str()) {
+                                // 分支只显示在窗格标题上，由渲染时读缓存，标签标题无需刷新。
                                 self.sync_git_watch(cx);
-                                // 进出 git 仓库会改变标题里的分支后缀。
-                                let mut titles_changed = false;
-                                for index in 0..self.session.tabs.len() {
-                                    titles_changed |= self.refresh_tab_title(index);
-                                }
-                                should_redraw |= titles_changed;
                             }
                             if cwd_changed {
                                 // 路径变了就刷新持久化缓存（长防抖合并写入）。
@@ -4381,7 +4376,7 @@ impl TerminalView {
                             }
                             if pane_is_active {
                                 self.session.tabs[tab_index].last_prompt_cwd =
-                                    Some(Self::normalize_reported_cwd(&path));
+                                    self.pane_cwds.get(pane_id.as_str()).cloned();
                             }
                         }
                     }

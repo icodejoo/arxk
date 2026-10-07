@@ -1,6 +1,6 @@
 # macOS Release Signing
 
-> **Status:** this fork currently ships an unsigned macOS DMG through `.github/workflows/ci.yml`, which needs none of the credentials below. Keep this page as the reference for turning Developer ID signing back on (`release.yml`).
+> **Status:** this fork currently ships an unsigned macOS DMG through `.github/workflows/ci.yml`, which needs none of the credentials below. Keep this page as the reference for turning Developer ID signing back on (`release.yml` and `finalize-stable-release.yml`). Both workflows are skipped unless the repository variable `SIGNED_RELEASE` is set to `true`, so publishing a release without Apple credentials does not leave failed runs behind.
 
 This workflow prepares Termy's DMG for Developer ID distribution outside the Mac App Store. GitHub Actions runs the existing packaging script for both Apple silicon and Intel and publishes only the resulting `-signed.dmg` files. Apple requires a Developer ID Application certificate, hardened runtime, secure timestamp, and notarization for this distribution path. See [Apple's notarization requirements](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) and [Mac software packaging guidance](https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution).
 

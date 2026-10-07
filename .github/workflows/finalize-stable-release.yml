@@ -1,5 +1,8 @@
 name: Finalize stable release
 
+# 签名发布流程的收尾（依赖 release.yml 产出 -signed.dmg）。本 fork 目前不走签名发布，
+# 所以默认跳过；启用签名时在仓库变量里设 SIGNED_RELEASE=true。
+
 on:
   release:
     types: [released]
@@ -15,7 +18,7 @@ concurrency:
 jobs:
   finalize-stable-release:
     name: Mark release as latest and publish AUR
-    if: ${{ github.event.release.prerelease == false && github.event.release.draft == false }}
+    if: ${{ vars.SIGNED_RELEASE == 'true' && github.event.release.prerelease == false && github.event.release.draft == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 70
     steps:

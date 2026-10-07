@@ -11,7 +11,7 @@ Release packaging is rooted in `scripts/`. GitHub release workflows should call 
 - Linux tarball and AppImage: `scripts/build-linux.sh`
 - app icon generation: `scripts/generate-icon.sh`
 - current release CI (unsigned macOS DMG, no Apple secrets): `.github/workflows/ci.yml`
-- Developer ID signed release flow, kept from upstream and not used by `ci.yml`: `.github/workflows/release.yml`
+- Developer ID signed release flow, kept from upstream and not used by `ci.yml` (skipped unless the repository variable `SIGNED_RELEASE` is `true`): `.github/workflows/release.yml`
 - GitHub macOS signing setup (only needed for the signed flow): `docs/architecture/macos-release-signing.md`
 - stable release finalization and AUR dispatch: `.github/workflows/finalize-stable-release.yml`
 

@@ -1,5 +1,9 @@
 name: Release
 
+# 上游遗留的 Developer ID 签名发布流程。本 fork 目前走 ci.yml（未签名 DMG），
+# 所以默认整条流水线跳过；需要启用签名时，在仓库变量里设 SIGNED_RELEASE=true，
+# 并按 docs/architecture/macos-release-signing.md 配好 Apple 凭据。
+
 on:
   release:
     types: [published]
@@ -20,6 +24,7 @@ env:
 jobs:
   build-dmg:
     name: Build ${{ matrix.arch }} DMG
+    if: ${{ vars.SIGNED_RELEASE == 'true' }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     permissions:
@@ -82,6 +87,7 @@ jobs:
 
   build-windows-setup:
     name: Build Windows x64 Setup
+    if: ${{ vars.SIGNED_RELEASE == 'true' }}
     runs-on: windows-latest
     timeout-minutes: 45
     permissions:
@@ -115,6 +121,7 @@ jobs:
 
   build-linux:
     name: Build Linux ${{ matrix.arch }}
+    if: ${{ vars.SIGNED_RELEASE == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
