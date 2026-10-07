@@ -152,7 +152,7 @@ fn kitty_graphics_layers(
     (below_background, below_text, above_text)
 }
 
-/// 窗格标签的一段文字：纯色底、直角、高 2em，只负责文字块本身，位置由调用方决定。
+/// 窗格标签的一段文字：纯色底、直角、高 3em，只负责文字块本身，位置由调用方决定。
 fn pane_label_chip(text: String, fg: gpui_kit::Hsla, bg: gpui_kit::Rgba) -> AnyElement {
     div()
         .h(px(PANE_TITLE_HEIGHT))
@@ -3594,7 +3594,7 @@ impl Render for TerminalView {
                 }
 
                 if multi_pane {
-                    // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 2em，不占布局。
+                    // 窗格标签：骑在窗格上边框上（一半在边框外），纯色底、直角、高 3em，不占布局。
                     // 有自定义标题：左标题（半透明主题色）、右路径（半透明反差色）；
                     // 没有标题：路径就是标题，只有左段。中间留出拖拽手柄，放不下就不画。
                     let pane_cwd = self.pane_cwds.get(pane.id.as_str()).map(String::as_str);

@@ -445,12 +445,16 @@ impl TerminalView {
 
     /// 标签页当前所在分支：取活动窗格的 cwd，缺失时退回最近一次提示符 cwd；非 git 返回 None。
     pub(crate) fn tab_branch(&self, index: usize) -> Option<&str> {
+        self.branch_for_pane_cwd(self.tab_cwd(index)?)
+    }
+
+    /// 标签页用来查分支的 cwd：活动窗格的 cwd，缺失时退回最近一次提示符 cwd。
+    pub(crate) fn tab_cwd(&self, index: usize) -> Option<&str> {
         let tab = self.session.tabs.get(index)?;
-        let cwd = tab
-            .active_pane_id()
+        tab.active_pane_id()
             .and_then(|id| self.pane_cwds.get(id))
-            .or(tab.last_prompt_cwd.as_ref())?;
-        self.branch_for_pane_cwd(cwd)
+            .or(tab.last_prompt_cwd.as_ref())
+            .map(String::as_str)
     }
 
     /// 标签页标题（不含分支后缀）：按优先级挑选来源，手动名同样适用。

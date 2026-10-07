@@ -121,7 +121,7 @@ impl TerminalView {
 
     /// 按可用宽度压缩标签文字：路径保留开头和最后一层目录，其余尾部截断。
     ///
-    /// - `title`：待显示的文字；末尾的 `::分支` 后缀会整体保留（分支名里的 `/` 不当路径处理）。
+    /// - `title`：待显示的文字；末尾的 `🔱分支` 后缀会整体保留（分支名里的 `/` 不当路径处理）。
     /// - `available_text_px`：可用宽度（像素）。
     /// - `measure_text_px`：量字函数。
     ///
@@ -318,30 +318,30 @@ mod tests {
 
     #[test]
     fn measured_tab_title_fit_keeps_branch_suffix_with_slash() {
-        let title = "~/Desktop/claudeCode/claude-code-provider-proxy/docs::feature/x";
-        let available = synthetic_text_width("~/Desktop/.../docs::feature/x");
+        let title = "~/Desktop/claudeCode/claude-code-provider-proxy/docs🔱feature/x";
+        let available = synthetic_text_width("~/Desktop/.../docs🔱feature/x");
         let formatted = TerminalView::format_tab_label_for_render_measured(
             title,
             available,
             synthetic_text_width,
         );
 
-        assert!(formatted.ends_with("docs::feature/x"), "{formatted}");
+        assert!(formatted.ends_with("docs🔱feature/x"), "{formatted}");
         assert!(formatted.contains("..."));
         assert!(synthetic_text_width(&formatted) <= available);
     }
 
     #[test]
     fn measured_tab_title_fit_truncates_plainly_when_branch_suffix_is_too_long() {
-        let title = "repo::feature/a-very-long-branch-name-that-cannot-fit";
-        let available = synthetic_text_width("repo::feature...");
+        let title = "repo🔱feature/a-very-long-branch-name-that-cannot-fit";
+        let available = synthetic_text_width("repo🔱feature...");
         let formatted = TerminalView::format_tab_label_for_render_measured(
             title,
             available,
             synthetic_text_width,
         );
 
-        assert!(formatted.starts_with("repo::"), "{formatted}");
+        assert!(formatted.starts_with("repo🔱"), "{formatted}");
         assert!(formatted.ends_with("..."));
         assert!(synthetic_text_width(&formatted) <= available);
     }
