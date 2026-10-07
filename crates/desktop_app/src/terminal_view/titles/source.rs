@@ -309,22 +309,20 @@ impl TerminalView {
         true
     }
 
-    /// 解析窗格标签使用的标题：手动名优先于终端上报标题。
+    /// 解析窗格标签使用的标题：只有用户手动设置的名字才算自定义标题。
+    ///
+    /// 终端上报的标题（如 cmd 默认的 `C:\Windows\system32\cmd.exe`）不参与，
+    /// 没有自定义标题时由调用方用当前路径当标题（见 `pane_label_texts`）。
     ///
     /// - `manual`：手动名表（窗格 id -> 名字）。
-    /// - `reported`：终端上报标题表（窗格 id -> 标题）。
     /// - `pane_id`：目标窗格 id。
     ///
-    /// 返回应显示的标题，两者都没有时为 `None`。
+    /// 返回应显示的自定义标题，没有时为 `None`。
     pub(crate) fn resolve_pane_title<'a>(
         manual: &'a HashMap<String, String>,
-        reported: &'a HashMap<String, String>,
         pane_id: &str,
     ) -> Option<&'a str> {
-        manual
-            .get(pane_id)
-            .or_else(|| reported.get(pane_id))
-            .map(String::as_str)
+        manual.get(pane_id).map(String::as_str)
     }
 
     /// 把用户输入写入手动名表：截断后为空则清除，返回表是否发生变化。
@@ -443,21 +441,7 @@ impl TerminalView {
         }
     }
 
-    /// 标签页当前所在分支：取活动窗格的 cwd，缺失时退回最近一次提示符 cwd；非 git 返回 None。
-    pub(crate) fn tab_branch(&self, index: usize) -> Option<&str> {
-        self.branch_for_pane_cwd(self.tab_cwd(index)?)
-    }
-
-    /// 标签页用来查分支的 cwd：活动窗格的 cwd，缺失时退回最近一次提示符 cwd。
-    pub(crate) fn tab_cwd(&self, index: usize) -> Option<&str> {
-        let tab = self.session.tabs.get(index)?;
-        tab.active_pane_id()
-            .and_then(|id| self.pane_cwds.get(id))
-            .or(tab.last_prompt_cwd.as_ref())
-            .map(String::as_str)
-    }
-
-    /// 标签页标题（不含分支后缀）：按优先级挑选来源，手动名同样适用。
+    /// 标签页标题：按优先级挑选来源，手动名同样适用。标签标题不带分支，分支只显示在窗格标题上。
     pub(crate) fn resolved_tab_title_base(&self, index: usize) -> String {
         let tab = &self.session.tabs[index];
         let fallback_title = self.fallback_title();
@@ -484,17 +468,12 @@ impl TerminalView {
         Self::truncate_tab_title(fallback_title)
     }
 
-    /// 标签页最终显示的标题：有 git 时固定追加 `::分支`（手动标题也一样）。
-    pub(crate) fn resolved_tab_title(&self, index: usize) -> String {
-        super::git::append_branch(self.resolved_tab_title_base(index), self.tab_branch(index))
-    }
-
     pub(crate) fn refresh_tab_title(&mut self, index: usize) -> bool {
         if index >= self.session.tabs.len() {
             return false;
         }
 
-        let next = self.resolved_tab_title(index);
+        let next = self.resolved_tab_title_base(index);
         if self.session.tabs[index].title == next {
             return false;
         }
@@ -898,34 +877,26 @@ mod tests {
     }
 
     #[test]
-    fn manual_pane_title_wins_over_reported_title() {
+    fn only_manual_pane_title_counts_as_custom_title() {
+        // 终端上报的标题（cmd.exe 全路径、vim 等）不是自定义标题，没有手动名就是 None。
         let manual = map_of(&[("p1", "build")]);
-        let reported = map_of(&[("p1", "zsh"), ("p2", "vim")]);
         assert_eq!(
-            TerminalView::resolve_pane_title(&manual, &reported, "p1"),
+            TerminalView::resolve_pane_title(&manual, "p1"),
             Some("build")
         );
-        assert_eq!(
-            TerminalView::resolve_pane_title(&manual, &reported, "p2"),
-            Some("vim")
-        );
-        assert_eq!(
-            TerminalView::resolve_pane_title(&manual, &reported, "p3"),
-            None
-        );
+        assert_eq!(TerminalView::resolve_pane_title(&manual, "p2"), None);
     }
 
     #[test]
-    fn clearing_manual_pane_title_falls_back_to_reported_title() {
+    fn clearing_manual_pane_title_falls_back_to_path() {
         let mut manual = HashMap::new();
-        let reported = map_of(&[("p1", "zsh")]);
         assert!(TerminalView::apply_manual_pane_title(
             &mut manual,
             "p1",
             "  build  "
         ));
         assert_eq!(
-            TerminalView::resolve_pane_title(&manual, &reported, "p1"),
+            TerminalView::resolve_pane_title(&manual, "p1"),
             Some("build")
         );
         // 重复提交相同名字不算变化。
@@ -934,15 +905,19 @@ mod tests {
             "p1",
             "build"
         ));
-        // 空串清除手动名，恢复终端标题。
+        // 空串清除手动名，没有自定义标题，窗格标签改用当前路径。
         assert!(TerminalView::apply_manual_pane_title(
             &mut manual,
             "p1",
             "   "
         ));
+        assert_eq!(TerminalView::resolve_pane_title(&manual, "p1"), None);
         assert_eq!(
-            TerminalView::resolve_pane_title(&manual, &reported, "p1"),
-            Some("zsh")
+            TerminalView::pane_label_texts(
+                TerminalView::resolve_pane_title(&manual, "p1"),
+                Some(r"C:\Users\jelon")
+            ),
+            texts(r"C:\Users\jelon", None)
         );
         assert!(!TerminalView::apply_manual_pane_title(
             &mut manual,
@@ -1020,8 +995,7 @@ mod tests {
     #[test]
     fn manual_pane_title_without_cwd_shows_only_left() {
         let manual = map_of(&[("p1", "build")]);
-        let reported = HashMap::new();
-        let title = TerminalView::resolve_pane_title(&manual, &reported, "p1");
+        let title = TerminalView::resolve_pane_title(&manual, "p1");
         assert_eq!(
             TerminalView::pane_label_texts(title, None),
             texts("build", None)

@@ -510,17 +510,11 @@ impl TerminalView {
         .detach();
     }
 
-    /// 只刷新当前 cwd 落在 `changed` 里的标签标题并重绘；集合为空什么都不做。
+    /// 分支变化后重绘窗格标题；标签标题不带分支，无需刷新。集合为空什么都不做。
     fn finish_git_change(&mut self, changed: &HashSet<String>, cx: &mut Context<Self>) {
-        if changed.is_empty() {
-            return;
+        if !changed.is_empty() {
+            cx.notify();
         }
-        for index in 0..self.session.tabs.len() {
-            if self.tab_cwd(index).is_some_and(|cwd| changed.contains(cwd)) {
-                self.refresh_tab_title(index);
-            }
-        }
-        cx.notify();
     }
 
     /// 后台防抖任务：阻塞等第一个 HEAD 事件，再等一个防抖间隔合并后续事件，
