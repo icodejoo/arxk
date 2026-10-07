@@ -70,14 +70,16 @@ pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
 pub fn cache_installer_path(version: &str, extension: &str) -> PathBuf {
     // Use XDG_CACHE_HOME or ~/.cache
     let cache_dir = std::env::var("XDG_CACHE_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-            PathBuf::from(home).join(".cache")
-        })
-        .join("termy");
+        .map_or_else(
+            |_| {
+                let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+                PathBuf::from(home).join(".cache")
+            },
+            PathBuf::from,
+        )
+        .join("termarx");
     let _ = std::fs::create_dir_all(&cache_dir);
-    cache_dir.join(format!("update-{}.{}", version, extension))
+    cache_dir.join(format!("update-{version}.{extension}"))
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
@@ -165,8 +167,9 @@ pub fn verify_installer_checksum(
     Ok(())
 }
 
+/// 当前平台是否强制要求校验和（Windows 与未签名的 macOS DMG 必须校验）。
 fn checksum_required_for_current_platform() -> bool {
-    cfg!(target_os = "windows")
+    cfg!(any(target_os = "windows", target_os = "macos"))
 }
 
 fn download_checksum_text(url: &str) -> Result<String> {
@@ -474,6 +477,8 @@ fn quote_windows_arg(arg: &str) -> String {
     quoted
 }
 
+// 注意：Linux 目前不支持自动更新，本函数暂不可达，故只拷启动脚本 `termarx`；
+// 启用 Linux 自动更新前需补齐 termarx-bin / termarx-cli 的拷贝。
 #[cfg(target_os = "linux")]
 pub fn do_install(tarball_path: &Path) -> Result<InstallOutcome> {
     use std::process::Command;
@@ -563,6 +568,22 @@ pub fn do_install(_installer_path: &Path) -> Result<InstallOutcome> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// macOS 与 Windows 缺校验和时必须拒绝安装。
+    #[test]
+    fn checksum_required_on_macos_and_windows() {
+        assert_eq!(
+            checksum_required_for_current_platform(),
+            cfg!(any(target_os = "windows", target_os = "macos"))
+        );
+    }
+
+    /// 缺校验和 URL 时，需要强制校验的平台返回错误。
+    #[test]
+    fn missing_checksum_rejected_when_required() {
+        let result = verify_installer_checksum(Path::new("nonexistent"), "a.dmg", None, None);
+        assert_eq!(result.is_err(), checksum_required_for_current_platform());
+    }
 
     #[test]
     fn checksum_parser_finds_matching_manifest_entry() {

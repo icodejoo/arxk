@@ -27,8 +27,8 @@ Termarx is a fast, native terminal for macOS, Linux, and Windows. It combines GP
 
 Download the latest build from **[termy.sh/download](https://termy.sh/download)** or browse every artifact on **[GitHub Releases](https://github.com/icodejoo/termarx/releases)**.
 
-macOS DMGs from v0.2.75 onward are signed and notarized. Open the DMG and drag
-Termarx to `/Applications`. See [macOS troubleshooting](https://termy.sh/docs/getting-started/troubleshooting)
+macOS DMGs are currently unsigned builds. Open the DMG, drag Termarx to
+`/Applications`, and on first launch right-click the app and choose Open. See [macOS troubleshooting](https://termy.sh/docs/getting-started/troubleshooting)
 if the app still does not open.
 
 ### Build from source

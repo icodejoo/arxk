@@ -9,3 +9,7 @@
 
 # DMG build output
 /dist
+
+# 本地索引与开发数据
+/.codegraph/
+/.dev-appdata/
