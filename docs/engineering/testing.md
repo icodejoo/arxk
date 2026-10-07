@@ -111,6 +111,34 @@ output while viewing history.
 Every `#[ignore]` must reference a tracking issue in a comment.
 `just check-boundaries` enforces that the repo stays at or below 11 ignored tests.
 
+## When to run tests
+
+Running the full suite for every change is slow, so it is a judgement call made
+per change by whoever (or whatever agent) makes it. The build and `clippy` already
+catch compile errors, so a green build is the first check.
+
+- **Small changes** (a constant, wording, a one-spot fix): build or `clippy` is
+  enough. Skip the test run.
+- **Large changes** (new logic, refactors, anything crossing modules, shared state
+  such as the active language, or file-watching and persistence code): run the
+  affected package's tests, e.g. `cargo test -p termy`. Run the whole thing, not
+  only the tests you touched, because cross-test interference only shows up that way.
+- Still add a unit test for every new function or module; the rule above is only
+  about when to run the suite.
+- Do not run `cargo test --workspace` on a memory-constrained machine; the build
+  can be killed. Run it per package instead.
+
+### In CI
+
+`.github/workflows/ci.yml` builds and publishes. Tests are **off by default** and
+run in parallel with the builds when switched on; a failure turns the workflow red
+but does not block the release.
+
+- Manual run: tick `run_tests`.
+- Tag push: put `[test]` in the message of the commit the tag points at. This
+  relies on `github.event.head_commit.message` being set on tag pushes; if it is
+  not, use the manual run.
+
 ## Before opening a PR
 
 Use the **smallest** pass that proves your change:
