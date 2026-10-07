@@ -26,16 +26,6 @@ const REFTABLE_PLACEHOLDER_BRANCH: &str = ".invalid";
 /// cwd -> 仓库目录缓存的有效期：超时后重新向上查找，才能发现嵌套 `git init` 或被删除的 `.git`。
 const CWD_CACHE_TTL: Duration = Duration::from_secs(5);
 
-/// 把终端上报的 cwd 文本转成本地路径。
-///
-/// - `cwd`：已规范化的 cwd 文本（见 `TerminalView::normalize_reported_cwd`）。
-///
-/// 这里不做 `%XX` 解码：OSC 7 的 URL 转义在解析 OSC 时就解码了，
-/// OSC 9;9 的原样路径里字面 `%XX` 必须保持不变。
-fn cwd_to_path(cwd: &str) -> PathBuf {
-    PathBuf::from(cwd)
-}
-
 /// 把 git 目录规范成真实路径，让它与 notify 事件里的路径一致。
 /// macOS 的 FSEvents 返回真实路径、Linux 别名共用同一个 inotify wd，不规范就对不上；
 /// Windows 的 canonicalize 会变成 `\\?\` 前缀，与事件路径反而不一致，所以不处理。
@@ -190,7 +180,7 @@ impl ViewGitWatcher {
             let entry = match self.cwd_dirs.remove(cwd) {
                 Some(entry) if entry.is_fresh(now) => entry,
                 _ => CwdEntry {
-                    dir: find_git_dir(&cwd_to_path(cwd)),
+                    dir: find_git_dir(Path::new(cwd)),
                     resolved_at: now,
                 },
             };
@@ -426,13 +416,6 @@ mod tests {
     }
 
     #[test]
-    fn cwd_to_path_keeps_literal_percent_escapes() {
-        // OSC 9;9 的原样路径里的 `%XX` 是路径本身，不能被解码。
-        assert_eq!(cwd_to_path("/tmp/a%20b"), PathBuf::from("/tmp/a%20b"));
-        assert_eq!(cwd_to_path("/tmp/100%"), PathBuf::from("/tmp/100%"));
-    }
-
-    #[test]
     fn append_branch_formats_and_skips_empty() {
         assert_eq!(append_branch("build".into(), Some("main")), "build::main");
         assert_eq!(append_branch("build".into(), None), "build");
@@ -531,7 +514,7 @@ mod tests {
         let rest = chars.as_str().trim_start_matches(':').replace('\\', "/");
         let reported = format!("/{drive}{rest}");
         let normalized = TerminalView::normalize_drive_style_cwd(&reported);
-        assert_eq!(find_git_dir(&cwd_to_path(&normalized)), Some(git));
+        assert_eq!(find_git_dir(Path::new(&normalized)), Some(git));
     }
 
     #[test]

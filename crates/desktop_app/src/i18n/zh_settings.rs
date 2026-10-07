@@ -266,7 +266,6 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
     ("Font size must be a positive number", "字号必须是正数"),
     ("Font size must be greater than 0", "字号必须大于 0"),
     ("Line height must be a number", "行高必须是数字"),
-    ("Line height must be finite", "行高必须是有限数值"),
     (
         "Line height must be between {min} and {max}",
         "行高必须在 {min} 到 {max} 之间",
@@ -298,7 +297,6 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "非活动标签页的回滚缓冲行数必须是正整数",
     ),
     ("Scroll multiplier must be a number", "滚动倍率必须是数字"),
-    ("Scroll multiplier must be finite", "滚动倍率必须是有限数值"),
     (
         "Cursor style must be line or block",
         "光标样式只能是 line 或 block",

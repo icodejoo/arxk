@@ -81,3 +81,16 @@
 - [x] 【未核】`begin_rename_pane` 无活动窗格时静默 `return false`，与注释承诺的提示不符（`command_palette/mod.rs:1692`）。
 - [x] 【未核，低置信】macOS 中文界面菜单名 "Window" 被翻译后可能让系统窗口菜单失效（`menus.rs:48`）。（核查无依据，未改）
 - [ ] 未验证：WSL `\wsl.localhost` 路径下 notify 是否收到 HEAD 事件。
+
+## 后续优化（diff-simplify 评审，已评估暂不做）
+
+这些会改变监听或存储机制，不是纯精简，需单独一轮并跑全量测试：
+
+- [ ] 性能：`ViewGitWatcher::sync` 与 `find_git_dir`/`read_head` 在 UI 线程同步做磁盘 stat；每个提示符触发 `is_stale`，一个窗格过期就整体重对齐；每次 HEAD 事件都 unwatch 再 watch，且全量刷新标签标题。改法：后台线程查找、只同步过期/缺失的 cwd、仅目录消失时重挂、只刷新受影响标签。
+- [ ] 性能：同一 cwd 每个提示符规范化两次（`record_pane_cwd` 与 `last_prompt_cwd`）；`live_pane_ids` 在 prune 与 `sync_git_watch` 各建一次；标签宽度压缩每帧重算，可按 `(标题, 宽度)` 缓存。
+- [ ] 结构：`pane_manual_titles`/`pane_titles`/`pane_cwds`/`tab_colors` 各自按窗格 id 存，迁移、改键、清理三处手工同步（`transfer.rs` 的 `PaneMeta`、`prune_dead_pane_state`），可合并成一张表。
+- [ ] 结构：`native_persist_revision` 与 `native_persist_meta_revision` 两个计数器，可改成单计数器加合并调度。
+- [ ] 结构：`git_watcher: Option` + `git_watch_unavailable: bool` 可并成 `enum GitWatch`；5 秒 TTL 轮询可改为监听 cwd 最近存在的祖先目录。
+- [ ] 待确认：`source.rs` 的 `%3A`/`%5C` 前缀分支在 OSC 7 已解码后是否仍有来源（OSC 9;9 不经解码）；有测试锁定，删前要确认。
+- [ ] 小项：`format.rs` 的泛型壳与 `fit_label` 重新包装的闭包、`plain_only` 标志；`parse_finite_f32` 返回 `Result<f32, ()>` 可改 `Option<f32>`；`ssh.rs` 读配置可与主进程统一入口（类型不同，需先对齐）。
+

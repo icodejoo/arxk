@@ -196,9 +196,6 @@ impl SettingsWindow {
             EditableField::LineHeight => {
                 let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Line height must be a number").to_string())?;
-                if !parsed.is_finite() {
-                    return Err(t!("Line height must be finite").to_string());
-                }
                 if !(termy_core::config_core::MIN_LINE_HEIGHT
                     ..=termy_core::config_core::MAX_LINE_HEIGHT)
                     .contains(&parsed)
@@ -364,9 +361,6 @@ impl SettingsWindow {
             EditableField::ScrollMultiplier => {
                 let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Scroll multiplier must be a number").to_string())?;
-                if !parsed.is_finite() {
-                    return Err(t!("Scroll multiplier must be finite").to_string());
-                }
                 let parsed = parsed.clamp(0.1, 1000.0);
                 self.config.mouse_scroll_multiplier = parsed;
                 config::set_root_setting(
