@@ -875,7 +875,11 @@ const CMD_PROMPT_CWD_REPORT: &str = "$E]9;9;\"$P\"$E\\";
 /// cmd 默认的提示符格式（用户没设 `PROMPT` 时沿用）。
 const CMD_DEFAULT_PROMPT: &str = "$P$G";
 /// bash 每次出提示符前执行的路径上报命令（`$PWD` 在 Git Bash 下是 `/c/...` 形式）。
-const BASH_PROMPT_COMMAND_CWD_REPORT: &str = r#"printf '\033]9;9;"%s"\033\\' "$PWD""#;
+///
+/// 先存 `$?` 再用 `(exit N)` 还原，避免 `printf` 把上一条命令的退出码冲成 0；
+/// `$PWD` 先剔除控制字符（BEL/ESC/换行），防止目录名里夹带转义序列注入终端。
+const BASH_PROMPT_COMMAND_CWD_REPORT: &str =
+    r#"__termarx_rc=$?;printf '\033]9;9;"%s"\033\\' "${PWD//[[:cntrl:]]/}";(exit $__termarx_rc)"#;
 /// 路径上报序列的标志，用来判断用户自己是否已经在上报，避免重复注入。
 const CWD_REPORT_MARKER: &str = "9;9;";
 

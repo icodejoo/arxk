@@ -854,6 +854,7 @@ impl SettingsWindow {
             crate::ui::toast::error(error);
             return;
         }
+        self.sync_language(self.config.language, cx);
         self.active_input = None;
         cx.notify();
     }
@@ -1265,6 +1266,8 @@ impl SettingsWindow {
         if let Err(error) = self.apply_editable_field(input.field, input.state.text()) {
             crate::ui::toast::error(error);
             self.active_input = Some(input);
+        } else {
+            self.sync_language(self.config.language, cx);
         }
         cx.notify();
     }

@@ -142,6 +142,8 @@ pub struct SettingsWindow {
     content_scroll_handle: ScrollHandle,
     setting_scroll_anchors: HashMap<&'static str, ScrollAnchor>,
     searchable_settings: Vec<SearchableSetting>,
+    /// 窗口标题当前所用的界面语言；与全局语言不一致时在渲染时刷新标题。
+    window_title_language: termy::i18n::Language,
     #[cfg(target_os = "macos")]
     default_terminal_state: Option<Result<bool, String>>,
     #[cfg(target_os = "macos")]
@@ -275,6 +277,7 @@ impl SettingsWindow {
             scrollbar_lane_bounds: None,
             hovered_setting_action: None,
             hovered_reset_section: None,
+            window_title_language: termy::i18n::language(),
             switch_animation: None,
             scroll_animation_token: 0,
             colors,
@@ -737,7 +740,7 @@ impl SettingsWindow {
         true
     }
 
-    fn reload_config_if_changed(&mut self, _cx: &mut Context<Self>) -> bool {
+    fn reload_config_if_changed(&mut self, cx: &mut Context<Self>) -> bool {
         let Some(path) = self.config_path.clone() else {
             let loaded = config::load_runtime_config(
                 &mut self.last_config_error_message,
@@ -746,6 +749,7 @@ impl SettingsWindow {
             self.config_path = loaded.path;
             self.config_fingerprint = loaded.fingerprint;
             return if loaded.loaded_from_disk {
+                self.sync_language(loaded.config.language, cx);
                 self.apply_runtime_config(loaded.config)
             } else {
                 false
@@ -767,9 +771,21 @@ impl SettingsWindow {
         self.config_path = loaded.path;
         self.config_fingerprint = loaded.fingerprint;
         if loaded.loaded_from_disk {
+            self.sync_language(loaded.config.language, cx);
             self.apply_runtime_config(loaded.config)
         } else {
             false
+        }
+    }
+
+    /// 应用界面语言；语言有变化时刷新全部窗口（含终端窗口），让已有文案重画。
+    fn sync_language(
+        &self,
+        language: termy_core::config_core::AppLanguage,
+        cx: &mut Context<Self>,
+    ) {
+        if termy::i18n::set_language(language) {
+            cx.refresh_windows();
         }
     }
 
@@ -1234,6 +1250,12 @@ impl gpui_kit::EntityInputHandler for SettingsWindow {
 impl Render for SettingsWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.sync_window_background_appearance(window);
+        // 界面语言切换后，窗口标题（创建时固化）跟着更新。
+        let language = termy::i18n::language();
+        if self.window_title_language != language {
+            self.window_title_language = language;
+            window.set_window_title(t!("Settings"));
+        }
         // Components from `termy_ui` read their colors from a global, so refresh
         // it before building this frame's element tree.
         self.sync_ui_tokens(cx);

@@ -118,8 +118,8 @@ pub(super) const PANE_DRAG_HANDLE_INSET_Y: f32 = 3.0;
 // 窗格左上角的标题小标签（覆盖绘制，不占布局）。
 /// 标签字号。
 pub(super) const PANE_TITLE_FONT_SIZE: f32 = 11.0;
-/// 窗格标签高度相对字号的倍数（高 2em）。
-pub(super) const PANE_TITLE_HEIGHT_RATIO: f32 = 2.0;
+/// 窗格标签高度（字号的 2 倍）。
+pub(super) const PANE_TITLE_HEIGHT: f32 = PANE_TITLE_FONT_SIZE * 2.0;
 /// 标签距窗格左边的留白（高度固定为 2em，上下骑在边框上）。
 pub(super) const PANE_TITLE_INSET: f32 = 3.0;
 /// 标签左右内边距。
@@ -130,7 +130,7 @@ pub(super) const PANE_TITLE_MIN_WIDTH: f32 = 32.0;
 pub(super) const PANE_TITLE_TITLE_ALPHA: f32 = 0.75;
 /// 路径文字透明度（颜色取前景反差色，不随焦点变化）。
 pub(super) const PANE_TITLE_PATH_ALPHA: f32 = 0.55;
-/// 估算文字宽度用：平均字符宽度 / 字号。
+/// 估算文字宽度用：单个半角列的宽度 / 字号（全角字符按 2 列算）。
 pub(super) const PANE_TITLE_CHAR_WIDTH_RATIO: f32 = 0.6;
 #[cfg(debug_assertions)]
 pub(super) const RENDER_METRICS_LOG_INTERVAL: Duration = Duration::from_secs(1);

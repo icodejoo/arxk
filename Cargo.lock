@@ -7887,6 +7887,7 @@ dependencies = [
  "keyring",
  "libc",
  "log",
+ "percent-encoding",
  "png 0.18.1",
  "polling",
  "rand_core 0.6.4",

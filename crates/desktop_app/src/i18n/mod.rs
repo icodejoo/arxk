@@ -11,6 +11,7 @@
 //!
 //! 语言来自配置项 `language = auto | en | zh`；`auto` 跟随系统界面语言。
 
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::OnceLock;
@@ -36,6 +37,11 @@ pub enum Language {
 /// 当前语言：0 = 英文，1 = 中文。
 static CURRENT: AtomicU8 = AtomicU8::new(0);
 
+thread_local! {
+    /// 当前线程的临时语言覆盖（`with_language` 使用），不影响其他线程。
+    static OVERRIDE: Cell<Option<u8>> = const { Cell::new(None) };
+}
+
 /// 全部译文表，后面的表覆盖前面的同名条目。
 const ZH_TABLES: &[&[(&str, &str)]] = &[
     zh_core::ENTRIES,
@@ -47,20 +53,50 @@ const ZH_TABLES: &[&[(&str, &str)]] = &[
     zh_new::ENTRIES,
 ];
 
-/// 按配置设置界面语言，返回语言是否发生了变化。
-pub fn set_language(setting: AppLanguage) -> bool {
-    let language = match setting {
+/// 把配置里的语言设置解析成具体语言（`auto` 跟随系统）。
+fn resolve_language(setting: AppLanguage) -> Language {
+    match setting {
         AppLanguage::English => Language::English,
         AppLanguage::Chinese => Language::Chinese,
         AppLanguage::Auto => detect_system_language(),
-    };
-    let value = u8::from(language == Language::Chinese);
+    }
+}
+
+/// 按配置设置界面语言，返回语言是否发生了变化。
+pub fn set_language(setting: AppLanguage) -> bool {
+    let value = u8::from(resolve_language(setting) == Language::Chinese);
     CURRENT.swap(value, Ordering::Relaxed) != value
+}
+
+/// 临时按指定语言设置在当前线程执行闭包，结束后还原；
+/// 用于全局语言尚未应用、却要先生成文案（如启动期 toast）的场景，
+/// 只覆盖当前线程，不动全局语言，不影响变更检测与其他线程。
+///
+/// # 参数
+/// - `setting`: 临时使用的语言设置。
+/// - `run`: 在该语言下执行的闭包。
+///
+/// # 返回
+/// 闭包的返回值。
+///
+/// # 示例
+/// ```ignore
+/// termy::i18n::with_language(config.language, || toast::warning(t!("Hello")));
+/// ```
+pub fn with_language<R>(setting: AppLanguage, run: impl FnOnce() -> R) -> R {
+    let value = u8::from(resolve_language(setting) == Language::Chinese);
+    let previous = OVERRIDE.with(|cell| cell.replace(Some(value)));
+    let result = run();
+    OVERRIDE.with(|cell| cell.set(previous));
+    result
 }
 
 /// 当前界面语言。
 pub fn language() -> Language {
-    if CURRENT.load(Ordering::Relaxed) == 1 {
+    let value = OVERRIDE
+        .with(Cell::get)
+        .unwrap_or_else(|| CURRENT.load(Ordering::Relaxed));
+    if value == 1 {
         Language::Chinese
     } else {
         Language::English
@@ -97,10 +133,28 @@ pub fn translate_named_with(
     text: &'static str,
     args: &[(&str, &dyn Display)],
 ) -> String {
-    let mut out = translate_with(language, text).to_string();
-    for (name, value) in args {
-        out = out.replace(&format!("{{{name}}}"), &value.to_string());
+    let template = translate_with(language, text);
+    let mut out = String::with_capacity(template.len());
+    let mut rest = template;
+    // 单趟扫描：参数值里即便含 `{name}` 也不会被再次替换。
+    while let Some(start) = rest.find('{') {
+        out.push_str(&rest[..start]);
+        let after = &rest[start + 1..];
+        let replaced = after.find('}').and_then(|end| {
+            let name = &after[..end];
+            args.iter()
+                .find(|(arg_name, _)| *arg_name == name)
+                .map(|(_, value)| (value.to_string(), end))
+        });
+        if let Some((value, end)) = replaced {
+            out.push_str(&value);
+            rest = &after[end + 1..];
+        } else {
+            out.push('{');
+            rest = after;
+        }
     }
+    out.push_str(rest);
     out
 }
 
@@ -264,6 +318,19 @@ mod tests {
             assert!(text.contains("C:\\work"), "{language:?}: {text}");
             assert!(!text.contains("{path}"), "{language:?}: {text}");
         }
+    }
+
+    #[test]
+    fn named_arguments_are_not_substituted_twice() {
+        // 参数值里恰好含 `{name}` 时，不能被后一个参数二次替换。
+        let first: &dyn Display = &"{second}";
+        let second: &dyn Display = &"X";
+        let text = translate_named_with(
+            Language::English,
+            "{first} and {second}",
+            &[("first", first), ("second", second)],
+        );
+        assert_eq!(text, "{second} and X");
     }
 
     #[test]

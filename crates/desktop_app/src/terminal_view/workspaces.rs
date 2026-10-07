@@ -511,6 +511,8 @@ impl TerminalView {
         self.mark_tab_strip_layout_dirty();
         self.sync_tab_strip_for_active_tab();
         self.sync_plugin_lifecycle_state(false, cx);
+        // 工作区切换/删除后，存活窗格集合变了：回收孤儿侧表并重新对齐 git 监听。
+        self.prune_dead_pane_state(cx);
         self.schedule_persist_native_workspace(cx);
         cx.notify();
     }
@@ -888,7 +890,8 @@ impl TerminalView {
                                 pane.progress_state = state;
                             }
                             TerminalEvent::WorkingDirectory(path) => {
-                                tab.last_prompt_cwd = Some(path);
+                                tab.last_prompt_cwd =
+                                    Some(TerminalView::normalize_reported_cwd(&path));
                             }
                             TerminalEvent::Bell => {
                                 attention = true;
@@ -1019,6 +1022,7 @@ impl TerminalView {
         }
         self.session.native_pane_layout_trees.remove(&tab_id);
         self.session.native_pane_zoom_snapshots.remove(&tab_id);
+        self.prune_dead_pane_state(cx);
         self.schedule_persist_native_workspace(cx);
     }
 

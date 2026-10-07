@@ -3,6 +3,7 @@
 //! rendering.
 
 use super::super::*;
+use crate::terminal_view::tab_colors::TabColor;
 
 pub(super) const TAB_TRANSITION_FRAME_MS: u64 = 16;
 const TAB_CLOSE_ANIMATION_DURATION: Duration = Duration::from_millis(180);
@@ -16,6 +17,8 @@ pub(crate) struct ClosingTabOverlay {
     title: String,
     width: f32,
     was_active: bool,
+    /// 关闭前标签的自定义背景色；收缩动画沿用它。
+    color: Option<TabColor>,
     started_at: Instant,
 }
 
@@ -27,6 +30,8 @@ pub(crate) struct ClosingTabOverlaySlot {
     pub(crate) width: f32,
     pub(crate) alpha: f32,
     pub(crate) was_active: bool,
+    /// 关闭前标签的自定义背景色。
+    pub(crate) color: Option<TabColor>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -77,6 +82,7 @@ impl TabStripTransitions {
                     width: overlay.width * (1.0 - ease_in_out_cubic(raw)),
                     alpha: 1.0 - raw,
                     was_active: overlay.was_active,
+                    color: overlay.color,
                 })
             })
             .collect();
@@ -90,6 +96,7 @@ impl TabStripTransitions {
         title: String,
         width: f32,
         was_active: bool,
+        color: Option<TabColor>,
         now: Instant,
     ) {
         if self.closing_overlays.len() >= TAB_CLOSE_OVERLAY_MAX {
@@ -100,6 +107,7 @@ impl TabStripTransitions {
             title,
             width: width.max(0.0),
             was_active,
+            color,
             started_at: now,
         });
     }
@@ -130,6 +138,7 @@ impl TerminalView {
         title: String,
         width: f32,
         was_active: bool,
+        color: Option<TabColor>,
         cx: &mut Context<Self>,
     ) {
         self.tab_strip.transitions.push_closing_overlay(
@@ -137,6 +146,7 @@ impl TerminalView {
             title,
             width,
             was_active,
+            color,
             Instant::now(),
         );
         self.schedule_tab_transitions_frame(cx);
@@ -191,7 +201,7 @@ mod tests {
     fn overlay_slots_shrink_fade_and_clamp_index() {
         let mut transitions = TabStripTransitions::default();
         let start = Instant::now();
-        transitions.push_closing_overlay(7, String::from("shell"), 100.0, true, start);
+        transitions.push_closing_overlay(7, String::from("shell"), 100.0, true, None, start);
 
         // Beyond the end of a shorter strip the overlay clamps into view.
         let slots = transitions.overlay_slots(2, start);
@@ -223,6 +233,7 @@ mod tests {
                 format!("tab-{index}"),
                 100.0,
                 false,
+                None,
                 start,
             );
         }

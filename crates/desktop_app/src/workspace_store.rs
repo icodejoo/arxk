@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS tabs (
     pinned INTEGER NOT NULL DEFAULT 0,
     manual_title TEXT,
     active_pane INTEGER NOT NULL DEFAULT 0,
-    layout_tree TEXT
+    layout_tree TEXT,
+    color TEXT
 );
 CREATE TABLE IF NOT EXISTS panes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,6 +88,13 @@ async fn ensure_workspace_columns(pool: &SqlitePool) -> Result<(), String> {
             .execute(pool)
             .await
             .map_err(|error| store_error("Failed to migrate workspace pinned state", error))?;
+    }
+    // 标签颜色列，补上以兼容老数据。
+    if !table_has_column(pool, "tabs", "color").await? {
+        sqlx::query("ALTER TABLE tabs ADD COLUMN color TEXT")
+            .execute(pool)
+            .await
+            .map_err(|error| store_error("Failed to migrate tab color", error))?;
     }
     // 窗格名、路径、上报标题三列，补上以兼容老数据。
     for column in ["manual_title", "cwd", "reported_title"] {
@@ -180,7 +188,7 @@ impl WorkspaceStore {
                 for (tab_position, tab) in workspace.tabs.iter().enumerate() {
                     let tab_id = sqlx::query(
                         "INSERT INTO tabs(workspace_id, position, pinned, manual_title, \
-                         active_pane, layout_tree) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+                         active_pane, layout_tree, color) VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                     )
                     .bind(workspace_id)
                     .bind(tab_position as i64)
@@ -188,6 +196,7 @@ impl WorkspaceStore {
                     .bind(tab.manual_title.as_deref())
                     .bind(tab.active_pane as i64)
                     .bind(tab.layout_tree_json.as_deref())
+                    .bind(tab.color.as_deref())
                     .execute(&mut *tx)
                     .await
                     .map_err(|error| store_error("Failed to write tab", error))?
@@ -246,7 +255,7 @@ impl WorkspaceStore {
             }
 
             let tab_rows = sqlx::query(
-                "SELECT id, workspace_id, pinned, manual_title, active_pane, layout_tree \
+                "SELECT id, workspace_id, pinned, manual_title, active_pane, layout_tree, color \
                  FROM tabs ORDER BY workspace_id, position",
             )
             .fetch_all(&self.pool)
@@ -288,7 +297,7 @@ impl WorkspaceStore {
                     .entry(workspace_id)
                     .or_default()
                     .push(StoredTab {
-                        color: None,
+                        color: row.get("color"),
                         zoomed: false,
                         presentation: None,
                         pinned: row.get("pinned"),
@@ -506,7 +515,7 @@ mod tests {
                     active_tab: 1,
                     tabs: vec![
                         StoredTab {
-                            color: None,
+                            color: Some("blue".to_string()),
                             zoomed: false,
                             presentation: None,
                             pinned: true,

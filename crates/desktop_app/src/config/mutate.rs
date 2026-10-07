@@ -157,10 +157,14 @@ pub fn remove_raw_root_key_from_config(key: &str) -> Result<(), String> {
     update_config_contents(move |existing| Ok((remove_raw_root_key_entry(existing, &key), ())))
 }
 
+/// 校验并写入主题 id，返回规范化后的主题 id。
+///
+/// - `theme_id`：用户输入的主题 id。
+/// - 返回：规范 id；id 无效或写盘失败时返回错误文案。
 pub fn set_theme_in_config(theme_id: &str) -> Result<String, String> {
     let theme = parse_theme_id(theme_id).ok_or_else(|| t!("Invalid theme id").to_string())?;
     set_root_setting(RootSettingId::Theme, &theme)?;
-    Ok(t!("Theme set to {theme}", theme = theme))
+    Ok(theme)
 }
 
 pub fn reset_theme_references_in_config(theme_id: &str) -> Result<ResetThemeReferences, String> {

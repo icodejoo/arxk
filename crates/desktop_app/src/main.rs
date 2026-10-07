@@ -50,7 +50,7 @@ use terminal_view::{TerminalView, initial_window_background_appearance};
 use termy::{auto_update, design_system, native_sdk, terminal_ui};
 
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
-pub(crate) const APP_ID: &str = "termy";
+pub(crate) const APP_ID: &str = "termarx";
 
 const MIN_WINDOW_WIDTH: f32 = 480.0;
 const MIN_WINDOW_HEIGHT: f32 = 320.0;
@@ -736,6 +736,8 @@ fn main() {
         }
         app_icon::apply_at_startup(&app_config);
         launch_probe::record_stage("icon_applied");
+        // 先应用界面语言，再生成 tmux 回退等启动期 toast，避免中文界面先出英文。
+        termy::i18n::set_language(app_config.language);
         if let Some(message) = guard_tmux_startup(&mut app_config) {
             log::warn!("{message}");
             crate::ui::toast::warning(message);

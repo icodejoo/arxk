@@ -22,6 +22,8 @@ live under `website/content/`.
 The [engineering index](engineering/README.md) owns the quality roadmap,
 scorecard, testing strategy, and decomposition plans.
 
+- [Code review backlog](engineering/code-review-todo.md): open findings from the full code review (in progress).
+
 ## Reference documents
 
 - [Configuration](configuration.md) — generated; do not edit directly.

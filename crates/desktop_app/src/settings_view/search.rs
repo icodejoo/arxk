@@ -360,7 +360,18 @@ impl SettingsWindow {
                 let description_lower = metadata.description.to_ascii_lowercase();
                 let section_lower =
                     Self::settings_section_label(metadata.section).to_ascii_lowercase();
-                let keywords_lower = metadata.keywords.join(" ").to_ascii_lowercase();
+                // 中文译文并入关键词：无论当前界面语言，中英文查询都能命中。
+                let zh = |text: &'static str| {
+                    termy::i18n::translate_with(termy::i18n::Language::Chinese, text)
+                };
+                let keywords_lower = format!(
+                    "{} {} {} {}",
+                    metadata.keywords.join(" "),
+                    zh(metadata.title),
+                    zh(metadata.description),
+                    zh(Self::settings_section_label(metadata.section)),
+                )
+                .to_ascii_lowercase();
                 let haystack_lower =
                     format!("{title_lower} {description_lower} {section_lower} {keywords_lower}");
 

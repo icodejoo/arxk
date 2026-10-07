@@ -1,5 +1,8 @@
 use super::super::*;
 
+/// 分支后缀最多占可用宽度的比例；超过就不再为它预留，改为整体截断。
+const BRANCH_SUFFIX_MAX_SHARE: f32 = 0.6;
+
 impl TerminalView {
     pub(crate) fn truncate_tab_title(title: &str) -> String {
         // Keep titles single-line so shell-provided newlines do not break tab layout.
@@ -116,6 +119,13 @@ impl TerminalView {
         String::new()
     }
 
+    /// 按可用宽度压缩标签文字：路径保留开头和最后一层目录，其余尾部截断。
+    ///
+    /// - `title`：待显示的文字；末尾的 `::分支` 后缀会整体保留（分支名里的 `/` 不当路径处理）。
+    /// - `available_text_px`：可用宽度（像素）。
+    /// - `measure_text_px`：量字函数。
+    ///
+    /// 返回放得下的文字；一点都放不下返回空串。
     pub(crate) fn format_tab_label_for_render_measured<F>(
         title: &str,
         available_text_px: f32,
@@ -124,6 +134,15 @@ impl TerminalView {
     where
         F: FnMut(&str) -> f32,
     {
+        Self::fit_label(title, available_text_px, &mut measure_text_px)
+    }
+
+    /// `format_tab_label_for_render_measured` 的实现（用 `dyn` 以便处理分支后缀时递归）。
+    fn fit_label(
+        title: &str,
+        available_text_px: f32,
+        measure: &mut dyn FnMut(&str) -> f32,
+    ) -> String {
         let available_text_px = if available_text_px.is_finite() {
             available_text_px.max(0.0)
         } else {
@@ -133,11 +152,31 @@ impl TerminalView {
             return String::new();
         }
 
-        if measure_text_px(title) <= available_text_px {
+        if measure(title) <= available_text_px {
             return title.to_string();
         }
 
-        if !Self::is_path_like_tab_title(title) {
+        // `{标题}::{分支}`：分支名可能含 `/`（feature/x），不能让它参与路径压缩，
+        // 否则仓库目录名和 `::` 会被当成路径碎片丢掉。先给后缀留足宽度，只压缩前面的标题。
+        let mut plain_only = false;
+        if let Some((base, branch)) = title.rsplit_once(super::git::BRANCH_SEPARATOR)
+            && !base.is_empty()
+            && !branch.is_empty()
+        {
+            let suffix = format!("{}{branch}", super::git::BRANCH_SEPARATOR);
+            let suffix_px = measure(&suffix);
+            if suffix_px < available_text_px * BRANCH_SUFFIX_MAX_SHARE {
+                let fitted_base = Self::fit_label(base, available_text_px - suffix_px, measure);
+                if !fitted_base.is_empty() {
+                    return fitted_base + &suffix;
+                }
+            }
+            // 后缀太长或标题一点也放不下：整体按普通文字截断，不做路径压缩。
+            plain_only = true;
+        }
+
+        let mut measure_text_px = |text: &str| measure(text);
+        if plain_only || !Self::is_path_like_tab_title(title) {
             let chars: Vec<char> = title.chars().collect();
             if chars.is_empty() {
                 return String::new();
@@ -275,6 +314,36 @@ mod tests {
             ),
             "cargo test..."
         );
+    }
+
+    #[test]
+    fn measured_tab_title_fit_keeps_branch_suffix_with_slash() {
+        let title = "~/Desktop/claudeCode/claude-code-provider-proxy/docs::feature/x";
+        let available = synthetic_text_width("~/Desktop/.../docs::feature/x");
+        let formatted = TerminalView::format_tab_label_for_render_measured(
+            title,
+            available,
+            synthetic_text_width,
+        );
+
+        assert!(formatted.ends_with("docs::feature/x"), "{formatted}");
+        assert!(formatted.contains("..."));
+        assert!(synthetic_text_width(&formatted) <= available);
+    }
+
+    #[test]
+    fn measured_tab_title_fit_truncates_plainly_when_branch_suffix_is_too_long() {
+        let title = "repo::feature/a-very-long-branch-name-that-cannot-fit";
+        let available = synthetic_text_width("repo::feature...");
+        let formatted = TerminalView::format_tab_label_for_render_measured(
+            title,
+            available,
+            synthetic_text_width,
+        );
+
+        assert!(formatted.starts_with("repo::"), "{formatted}");
+        assert!(formatted.ends_with("..."));
+        assert!(synthetic_text_width(&formatted) <= available);
     }
 
     #[test]

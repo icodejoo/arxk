@@ -373,10 +373,15 @@ impl TerminalView {
         font_family: &SharedString,
         font_family_key: &str,
     ) -> AnyElement {
-        let mut chip_bg = if slot.was_active {
-            palette.active_tab_bg
-        } else {
-            palette.hovered_tab_bg
+        let mut chip_bg = match slot.color {
+            // 与存活标签一致：自定义背景色覆盖默认底色。
+            Some(tint) => tint.with_alpha(if slot.was_active {
+                tab_colors::TAB_TINT_ACTIVE_ALPHA
+            } else {
+                tab_colors::TAB_TINT_IDLE_ALPHA
+            }),
+            None if slot.was_active => palette.active_tab_bg,
+            None => palette.hovered_tab_bg,
         };
         chip_bg.a *= slot.alpha;
         let mut text_color = if slot.was_active {

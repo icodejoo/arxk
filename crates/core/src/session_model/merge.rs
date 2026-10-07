@@ -146,7 +146,7 @@ fn merge_tab(
         &(remote.active_pane, &remote.layout_tree_json, &remote.panes),
     )?;
     Ok(StoredTab {
-        color: None,
+        color: field(&base.color, &local.color, &remote.color)?,
         zoomed: field(&base.zoomed, &local.zoomed, &remote.zoomed)?,
         pinned: field(&base.pinned, &local.pinned, &remote.pinned)?,
         manual_title: field(

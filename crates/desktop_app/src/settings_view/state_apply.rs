@@ -1,5 +1,13 @@
 use super::*;
 
+/// 把输入解析成有限的 `f32`；格式错误或 NaN / inf 一律返回 `Err(())`。
+fn parse_finite_f32(text: &str) -> Result<f32, ()> {
+    text.parse::<f32>()
+        .ok()
+        .filter(|number| number.is_finite())
+        .ok_or(())
+}
+
 impl SettingsWindow {
     pub(super) fn apply_editable_field(
         &mut self,
@@ -63,12 +71,7 @@ impl SettingsWindow {
                 if value.is_empty() {
                     return Err(t!("Theme cannot be empty").to_string());
                 }
-                let message = crate::config::set_theme_in_config(value)?;
-                let canonical_theme = message
-                    .strip_prefix("Theme set to ")
-                    .unwrap_or(value)
-                    .to_string();
-                self.config.theme = canonical_theme;
+                self.config.theme = crate::config::set_theme_in_config(value)?;
                 Ok(())
             }
             EditableField::ThemeMode => {
@@ -134,12 +137,11 @@ impl SettingsWindow {
                     canonical,
                 )?;
                 self.config.language = parsed;
-                // 立即生效：设置窗口自己和其他窗口都会按新语言重画。
-                termy::i18n::set_language(parsed);
+                // 语言由调用方（`sync_language`）统一应用并刷新全部窗口。
                 Ok(())
             }
             EditableField::BackgroundOpacity => {
-                let parsed = value.trim_end_matches('%').parse::<f32>().map_err(|_| {
+                let parsed = parse_finite_f32(value.trim_end_matches('%')).map_err(|_| {
                     t!("Background opacity must be a number from 0 to 100").to_string()
                 })?;
                 let opacity = (parsed / 100.0).clamp(0.0, 1.0);
@@ -180,8 +182,7 @@ impl SettingsWindow {
                 Ok(())
             }
             EditableField::FontSize => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Font size must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Font size must be greater than 0").to_string());
@@ -193,8 +194,7 @@ impl SettingsWindow {
                 )
             }
             EditableField::LineHeight => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Line height must be a number").to_string())?;
                 if !parsed.is_finite() {
                     return Err(t!("Line height must be finite").to_string());
@@ -217,8 +217,7 @@ impl SettingsWindow {
                 Ok(())
             }
             EditableField::PaddingX => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Horizontal padding must be a number").to_string())?;
                 if parsed < 0.0 {
                     return Err(t!("Horizontal padding cannot be negative").to_string());
@@ -230,8 +229,7 @@ impl SettingsWindow {
                 )
             }
             EditableField::PaddingY => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Vertical padding must be a number").to_string())?;
                 if parsed < 0.0 {
                     return Err(t!("Vertical padding cannot be negative").to_string());
@@ -364,8 +362,7 @@ impl SettingsWindow {
                 )
             }
             EditableField::ScrollMultiplier => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Scroll multiplier must be a number").to_string())?;
                 if !parsed.is_finite() {
                     return Err(t!("Scroll multiplier must be finite").to_string());
@@ -658,8 +655,7 @@ impl SettingsWindow {
                 )
             }
             EditableField::SidebarWidth => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Sidebar width must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Sidebar width must be greater than 0").to_string());
@@ -716,8 +712,7 @@ impl SettingsWindow {
                 )
             }
             EditableField::WindowWidth => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Default width must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Default width must be greater than 0").to_string());
@@ -729,8 +724,7 @@ impl SettingsWindow {
                 )
             }
             EditableField::WindowHeight => {
-                let parsed = value
-                    .parse::<f32>()
+                let parsed = parse_finite_f32(value)
                     .map_err(|_| t!("Default height must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Default height must be greater than 0").to_string());

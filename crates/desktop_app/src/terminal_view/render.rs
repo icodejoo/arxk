@@ -155,11 +155,11 @@ fn kitty_graphics_layers(
 /// 窗格标签的一段文字：纯色底、直角、高 2em，只负责文字块本身，位置由调用方决定。
 fn pane_label_chip(text: String, fg: gpui_kit::Hsla, bg: gpui_kit::Rgba) -> AnyElement {
     div()
-        .h(px(PANE_TITLE_FONT_SIZE * PANE_TITLE_HEIGHT_RATIO))
+        .h(px(PANE_TITLE_HEIGHT))
         .px(px(PANE_TITLE_PADDING_X))
         .whitespace_nowrap()
         .text_size(px(PANE_TITLE_FONT_SIZE))
-        .line_height(px(PANE_TITLE_FONT_SIZE * PANE_TITLE_HEIGHT_RATIO))
+        .line_height(px(PANE_TITLE_HEIGHT))
         .text_color(fg)
         .bg(bg)
         .child(text)
@@ -2226,6 +2226,8 @@ impl TerminalView {
                     .on_mouse_down(
                         MouseButton::Right,
                         cx.listener(|view, event: &MouseDownEvent, _window, cx| {
+                            // 菜单已开时在另一窗格右键：先切活动窗格，命令才作用到点击的窗格。
+                            view.focus_pane_at_position(event.position, cx);
                             view.open_terminal_context_menu(event.position, cx);
                             cx.stop_propagation();
                         }),
@@ -3607,7 +3609,7 @@ impl Render for TerminalView {
                     .map(|mut texts| {
                         // 有 git 时左段（标题）固定追加 `::分支`。
                         let branch = pane_cwd.and_then(|cwd| self.branch_for_pane_cwd(cwd));
-                        texts.left = titles::git::append_branch(&texts.left, branch);
+                        texts.left = titles::git::append_branch(texts.left, branch);
                         texts
                     });
                     let side_max_width =
@@ -3618,17 +3620,15 @@ impl Render for TerminalView {
                         // 底色与面板背景一致且不透明，盖住边框线；透明度恒定，不随焦点变化。
                         let mut label_bg = colors.background;
                         label_bg.a = 1.0;
-                        let label_top = (pane_frame_top
-                            - PANE_TITLE_FONT_SIZE * PANE_TITLE_HEIGHT_RATIO * 0.5)
-                            .max(0.0);
+                        let label_top = (pane_frame_top - PANE_TITLE_HEIGHT * 0.5).max(0.0);
                         // 过长时压缩中段、保留开头和最后一层目录（同标签页标题的规则）。
-                        // 宽度按字符数估算，溢出部分不再处理。
+                        // 宽度按显示列数估算（CJK 全角占 2 列），溢出部分不再处理。
                         let fit_text = |text: &str| {
                             TerminalView::format_tab_label_for_render_measured(
                                 text,
                                 side_max_width - PANE_TITLE_PADDING_X * 2.0,
                                 |text| {
-                                    text.chars().count() as f32
+                                    unicode_width::UnicodeWidthStr::width(text) as f32
                                         * PANE_TITLE_FONT_SIZE
                                         * PANE_TITLE_CHAR_WIDTH_RATIO
                                 },

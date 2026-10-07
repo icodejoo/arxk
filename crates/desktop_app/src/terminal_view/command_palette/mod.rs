@@ -222,10 +222,17 @@ impl TerminalView {
         CommandAction::palette_entries_for_runtime(capabilities.tmux_runtime_active)
             .into_iter()
             .map(|entry| {
+                let title = termy::i18n::tr(entry.title);
+                // 界面已翻译时，把英文原标题并入关键词，保证英文查询仍能命中。
+                let keywords = if title == entry.title {
+                    entry.keywords.to_string()
+                } else {
+                    format!("{} {}", entry.title, entry.keywords)
+                };
                 Self::command_palette_command_item_for_state(
                     entry.action,
-                    termy::i18n::tr(entry.title),
-                    entry.keywords,
+                    title,
+                    &keywords,
                     capabilities,
                 )
             })
@@ -1690,6 +1697,8 @@ impl TerminalView {
             return false;
         }
         let Some(pane_id) = self.active_pane_id().map(str::to_string) else {
+            crate::ui::toast::info(t!("No active pane to rename"));
+            self.notify_overlay(cx);
             return false;
         };
         let current = self

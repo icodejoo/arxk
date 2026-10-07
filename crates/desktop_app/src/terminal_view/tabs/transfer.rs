@@ -13,10 +13,25 @@ struct WindowTabDrag {
 struct WindowTabDragState(Option<WindowTabDrag>);
 impl Global for WindowTabDragState {}
 
+/// 随窗格走的侧表数据（手动名、上报标题、当前目录）。
+#[derive(Default)]
+struct PaneMeta {
+    /// 用户手动起的窗格名。
+    manual_title: Option<String>,
+    /// 终端上报的标题。
+    title: Option<String>,
+    /// shell 上报的当前目录。
+    cwd: Option<String>,
+}
+
 struct TransferredTab {
     tab: TerminalTab,
     layout: Option<NativePaneLayoutTree>,
     zoom: Option<NativePaneZoomSnapshot>,
+    /// 标签背景色。
+    color: Option<tab_colors::TabColor>,
+    /// 窗格 id -> 侧表数据；`rebind` 换窗格 id 时跟着改键。
+    pane_meta: HashMap<String, PaneMeta>,
 }
 
 impl TransferredTab {
@@ -72,6 +87,10 @@ impl TransferredTab {
                 rename_tree(&mut layout.root, &names);
             }
         }
+        self.pane_meta = std::mem::take(&mut self.pane_meta)
+            .into_iter()
+            .map(|(old, meta)| (names.get(&old).cloned().unwrap_or(old), meta))
+            .collect();
         self.tab.id = id;
         self.tab.window_id = format!("@native-{id}");
     }
@@ -322,6 +341,22 @@ impl TerminalView {
         let tab = self.session.tabs.remove(index);
         let layout = self.session.native_pane_layout_trees.remove(&tab_id);
         let zoom = self.session.native_pane_zoom_snapshots.remove(&tab_id);
+        // 标签颜色与各窗格的手动名/标题/目录跟着标签走，缩放时藏起来的窗格也要带上。
+        let color = self.tab_colors.remove(&tab_id);
+        let pane_meta = tab
+            .panes
+            .iter()
+            .chain(zoom.iter().flat_map(|zoom| zoom.other_panes.iter()))
+            .map(|pane| {
+                let meta = PaneMeta {
+                    manual_title: self.pane_manual_titles.remove(&pane.id),
+                    title: self.pane_titles.remove(&pane.id),
+                    cwd: self.pane_cwds.remove(&pane.id),
+                };
+                (pane.id.clone(), meta)
+            })
+            .collect();
+        self.sync_git_watch(cx);
         if self.session.active_tab > index {
             self.session.active_tab -= 1;
         }
@@ -334,7 +369,13 @@ impl TerminalView {
         self.sync_native_terminal_wakeup_interest();
         self.last_terminal_resize_signature = None;
         cx.notify();
-        Some(TransferredTab { tab, layout, zoom })
+        Some(TransferredTab {
+            tab,
+            layout,
+            zoom,
+            color,
+            pane_meta,
+        })
     }
 
     fn receive_transferred_tab(&mut self, mut moved: TransferredTab, cx: &mut Context<Self>) {
@@ -351,8 +392,24 @@ impl TerminalView {
         if let Some(zoom) = moved.zoom {
             self.session.native_pane_zoom_snapshots.insert(id, zoom);
         }
+        if let Some(color) = moved.color {
+            self.tab_colors.insert(id, color);
+        }
+        for (pane_id, meta) in moved.pane_meta {
+            if let Some(manual_title) = meta.manual_title {
+                self.pane_manual_titles
+                    .insert(pane_id.clone(), manual_title);
+            }
+            if let Some(title) = meta.title {
+                self.pane_titles.insert(pane_id.clone(), title);
+            }
+            if let Some(cwd) = meta.cwd {
+                self.pane_cwds.insert(pane_id, cwd);
+            }
+        }
         self.session.tabs.push(moved.tab);
         self.session.active_tab = self.session.tabs.len() - 1;
+        self.sync_git_watch(cx);
         if self.runtime_uses_tmux() {
             if let Err(error) = self.tmux_runtime().client.select_window(&tmux_window_id) {
                 log::warn!("Could not select moved tmux tab: {error}");
@@ -407,6 +464,12 @@ mod tests {
             let source = test_window(cx, 2);
             let target = test_window(cx, 1);
             let source_view = source.entity(cx).unwrap();
+            // 测试调度器要求确定性：不创建后台 git 监听线程。
+            for window in [source, target] {
+                window
+                    .update(cx, |view, _, _| view.git_watch_unavailable = true)
+                    .unwrap();
+            }
             source
                 .update(cx, |view, _, _| {
                     let tab = &mut view.session.tabs[0];
@@ -415,6 +478,14 @@ mod tests {
                     tab.last_prompt_cwd = Some("/tmp/project".into());
                     tab.running_process = true;
                     let pane_id = tab.panes[0].id.clone();
+                    let tab_id = tab.id;
+                    view.tab_colors.insert(tab_id, tab_colors::TabColor::Blue);
+                    view.pane_manual_titles
+                        .insert(pane_id.clone(), "build".to_string());
+                    view.pane_titles
+                        .insert(pane_id.clone(), "vim main.rs".to_string());
+                    view.pane_cwds
+                        .insert(pane_id.clone(), "/tmp/project".to_string());
                     view.session.native_pane_layout_trees.insert(
                         tab.id,
                         NativePaneLayoutTree {
@@ -447,6 +518,31 @@ mod tests {
                         }
                     );
                     assert_eq!(view.session.active_tab, 1);
+                    // 标签颜色与窗格侧表跟着标签迁移，并改用新的 id。
+                    let new_pane_id = moved.panes[0].id.as_str();
+                    assert_eq!(
+                        view.tab_colors.get(&moved.id),
+                        Some(&tab_colors::TabColor::Blue)
+                    );
+                    assert_eq!(
+                        view.pane_manual_titles.get(new_pane_id).map(String::as_str),
+                        Some("build")
+                    );
+                    assert_eq!(
+                        view.pane_titles.get(new_pane_id).map(String::as_str),
+                        Some("vim main.rs")
+                    );
+                    assert_eq!(
+                        view.pane_cwds.get(new_pane_id).map(String::as_str),
+                        Some("/tmp/project")
+                    );
+                })
+                .unwrap();
+            source
+                .update(cx, |view, _, _| {
+                    assert!(!view.tab_colors.contains_key(&1));
+                    assert!(view.pane_cwds.is_empty() && view.pane_titles.is_empty());
+                    assert!(view.pane_manual_titles.is_empty());
                 })
                 .unwrap();
         });
@@ -472,5 +568,24 @@ mod tests {
             assert!(!source_view.read(cx).owns_persisted_session);
         });
         assert_eq!(cx.windows().len(), 1);
+    }
+
+    /// 监听器创建失败（`git_watch_unavailable`）后，提示符到来既不要求重新对齐，也不会再建监听器。
+    #[gpui_kit::test]
+    fn unavailable_git_watch_is_never_retried(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            let window = test_window(cx, 1);
+            window
+                .update(cx, |view, _, cx| {
+                    view.git_watch_unavailable = true;
+                    view.pane_cwds
+                        .insert("%native-pane-1".to_string(), r"E:\work".to_string());
+                    assert!(!view.git_watch_needs_sync("%native-pane-1"));
+                    view.sync_git_watch(cx);
+                    assert!(view.git_watcher.is_none());
+                    assert!(view.git_watch_unavailable);
+                })
+                .unwrap();
+        });
     }
 }

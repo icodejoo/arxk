@@ -306,6 +306,23 @@ impl TerminalView {
         self.open_terminal_context_menu_with_native_anchor(position, None, cx);
     }
 
+    /// 把窗口坐标处的窗格设为活动窗格（已是活动窗格则不动）。
+    ///
+    /// - `position`：鼠标位置（窗口坐标）。
+    ///
+    /// 右键菜单的 Close/Rename Pane 等命令都作用在活动窗格上，打开菜单前必须先调用。
+    pub(in super::super) fn focus_pane_at_position(
+        &mut self,
+        position: gpui_kit::Point<Pixels>,
+        cx: &mut Context<Self>,
+    ) {
+        if let Some((pane_id, _)) = self.position_to_pane_cell(position, false)
+            && !self.is_active_pane_id(pane_id.as_str())
+        {
+            let _ = self.focus_pane_target(pane_id.as_str(), cx);
+        }
+    }
+
     pub(in super::super) fn open_terminal_context_menu_for_window(
         &mut self,
         position: gpui_kit::Point<Pixels>,

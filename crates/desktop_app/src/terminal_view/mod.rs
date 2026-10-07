@@ -1394,6 +1394,8 @@ pub struct TerminalView {
     native_buffer_persistence: bool,
     current_named_layout: Option<String>,
     native_persist_revision: Arc<AtomicU64>,
+    /// 窗格路径/标题类保存的版本号，与 `native_persist_revision` 互不作废。
+    native_persist_meta_revision: Arc<AtomicU64>,
     native_persist_write_gate: Arc<Mutex<()>>,
     /// Lazily opened SQLite-backed session store; `None` once opening failed
     /// (logged), so persistence degrades to a no-op instead of retry spam.
@@ -1506,6 +1508,8 @@ pub struct TerminalView {
     pane_cwds: HashMap<String, String>,
     /// git 分支监听器（按仓库去重），首次收到 cwd 时才创建。
     git_watcher: Option<titles::git::ViewGitWatcher>,
+    /// git 监听器创建失败过：之后不再重试（已记日志），分支后缀不显示。
+    git_watch_unavailable: bool,
     /// 快捷键弹窗（点击顶栏左侧 logo 打开）是否显示。
     shortcuts_popup_open: bool,
     /// 快捷键弹窗列表的滚动状态。
@@ -3353,6 +3357,7 @@ impl TerminalView {
             native_buffer_persistence: config.native_buffer_persistence,
             current_named_layout: None,
             native_persist_revision: Arc::new(AtomicU64::new(0)),
+            native_persist_meta_revision: Arc::new(AtomicU64::new(0)),
             native_persist_write_gate: Arc::new(Mutex::new(())),
             workspace_store: std::cell::OnceCell::new(),
             tmux_show_active_pane_border: config.tmux_show_active_pane_border,
@@ -3457,6 +3462,7 @@ impl TerminalView {
             pane_manual_titles: HashMap::new(),
             pane_cwds: HashMap::new(),
             git_watcher: None,
+            git_watch_unavailable: false,
             shortcuts_popup_open: false,
             shortcuts_scroll: ScrollHandle::new(),
             tab_colors: HashMap::new(),
@@ -4355,11 +4361,16 @@ impl TerminalView {
                         TerminalEvent::WorkingDirectory(path) => {
                             // 窗格标签的路径文字：每个窗格都记，不限于活动窗格。
                             let cwd_changed = self.record_pane_cwd(pane_id.as_str(), &path);
-                            // 恢复会话后 cwd 不变也要补建监听，否则分支后缀出不来。
-                            if cwd_changed || self.git_watcher.is_none() {
+                            // 目录变了、恢复会话后还没建监听、或仓库缓存过期（嵌套 git init、
+                            // 删除 .git）时都要重新对齐，否则分支后缀出不来或停在旧值。
+                            if cwd_changed || self.git_watch_needs_sync(pane_id.as_str()) {
                                 self.sync_git_watch(cx);
                                 // 进出 git 仓库会改变标题里的分支后缀。
-                                self.refresh_tab_title(tab_index);
+                                let mut titles_changed = false;
+                                for index in 0..self.session.tabs.len() {
+                                    titles_changed |= self.refresh_tab_title(index);
+                                }
+                                should_redraw |= titles_changed;
                             }
                             if cwd_changed {
                                 // 路径变了就刷新持久化缓存（长防抖合并写入）。
@@ -4369,7 +4380,8 @@ impl TerminalView {
                                 }
                             }
                             if pane_is_active {
-                                self.session.tabs[tab_index].last_prompt_cwd = Some(path);
+                                self.session.tabs[tab_index].last_prompt_cwd =
+                                    Some(Self::normalize_reported_cwd(&path));
                             }
                         }
                     }

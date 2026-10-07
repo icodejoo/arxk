@@ -131,7 +131,21 @@ mod tests {
     }
 
     #[test]
-    fn linux_and_windows_titlebar_height_collapses_when_tab_strip_hidden() {
+    fn window_titlebar_height_for_follows_platform_when_tab_strip_hidden() {
+        // 真实入口：macOS / Windows 自绘顶栏需保留，Linux 隐藏标签栏后收起。
+        let expected = if cfg!(any(target_os = "macos", target_os = "windows")) {
+            TerminalView::titlebar_height()
+        } else {
+            0.0
+        };
+        assert_eq!(
+            TerminalView::window_titlebar_height_for(false, false),
+            expected
+        );
+    }
+
+    #[test]
+    fn platform_titlebar_height_collapses_when_not_preserved_and_strip_hidden() {
         assert_eq!(
             TerminalView::window_titlebar_height_for_platform(false, false),
             0.0

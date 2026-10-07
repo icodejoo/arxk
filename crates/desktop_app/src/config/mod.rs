@@ -220,7 +220,10 @@ pub fn load_runtime_config(
     match load_from_path(path.clone()) {
         Ok(loaded) => {
             log_parse_diagnostics(&loaded.diagnostics);
-            show_parse_diagnostics_toast(&loaded.diagnostics);
+            // 全局语言此刻可能还没应用（启动期），按刚读到的语言生成 toast。
+            termy::i18n::with_language(loaded.config.language, || {
+                show_parse_diagnostics_toast(&loaded.diagnostics);
+            });
             *previous_error = None;
             RuntimeConfigLoad {
                 config: loaded.config,

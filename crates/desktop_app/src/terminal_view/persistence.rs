@@ -1055,6 +1055,10 @@ impl TerminalView {
     /// 每个窗格在原目录里新开 shell（运行中的进程和滚动缓冲区不复制）。
     /// 新标签插在原标签右侧并激活；返回是否复制成功。
     pub(super) fn duplicate_tab_by_id(&mut self, tab_id: TabId, cx: &mut Context<Self>) -> bool {
+        // tmux 的标签由服务端维护，本地复制只会造出与服务端不一致的标签。
+        if self.runtime_kind() != RuntimeKind::Native {
+            return false;
+        }
         let Some(index) = self.tab_index_by_id(tab_id) else {
             return false;
         };
@@ -1095,6 +1099,15 @@ impl TerminalView {
         self.session.native_pane_zoom_snapshots.extend(zoom);
         self.session.tabs.insert(index + 1, new_tab);
         self.session.active_tab = index + 1;
+        // 插入点右侧的标签整体后移一位，行内重命名与悬停索引要跟着平移。
+        let shift_after_insert = |slot: &mut Option<usize>| {
+            if let Some(slot_index) = slot.as_mut().filter(|slot_index| **slot_index > index) {
+                *slot_index += 1;
+            }
+        };
+        shift_after_insert(&mut self.renaming_tab);
+        shift_after_insert(&mut self.tab_strip.hovered_tab);
+        shift_after_insert(&mut self.tab_strip.hovered_tab_close);
         self.finish_workspace_restore(cx);
         self.schedule_persist_native_workspace(cx);
         true
@@ -1267,6 +1280,8 @@ impl TerminalView {
         // synchronous flush.
         self.native_persist_revision
             .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        self.native_persist_meta_revision
+            .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let Some(request) = self.persisted_native_workspace_write_request() else {
             return;
         };
@@ -1280,25 +1295,41 @@ impl TerminalView {
     }
 
     pub(in super::super) fn schedule_persist_native_workspace(&self, cx: &mut Context<Self>) {
-        self.schedule_persist_native_workspace_after(NATIVE_PERSIST_DEBOUNCE, cx);
+        self.schedule_persist_native_workspace_after(
+            NATIVE_PERSIST_DEBOUNCE,
+            &self.native_persist_revision,
+            cx,
+        );
     }
 
     /// 窗格路径或上报标题变化后的保存：用更长的防抖合并高频刷新。
+    /// 使用独立的版本号，不会被结构类保存顶掉，也不会反过来把它们推迟。
     pub(in super::super) fn schedule_persist_native_pane_meta(&self, cx: &mut Context<Self>) {
-        self.schedule_persist_native_workspace_after(NATIVE_PERSIST_META_DEBOUNCE, cx);
+        self.schedule_persist_native_workspace_after(
+            NATIVE_PERSIST_META_DEBOUNCE,
+            &self.native_persist_meta_revision,
+            cx,
+        );
     }
 
-    /// 按给定防抖时长延迟合并保存，后到的请求会顶掉先到的。
-    fn schedule_persist_native_workspace_after(&self, debounce: Duration, cx: &mut Context<Self>) {
-        let next_revision = self
-            .native_persist_revision
+    /// 按给定防抖时长延迟合并保存；同一版本号计数器内后到的请求会顶掉先到的。
+    ///
+    /// - `debounce`：防抖时长。
+    /// - `revision`：本类保存专用的版本号计数器（结构类与窗格元数据类各用一个）。
+    fn schedule_persist_native_workspace_after(
+        &self,
+        debounce: Duration,
+        revision: &Arc<AtomicU64>,
+        cx: &mut Context<Self>,
+    ) {
+        let next_revision = revision
             .fetch_add(1, std::sync::atomic::Ordering::AcqRel)
             .saturating_add(1);
         if !self.should_sync_persisted_native_workspace() {
             return;
         }
 
-        let latest_revision = self.native_persist_revision.clone();
+        let latest_revision = revision.clone();
         let write_gate = self.native_persist_write_gate.clone();
         cx.spawn(async move |this: WeakEntity<Self>, cx: &mut AsyncApp| {
             cx.background_executor().timer(debounce).await;

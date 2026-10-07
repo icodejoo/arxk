@@ -376,7 +376,6 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "解锁配置锁文件 '{path}' 失败：{source}",
     ),
     ("Invalid theme id", "无效的主题 ID"),
-    ("Theme set to {theme}", "主题已设为 {theme}"),
     (
         "Invalid hex color for '{key}': {hex}",
         "'{key}' 的十六进制颜色无效：{hex}",

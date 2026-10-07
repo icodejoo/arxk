@@ -79,4 +79,9 @@ pub(super) const ENTRIES: &[(&str, &str)] = &[
         "Pane names are not supported in tmux yet",
         "tmux 模式暂不支持窗格命名",
     ),
+    ("No active pane to rename", "没有可重命名的活动窗格"),
+    (
+        "Task \"{task_name}\" no longer exists",
+        "任务“{task_name}”已不存在",
+    ),
 ];

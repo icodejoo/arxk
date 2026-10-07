@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BINARY="target/release/termy"
+BINARY="target/release/termarx"
 TIMEOUT_SECONDS=10
 SETTLE_SECONDS=2
 MAX_LAUNCH_MS=500
@@ -22,7 +22,7 @@ Launch the GPUI Termarx binary with an isolated config and gate first-frame
 readiness plus settled process-tree RSS and CPU.
 
 Options:
-  --binary PATH                 Executable to test (default: target/release/termy)
+  --binary PATH                 Executable to test (default: target/release/termarx)
   --timeout-seconds N           Readiness timeout (default: 10)
   --settle-seconds N            Idle settling window (default: 2)
   --max-launch-ms N             Maximum process-to-ready time (default: 500)

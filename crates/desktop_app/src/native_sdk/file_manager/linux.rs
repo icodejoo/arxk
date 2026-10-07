@@ -29,18 +29,18 @@ pub(super) fn register(executable: &Path) -> Result<(), String> {
         &nautilus_script(&quoted_exe),
     )?;
     write_text_if_unmanaged(
-        &home.join(".local/share/nemo/actions/termy-open-tab.nemo_action"),
-        Path::new("/usr/share/nemo/actions/termy-open-tab.nemo_action"),
+        &home.join(".local/share/nemo/actions/termarx-open-tab.nemo_action"),
+        Path::new("/usr/share/nemo/actions/termarx-open-tab.nemo_action"),
         &nemo_action(&quoted_exe),
     )?;
     write_text_if_unmanaged(
-        &home.join(".local/share/kio/servicemenus/termy-open-tab.desktop"),
-        Path::new("/usr/share/kio/servicemenus/termy-open-tab.desktop"),
+        &home.join(".local/share/kio/servicemenus/termarx-open-tab.desktop"),
+        Path::new("/usr/share/kio/servicemenus/termarx-open-tab.desktop"),
         &kde_servicemenu(&quoted_exe),
     )?;
     write_text_if_unmanaged(
-        &home.join(".local/share/kservices5/ServiceMenus/termy-open-tab.desktop"),
-        Path::new("/usr/share/kservices5/ServiceMenus/termy-open-tab.desktop"),
+        &home.join(".local/share/kservices5/ServiceMenus/termarx-open-tab.desktop"),
+        Path::new("/usr/share/kservices5/ServiceMenus/termarx-open-tab.desktop"),
         &kde_servicemenu(&quoted_exe),
     )?;
     Ok(())

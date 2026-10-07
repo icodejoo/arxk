@@ -335,7 +335,7 @@ impl TerminalView {
                 .iter()
                 .any(|tab| tab.window_id == window_id);
             if let (Some((title, width, was_active)), true) = (closing_overlay, window_gone) {
-                self.push_closing_tab_overlay(index, title, width, was_active, cx);
+                self.push_closing_tab_overlay(index, title, width, was_active, None, cx);
             }
             self.reset_tab_rename_state();
             self.reset_tab_drag_state();

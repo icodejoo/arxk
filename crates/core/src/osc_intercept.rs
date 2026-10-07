@@ -238,16 +238,19 @@ fn input_requires_interception(input: &[u8]) -> bool {
         .any(|pair| pair[0] == 0x1B && pair[1] == b']')
 }
 
-/// Parse OSC 7 file:// URL to extract path
+/// 解析 OSC 7 的 `file://host/path` URL，返回已解码 `%XX` 的路径；不是 file URL 返回 None。
+///
+/// 只有 OSC 7 是 URL 形式，才在这里解码；OSC 9;9 的原样路径不经过此函数，字面 `%XX` 保持不变。
 fn parse_file_url(url: &str) -> Option<String> {
     // Format: file://hostname/path or file:///path
-    if let Some(rest) = url.strip_prefix("file://") {
-        // Skip hostname (everything up to first / after hostname)
-        if let Some(slash_pos) = rest.find('/') {
-            return Some(rest[slash_pos..].to_string());
-        }
-    }
-    None
+    let rest = url.strip_prefix("file://")?;
+    // 跳过主机名（第一个 / 之前的部分）。
+    let slash_pos = rest.find('/')?;
+    Some(
+        percent_encoding::percent_decode_str(&rest[slash_pos..])
+            .decode_utf8_lossy()
+            .into_owned(),
+    )
 }
 
 /// Parse OSC 9;4 progress indicator
@@ -382,14 +385,24 @@ mod tests {
     }
 
     #[test]
-    fn parse_osc_7_preserves_percent_escaped_paths() {
+    fn parse_osc_7_decodes_percent_escaped_paths() {
         let mut interceptor = OscInterceptor::new();
         let (output, events) = process_str(&mut interceptor, "\x1b]7;file://host/tmp/a%20b\x1b\\");
 
         assert!(output.is_empty());
         assert_eq!(
             events,
-            vec![OscEvent::WorkingDirectory("/tmp/a%20b".to_string())]
+            vec![OscEvent::WorkingDirectory("/tmp/a b".to_string())]
+        );
+    }
+
+    #[test]
+    fn parse_osc_9_9_keeps_literal_percent_escapes() {
+        let mut interceptor = OscInterceptor::new();
+        let (_, events) = process_str(&mut interceptor, "]9;9;\"/c/a%41\"");
+        assert_eq!(
+            events,
+            vec![OscEvent::WorkingDirectory("/c/a%41".to_string())]
         );
     }
 

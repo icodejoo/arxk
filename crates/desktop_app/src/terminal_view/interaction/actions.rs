@@ -440,7 +440,10 @@ impl TerminalView {
             .find(|task| task.name == action.task_name)
             .cloned()
         else {
-            crate::ui::toast::error(format!("Task \"{}\" no longer exists", action.task_name));
+            crate::ui::toast::error(t!(
+                "Task \"{task_name}\" no longer exists",
+                task_name = action.task_name
+            ));
             self.notify_overlay(cx);
             return;
         };

@@ -625,7 +625,7 @@ impl BenchmarkTargetSpec {
         Ok(Self {
             label,
             kind: BenchmarkTargetKind::Termy,
-            executable_path: root.join("target/release/termy"),
+            executable_path: root.join("target/release/termarx"),
             git_sha: Some(git_rev_parse_short(&root)?),
             source_path: root,
             runtime_name: engine.runtime_name(),
@@ -3386,7 +3386,7 @@ mod tests {
             label: "candidate",
             kind: BenchmarkTargetKind::Termy,
             source_path: PathBuf::from("/tmp/termy"),
-            executable_path: PathBuf::from("/tmp/termy/target/release/termy"),
+            executable_path: PathBuf::from("/tmp/termy/target/release/termarx"),
             git_sha: Some("abc123".to_string()),
             runtime_name: "native/alacritty",
             engine_env: Some("0"),
@@ -3421,7 +3421,7 @@ mod tests {
         );
         assert_eq!(
             args.last().map(String::as_str),
-            Some("/tmp/termy/target/release/termy")
+            Some("/tmp/termy/target/release/termarx")
         );
     }
 

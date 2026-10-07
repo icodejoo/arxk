@@ -1020,11 +1020,7 @@ impl TerminalView {
                 return;
             }
 
-            if let Some((pane_id, _)) = self.position_to_pane_cell(event.position, false)
-                && !self.is_active_pane_id(pane_id.as_str())
-            {
-                let _ = self.focus_pane_target(pane_id.as_str(), cx);
-            }
+            self.focus_pane_at_position(event.position, cx);
             let image_selection = self.kitty_image_at_position(event.position);
             if self.kitty_image_selection != image_selection {
                 self.kitty_image_selection = image_selection;

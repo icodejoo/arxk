@@ -29,6 +29,19 @@ pub(crate) fn load_hosts(config_path: Option<&Path>) -> Result<Vec<SshHost>, Str
     Ok(manager(config_path)?.hosts().to_vec())
 }
 
+/// askpass 是独立进程，没有窗口去应用语言；只读配置文件，按其中的 `language` 设置界面语言。
+fn apply_askpass_language() {
+    let language = termy_core::config_core::config_path()
+        .and_then(|path| std::fs::read_to_string(path).ok())
+        .map(|contents| {
+            crate::config::AppConfig::from_contents_with_report(&contents)
+                .config
+                .language
+        })
+        .unwrap_or_default();
+    termy::i18n::set_language(language);
+}
+
 pub(crate) fn run_askpass_if_requested(cli_args: &[String]) -> Option<i32> {
     let prompt = cli_args.first().map_or("", String::as_str);
     let request = match parse_askpass_request(|key| std::env::var(key).ok(), prompt) {
@@ -56,6 +69,7 @@ pub(crate) fn run_askpass_if_requested(cli_args: &[String]) -> Option<i32> {
             }
         }
         AskpassPromptKind::HostKeyConfirmation => {
+            apply_askpass_language();
             let confirmed = crate::native_sdk::confirm(t!("Verify SSH Host Key"), prompt);
             if confirmed {
                 "yes".to_string()

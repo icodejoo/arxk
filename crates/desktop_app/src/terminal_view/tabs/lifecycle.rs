@@ -657,7 +657,7 @@ impl TerminalView {
                 self.sync_plugin_lifecycle_state(true, cx);
                 return;
             }
-            RuntimeKind::Native => self.forget_pane_manual_titles(&removed_pane_ids),
+            RuntimeKind::Native => {}
         };
 
         self.push_closing_tab_overlay(
@@ -665,6 +665,7 @@ impl TerminalView {
             self.session.tabs[index].title.clone(),
             Self::stable_tab_render_width(self.session.tabs[index].display_width),
             index == self.session.active_tab,
+            self.tab_color_at(index),
             cx,
         );
         self.session.tabs.remove(index);
@@ -674,6 +675,7 @@ impl TerminalView {
         self.session
             .native_pane_layout_trees
             .remove(&removed_tab_id);
+        self.prune_dead_pane_state(cx);
         self.mark_tab_strip_layout_dirty();
 
         if self.session.tabs.is_empty() {
@@ -952,17 +954,16 @@ impl TerminalView {
         match self.runtime_kind() {
             RuntimeKind::Tmux => self.tmux_close_active_pane(cx),
             RuntimeKind::Native => {
-                let closed_pane_id = self.active_pane_id().map(str::to_string);
                 let closed = self.native_close_active_pane(cx);
-                if closed && let Some(pane_id) = closed_pane_id {
-                    self.forget_pane_manual_titles(&[pane_id]);
+                if closed {
+                    self.prune_dead_pane_state(cx);
                 }
                 closed
             }
         }
     }
 
-    /// 按 id 关闭原生窗格；成功关闭后同步清理其手动窗格名。
+    /// 按 id 关闭原生窗格；成功关闭后回收该窗格的标题、路径等侧表并重新对齐 git 监听。
     pub(crate) fn close_native_pane_by_id(
         &mut self,
         tab_id: TabId,
@@ -971,7 +972,7 @@ impl TerminalView {
     ) -> bool {
         let closed = self.close_native_pane_by_id_inner(tab_id, pane_id, cx);
         if closed {
-            self.forget_pane_manual_titles(&[pane_id.to_string()]);
+            self.prune_dead_pane_state(cx);
         }
         closed
     }
@@ -1461,6 +1462,8 @@ impl TerminalView {
 
         tab.active_pane_id = pane_id.to_string();
         tab.assert_active_pane_invariant();
+        // 标签标题里的 `::分支` 跟随活动窗格的目录。
+        self.refresh_tab_title(self.session.active_tab);
         self.clear_selection();
         self.clear_hovered_link();
         self.refresh_search_if_open(cx);

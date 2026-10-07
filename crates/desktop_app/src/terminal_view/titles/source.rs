@@ -2,6 +2,19 @@ use super::super::*;
 use crate::terminal_ui::TmuxPaneState;
 use std::path::Path;
 
+/// Cygwin 的盘符挂载前缀（`/cygdrive/c/x`）。
+const CYGDRIVE_PREFIX: &str = "/cygdrive";
+/// 盘符后冒号的 URL 编码形式（OSC 7 里 `E:` 可能写成 `E%3A`）；裸冒号放最后兜底。
+const DRIVE_COLON_PREFIXES: [&str; 3] = ["%3A", "%3a", ":"];
+/// 盘符之后合法的路径分隔符起始形式（含 URL 编码的反斜杠）。
+const DRIVE_SEPARATOR_PREFIXES: [&str; 4] = ["/", "\\", "%5C", "%5c"];
+/// 路径里可能出现的两种分隔符。
+const PATH_SEPARATORS: [char; 2] = ['/', '\\'];
+/// Windows 路径分隔符。
+const WINDOWS_SEPARATOR: &str = "\\";
+/// POSIX 路径分隔符。
+const POSIX_SEPARATOR: &str = "/";
+
 /// 窗格标签的两段文字：左段用标题样式，右段（可选）用路径样式。
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct PaneLabelTexts {
@@ -269,15 +282,26 @@ impl TerminalView {
         true
     }
 
+    /// 把 shell 上报的 cwd 文本规范成真实目录路径：去首尾空白与引号；
+    /// Windows 上还把 Git Bash / MSYS2 / Cygwin 的 `/c/...` 转回盘符路径。
+    /// 不截断、不折叠空白（截断只用于渲染），也不解码 `%XX`（OSC 7 在解析时已解码）。
+    ///
+    /// - `raw`：终端上报的原始路径文本。
+    ///
+    /// 返回规范化后的路径；上报为空时返回空串。
+    pub(crate) fn normalize_reported_cwd(raw: &str) -> String {
+        let raw = raw.trim().trim_matches('"');
+        if cfg!(target_os = "windows") {
+            Self::normalize_drive_style_cwd(raw)
+        } else {
+            raw.to_string()
+        }
+    }
+
     /// 记录某个窗格的当前目录（来自 shell 上报的 OSC 7 / OSC 9;9），
     /// 返回显示内容是否发生变化。
     pub(crate) fn record_pane_cwd(&mut self, pane_id: &str, raw: &str) -> bool {
-        let raw = raw.trim().trim_matches('"');
-        // Windows 上 Git Bash / MSYS2 / Cygwin 报的是 `/c/...`，转回盘符路径才能显示与恢复。
-        #[cfg(target_os = "windows")]
-        let cwd = Self::truncate_tab_title(&Self::normalize_msys_cwd(raw));
-        #[cfg(not(target_os = "windows"))]
-        let cwd = Self::truncate_tab_title(raw);
+        let cwd = Self::normalize_reported_cwd(raw);
         if cwd.is_empty() || self.pane_cwds.get(pane_id) == Some(&cwd) {
             return false;
         }
@@ -329,21 +353,33 @@ impl TerminalView {
         Self::apply_manual_pane_title(&mut self.pane_manual_titles, pane_id, raw)
     }
 
-    /// 窗格被关闭时，清理这些窗格的手动名。
-    pub(crate) fn forget_pane_manual_titles(&mut self, pane_ids: &[String]) {
-        for pane_id in pane_ids {
-            self.pane_manual_titles.remove(pane_id.as_str());
+    /// 窗格被关闭后回收按窗格 id 存的侧表（手动名、上报标题、cwd），
+    /// 再重新对齐 git 监听并刷新标签标题。
+    ///
+    /// 以“不在任何存活窗格里”为准，所以关闭窗格、标签、工作区后都可以直接调用；
+    /// 不回收的话，复用 `%native-pane-N` 的新窗格会继承旧路径和分支后缀。
+    pub(crate) fn prune_dead_pane_state(&mut self, cx: &mut Context<Self>) {
+        let live = self.session.live_pane_ids();
+        self.pane_manual_titles
+            .retain(|id, _| live.contains(id.as_str()));
+        self.pane_titles.retain(|id, _| live.contains(id.as_str()));
+        self.pane_cwds.retain(|id, _| live.contains(id.as_str()));
+        self.sync_git_watch(cx);
+        for index in 0..self.session.tabs.len() {
+            self.refresh_tab_title(index);
         }
     }
 
-    /// 把 Git Bash / MSYS2 / Cygwin 上报的 `/c/Users/x`、`/cygdrive/c/Users/x`
-    /// 转成 `C:\Users\x`；不是这种形式的路径原样返回。
+    /// 把盘符风格的 POSIX 路径转成 Windows 路径：Git Bash / MSYS2 / Cygwin 的 `/c/Users/x`、
+    /// `/cygdrive/c/Users/x`，以及 OSC 7 的 `/E:/x`、`/E%3A/x`、`/E:\x`、`/E:%5Cx`，
+    /// 都转成 `C:\Users\x` 形式；不是这种形式的路径原样返回。
     ///
     /// - `raw`：shell 上报的路径文本。
-    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
-    pub(crate) fn normalize_msys_cwd(raw: &str) -> String {
-        let rest = raw.strip_prefix("/cygdrive").unwrap_or(raw);
-        let Some(after) = rest.strip_prefix('/') else {
+    ///
+    /// 盘符后的 `%XX` 不在此处解码（OSC 7 在解析时已解码）。
+    pub(crate) fn normalize_drive_style_cwd(raw: &str) -> String {
+        let rest = raw.strip_prefix(CYGDRIVE_PREFIX).unwrap_or(raw);
+        let Some(after) = rest.strip_prefix(POSIX_SEPARATOR) else {
             return raw.to_string();
         };
         let mut chars = after.chars();
@@ -351,21 +387,33 @@ impl TerminalView {
             return raw.to_string();
         };
         let tail = chars.as_str();
+        // 盘符后允许跟冒号（或编码的冒号），随后必须是结尾或路径分隔符。
+        let tail = DRIVE_COLON_PREFIXES
+            .iter()
+            .find_map(|colon| tail.strip_prefix(colon))
+            .unwrap_or(tail);
         if tail.is_empty() {
-            return format!("{}:\\", drive.to_ascii_uppercase());
+            return format!("{}:{WINDOWS_SEPARATOR}", drive.to_ascii_uppercase());
         }
-        if !tail.starts_with('/') {
+        let has_separator = DRIVE_SEPARATOR_PREFIXES
+            .iter()
+            .any(|separator| tail.starts_with(separator));
+        if !has_separator {
             return raw.to_string();
         }
-        format!("{}:{}", drive.to_ascii_uppercase(), tail.replace('/', "\\"))
+        format!(
+            "{}:{}",
+            drive.to_ascii_uppercase(),
+            tail.replace(POSIX_SEPARATOR, WINDOWS_SEPARATOR)
+        )
     }
 
     /// 比较两段文字是否指向同一路径：忽略首尾空白、末尾分隔符、`/` 与 `\` 的差别和大小写。
     fn same_path_text(a: &str, b: &str) -> bool {
         let normalize = |text: &str| {
             text.trim()
-                .trim_end_matches(['/', '\\'])
-                .replace('\\', "/")
+                .trim_end_matches(PATH_SEPARATORS)
+                .replace(WINDOWS_SEPARATOR, POSIX_SEPARATOR)
                 .to_lowercase()
         };
         normalize(a) == normalize(b)
@@ -434,7 +482,7 @@ impl TerminalView {
 
     /// 标签页最终显示的标题：有 git 时固定追加 `::分支`（手动标题也一样）。
     pub(crate) fn resolved_tab_title(&self, index: usize) -> String {
-        super::git::append_branch(&self.resolved_tab_title_base(index), self.tab_branch(index))
+        super::git::append_branch(self.resolved_tab_title_base(index), self.tab_branch(index))
     }
 
     pub(crate) fn refresh_tab_title(&mut self, index: usize) -> bool {
@@ -473,7 +521,8 @@ impl TerminalView {
         if let Some(explicit_payload) = self.parse_explicit_title(title) {
             return match explicit_payload {
                 ExplicitTitlePayload::Prompt { title, cwd } => {
-                    self.session.tabs[index].last_prompt_cwd = Some(cwd);
+                    self.session.tabs[index].last_prompt_cwd =
+                        Some(Self::normalize_reported_cwd(&cwd));
                     self.session.tabs[index].running_process = false;
                     self.session.tabs[index].current_command = None;
                     self.cancel_pending_command_title(index);
@@ -923,9 +972,18 @@ mod tests {
             ("/d", r"D:\"),
             ("/cygdrive/e/work/api", r"E:\work\api"),
             ("/C/Program Files", r"C:\Program Files"),
+            ("/E:/work/api", r"E:\work\api"),
+            ("/e:", r"E:\"),
+            (r"/E:\work\api", r"E:\work\api"),
+            ("/C%3A/Users/x", r"C:\Users\x"),
+            ("/C:%5CUsers%5Cx", r"C:%5CUsers%5Cx"),
         ];
         for (raw, expected) in cases {
-            assert_eq!(TerminalView::normalize_msys_cwd(raw), expected, "{raw}");
+            assert_eq!(
+                TerminalView::normalize_drive_style_cwd(raw),
+                expected,
+                "{raw}"
+            );
         }
         // 不是盘符形式的路径保持原样：Windows 路径、UNC、WSL 内部路径、相对路径。
         for raw in [
@@ -936,8 +994,23 @@ mod tests {
             "relative/x",
             "",
         ] {
-            assert_eq!(TerminalView::normalize_msys_cwd(raw), raw, "{raw}");
+            assert_eq!(TerminalView::normalize_drive_style_cwd(raw), raw, "{raw}");
         }
+    }
+
+    #[test]
+    fn reported_cwd_is_not_truncated_or_whitespace_collapsed() {
+        let long = format!("/tmp/{}  x", "d".repeat(MAX_TAB_TITLE_CHARS * 2));
+        assert_eq!(
+            TerminalView::normalize_reported_cwd(&format!("  \"{long}\"  ")),
+            long
+        );
+        // OSC 9;9 原样路径里的字面 `%XX` 保持不变。
+        assert_eq!(
+            TerminalView::normalize_reported_cwd("/tmp/a%41"),
+            "/tmp/a%41"
+        );
+        assert_eq!(TerminalView::normalize_reported_cwd("  "), "");
     }
 
     #[test]
