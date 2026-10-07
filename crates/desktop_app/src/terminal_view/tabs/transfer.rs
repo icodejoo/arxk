@@ -13,17 +13,6 @@ struct WindowTabDrag {
 struct WindowTabDragState(Option<WindowTabDrag>);
 impl Global for WindowTabDragState {}
 
-/// 随窗格走的侧表数据（手动名、上报标题、当前目录）。
-#[derive(Default)]
-struct PaneMeta {
-    /// 用户手动起的窗格名。
-    manual_title: Option<String>,
-    /// 终端上报的标题。
-    title: Option<String>,
-    /// shell 上报的当前目录。
-    cwd: Option<String>,
-}
-
 struct TransferredTab {
     tab: TerminalTab,
     layout: Option<NativePaneLayoutTree>,
@@ -31,7 +20,7 @@ struct TransferredTab {
     /// 标签背景色。
     color: Option<tab_colors::TabColor>,
     /// 窗格 id -> 侧表数据；`rebind` 换窗格 id 时跟着改键。
-    pane_meta: HashMap<String, PaneMeta>,
+    pane_meta: HashMap<String, titles::source::PaneMeta>,
 }
 
 impl TransferredTab {
@@ -347,13 +336,9 @@ impl TerminalView {
             .panes
             .iter()
             .chain(zoom.iter().flat_map(|zoom| zoom.other_panes.iter()))
-            .map(|pane| {
-                let meta = PaneMeta {
-                    manual_title: self.pane_manual_titles.remove(&pane.id),
-                    title: self.pane_titles.remove(&pane.id),
-                    cwd: self.pane_cwds.remove(&pane.id),
-                };
-                (pane.id.clone(), meta)
+            .filter_map(|pane| {
+                let meta = self.pane_meta.remove(&pane.id)?;
+                Some((pane.id.clone(), meta))
             })
             .collect();
         self.sync_git_watch(cx);
@@ -395,18 +380,7 @@ impl TerminalView {
         if let Some(color) = moved.color {
             self.tab_colors.insert(id, color);
         }
-        for (pane_id, meta) in moved.pane_meta {
-            if let Some(manual_title) = meta.manual_title {
-                self.pane_manual_titles
-                    .insert(pane_id.clone(), manual_title);
-            }
-            if let Some(title) = meta.title {
-                self.pane_titles.insert(pane_id.clone(), title);
-            }
-            if let Some(cwd) = meta.cwd {
-                self.pane_cwds.insert(pane_id, cwd);
-            }
-        }
+        self.pane_meta.extend(moved.pane_meta);
         self.session.tabs.push(moved.tab);
         self.session.active_tab = self.session.tabs.len() - 1;
         self.sync_git_watch(cx);
@@ -467,7 +441,9 @@ mod tests {
             // 测试调度器要求确定性：不创建后台 git 监听线程。
             for window in [source, target] {
                 window
-                    .update(cx, |view, _, _| view.git_watch_unavailable = true)
+                    .update(cx, |view, _, _| {
+                        view.git_watch = titles::git::GitWatch::Unavailable;
+                    })
                     .unwrap();
             }
             source
@@ -480,12 +456,14 @@ mod tests {
                     let pane_id = tab.panes[0].id.clone();
                     let tab_id = tab.id;
                     view.tab_colors.insert(tab_id, tab_colors::TabColor::Blue);
-                    view.pane_manual_titles
-                        .insert(pane_id.clone(), "build".to_string());
-                    view.pane_titles
-                        .insert(pane_id.clone(), "vim main.rs".to_string());
-                    view.pane_cwds
-                        .insert(pane_id.clone(), "/tmp/project".to_string());
+                    view.pane_meta.insert(
+                        pane_id.clone(),
+                        titles::source::PaneMeta {
+                            manual_title: Some("build".to_string()),
+                            reported_title: Some("vim main.rs".to_string()),
+                            cwd: Some("/tmp/project".to_string()),
+                        },
+                    );
                     view.session.native_pane_layout_trees.insert(
                         tab.id,
                         NativePaneLayoutTree {
@@ -524,25 +502,16 @@ mod tests {
                         view.tab_colors.get(&moved.id),
                         Some(&tab_colors::TabColor::Blue)
                     );
-                    assert_eq!(
-                        view.pane_manual_titles.get(new_pane_id).map(String::as_str),
-                        Some("build")
-                    );
-                    assert_eq!(
-                        view.pane_titles.get(new_pane_id).map(String::as_str),
-                        Some("vim main.rs")
-                    );
-                    assert_eq!(
-                        view.pane_cwds.get(new_pane_id).map(String::as_str),
-                        Some("/tmp/project")
-                    );
+                    let meta = &view.pane_meta[new_pane_id];
+                    assert_eq!(meta.manual_title.as_deref(), Some("build"));
+                    assert_eq!(meta.reported_title.as_deref(), Some("vim main.rs"));
+                    assert_eq!(meta.cwd.as_deref(), Some("/tmp/project"));
                 })
                 .unwrap();
             source
                 .update(cx, |view, _, _| {
                     assert!(!view.tab_colors.contains_key(&1));
-                    assert!(view.pane_cwds.is_empty() && view.pane_titles.is_empty());
-                    assert!(view.pane_manual_titles.is_empty());
+                    assert!(view.pane_meta.is_empty());
                 })
                 .unwrap();
         });
@@ -570,20 +539,18 @@ mod tests {
         assert_eq!(cx.windows().len(), 1);
     }
 
-    /// 监听器创建失败（`git_watch_unavailable`）后，提示符到来既不要求重新对齐，也不会再建监听器。
+    /// 监听器创建失败（`GitWatch::Unavailable`）后，提示符到来既不要求重新对齐，也不会再建监听器。
     #[gpui_kit::test]
     fn unavailable_git_watch_is_never_retried(cx: &mut TestAppContext) {
         cx.update(|cx| {
             let window = test_window(cx, 1);
             window
                 .update(cx, |view, _, cx| {
-                    view.git_watch_unavailable = true;
-                    view.pane_cwds
-                        .insert("%native-pane-1".to_string(), r"E:\work".to_string());
+                    view.git_watch = titles::git::GitWatch::Unavailable;
+                    view.record_pane_cwd("%native-pane-1", r"E:\work");
                     assert!(!view.git_watch_needs_sync("%native-pane-1"));
                     view.sync_git_watch(cx);
-                    assert!(view.git_watcher.is_none());
-                    assert!(view.git_watch_unavailable);
+                    assert!(matches!(view.git_watch, titles::git::GitWatch::Unavailable));
                 })
                 .unwrap();
         });

@@ -24,6 +24,24 @@ pub(crate) struct PaneLabelTexts {
     pub(crate) right: Option<String>,
 }
 
+/// 按窗格 id 存的侧表数据：手动名、终端上报标题、shell 上报的当前目录。
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct PaneMeta {
+    /// 用户手动起的窗格名；窗格标签里唯一算“自定义标题”的来源。
+    pub(crate) manual_title: Option<String>,
+    /// 终端上报的标题；只参与持久化，不用于窗格标签显示。
+    pub(crate) reported_title: Option<String>,
+    /// shell 上报的当前目录（OSC 7 / OSC 9;9）。
+    pub(crate) cwd: Option<String>,
+}
+
+impl PaneMeta {
+    /// 三个字段是否都为空（空条目会从侧表里移除）。
+    pub(crate) fn is_empty(&self) -> bool {
+        self.manual_title.is_none() && self.reported_title.is_none() && self.cwd.is_none()
+    }
+}
+
 impl TerminalView {
     pub(crate) fn fallback_title(&self) -> &str {
         let fallback = self.tab_title.fallback.trim();
@@ -275,11 +293,29 @@ impl TerminalView {
         let Some(title) = self.pane_display_title(raw) else {
             return false;
         };
-        if self.pane_titles.get(pane_id) == Some(&title) {
+        let meta = self.pane_meta.entry(pane_id.to_string()).or_default();
+        if meta.reported_title.as_ref() == Some(&title) {
             return false;
         }
-        self.pane_titles.insert(pane_id.to_string(), title);
+        meta.reported_title = Some(title);
         true
+    }
+
+    /// 清除某个窗格记录的终端上报标题，返回是否真的有内容被清掉。
+    pub(crate) fn clear_pane_reported_title(&mut self, pane_id: &str) -> bool {
+        let Some(meta) = self.pane_meta.get_mut(pane_id) else {
+            return false;
+        };
+        let cleared = meta.reported_title.take().is_some();
+        if meta.is_empty() {
+            self.pane_meta.remove(pane_id);
+        }
+        cleared
+    }
+
+    /// 某个窗格当前的目录（shell 上报），没记录返回 `None`。
+    pub(crate) fn pane_cwd(&self, pane_id: &str) -> Option<&str> {
+        self.pane_meta.get(pane_id)?.cwd.as_deref()
     }
 
     /// 把 shell 上报的 cwd 文本规范成真实目录路径：去首尾空白与引号；
@@ -302,10 +338,10 @@ impl TerminalView {
     /// 返回显示内容是否发生变化。
     pub(crate) fn record_pane_cwd(&mut self, pane_id: &str, raw: &str) -> bool {
         let cwd = Self::normalize_reported_cwd(raw);
-        if cwd.is_empty() || self.pane_cwds.get(pane_id) == Some(&cwd) {
+        if cwd.is_empty() || self.pane_cwd(pane_id) == Some(cwd.as_str()) {
             return false;
         }
-        self.pane_cwds.insert(pane_id.to_string(), cwd);
+        self.pane_meta.entry(pane_id.to_string()).or_default().cwd = Some(cwd);
         true
     }
 
@@ -314,41 +350,49 @@ impl TerminalView {
     /// 终端上报的标题（如 cmd 默认的 `C:\Windows\system32\cmd.exe`）不参与，
     /// 没有自定义标题时由调用方用当前路径当标题（见 `pane_label_texts`）。
     ///
-    /// - `manual`：手动名表（窗格 id -> 名字）。
+    /// - `metas`：窗格侧表（窗格 id -> 元数据）。
     /// - `pane_id`：目标窗格 id。
     ///
     /// 返回应显示的自定义标题，没有时为 `None`。
     pub(crate) fn resolve_pane_title<'a>(
-        manual: &'a HashMap<String, String>,
+        metas: &'a HashMap<String, PaneMeta>,
         pane_id: &str,
     ) -> Option<&'a str> {
-        manual.get(pane_id).map(String::as_str)
+        metas.get(pane_id)?.manual_title.as_deref()
     }
 
-    /// 把用户输入写入手动名表：截断后为空则清除，返回表是否发生变化。
+    /// 把用户输入写入侧表的手动名：截断后为空则清除，返回是否发生变化。
     ///
-    /// - `manual`：手动名表（窗格 id -> 名字）。
+    /// - `metas`：窗格侧表（窗格 id -> 元数据）。
     /// - `pane_id`：目标窗格 id。
     /// - `raw`：用户输入的原始文本。
     pub(crate) fn apply_manual_pane_title(
-        manual: &mut HashMap<String, String>,
+        metas: &mut HashMap<String, PaneMeta>,
         pane_id: &str,
         raw: &str,
     ) -> bool {
         let title = Self::truncate_tab_title(raw.trim());
         if title.is_empty() {
-            return manual.remove(pane_id).is_some();
+            let Some(meta) = metas.get_mut(pane_id) else {
+                return false;
+            };
+            let cleared = meta.manual_title.take().is_some();
+            if meta.is_empty() {
+                metas.remove(pane_id);
+            }
+            return cleared;
         }
-        if manual.get(pane_id) == Some(&title) {
+        let meta = metas.entry(pane_id.to_string()).or_default();
+        if meta.manual_title.as_ref() == Some(&title) {
             return false;
         }
-        manual.insert(pane_id.to_string(), title);
+        meta.manual_title = Some(title);
         true
     }
 
     /// 设置（或清除，传空串）某个窗格的手动名，返回是否发生变化。
     pub(crate) fn set_pane_manual_title(&mut self, pane_id: &str, raw: &str) -> bool {
-        Self::apply_manual_pane_title(&mut self.pane_manual_titles, pane_id, raw)
+        Self::apply_manual_pane_title(&mut self.pane_meta, pane_id, raw)
     }
 
     /// 窗格被关闭后回收按窗格 id 存的侧表（手动名、上报标题、cwd），
@@ -358,10 +402,7 @@ impl TerminalView {
     /// 不回收的话，复用 `%native-pane-N` 的新窗格会继承旧路径和分支后缀。
     pub(crate) fn prune_dead_pane_state(&mut self, cx: &mut Context<Self>) {
         let live = self.session.live_pane_ids();
-        self.pane_manual_titles
-            .retain(|id, _| live.contains(id.as_str()));
-        self.pane_titles.retain(|id, _| live.contains(id.as_str()));
-        self.pane_cwds.retain(|id, _| live.contains(id.as_str()));
+        self.pane_meta.retain(|id, _| live.contains(id.as_str()));
         self.sync_git_watch(cx);
         for index in 0..self.session.tabs.len() {
             self.refresh_tab_title(index);
@@ -869,10 +910,16 @@ mod tests {
         assert_eq!(TerminalView::pane_label_texts(Some(""), Some(" ")), None);
     }
 
-    fn map_of(entries: &[(&str, &str)]) -> HashMap<String, String> {
+    fn map_of(entries: &[(&str, &str)]) -> HashMap<String, PaneMeta> {
         entries
             .iter()
-            .map(|(key, value)| (key.to_string(), value.to_string()))
+            .map(|(key, value)| {
+                let meta = PaneMeta {
+                    manual_title: Some(value.to_string()),
+                    ..PaneMeta::default()
+                };
+                (key.to_string(), meta)
+            })
             .collect()
     }
 
@@ -935,13 +982,16 @@ mod tests {
             "p1",
             &long
         ));
-        assert_eq!(manual["p1"].chars().count(), MAX_TAB_TITLE_CHARS);
+        assert_eq!(
+            manual["p1"].manual_title.as_ref().unwrap().chars().count(),
+            MAX_TAB_TITLE_CHARS
+        );
         assert!(TerminalView::apply_manual_pane_title(
             &mut manual,
             "p2",
             "a\nb"
         ));
-        assert_eq!(manual["p2"], "a b");
+        assert_eq!(manual["p2"].manual_title.as_deref(), Some("a b"));
     }
 
     #[test]
@@ -990,6 +1040,31 @@ mod tests {
             "/tmp/a%41"
         );
         assert_eq!(TerminalView::normalize_reported_cwd("  "), "");
+    }
+
+    #[test]
+    fn clearing_manual_title_keeps_other_meta_and_drops_empty_entries() {
+        let mut metas = HashMap::new();
+        metas.insert(
+            "p1".to_string(),
+            PaneMeta {
+                manual_title: Some("build".into()),
+                reported_title: Some("vim".into()),
+                cwd: None,
+            },
+        );
+        // 清掉手动名后上报标题还在，条目保留。
+        assert!(TerminalView::apply_manual_pane_title(&mut metas, "p1", ""));
+        assert_eq!(metas["p1"].reported_title.as_deref(), Some("vim"));
+        assert_eq!(TerminalView::resolve_pane_title(&metas, "p1"), None);
+        // 上报标题不算自定义标题。
+        assert!(PaneMeta::default().manual_title.is_none());
+        metas.get_mut("p1").unwrap().reported_title = None;
+        assert!(metas["p1"].is_empty());
+        // 全空条目在清除手动名时被移除。
+        assert!(TerminalView::apply_manual_pane_title(&mut metas, "p2", "x"));
+        assert!(TerminalView::apply_manual_pane_title(&mut metas, "p2", ""));
+        assert!(!metas.contains_key("p2"));
     }
 
     #[test]

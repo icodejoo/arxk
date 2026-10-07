@@ -467,6 +467,7 @@ impl TerminalView {
                             .map_or((pane.left, pane.top, pane.width, pane.height), |zoom| {
                                 zoom.active_pane_geometry
                             });
+                        let meta = self.pane_meta.get(&pane.id);
                         PersistedNativePane {
                             session_id: pane.terminal.session_id().map(str::to_owned),
                             left,
@@ -474,9 +475,9 @@ impl TerminalView {
                             width: width.max(1),
                             height: height.max(1),
                             buffer: self.extract_persisted_buffer_text(&pane.terminal),
-                            manual_title: self.pane_manual_titles.get(&pane.id).cloned(),
-                            cwd: self.pane_cwds.get(&pane.id).cloned(),
-                            reported_title: self.pane_titles.get(&pane.id).cloned(),
+                            manual_title: meta.and_then(|meta| meta.manual_title.clone()),
+                            cwd: meta.and_then(|meta| meta.cwd.clone()),
+                            reported_title: meta.and_then(|meta| meta.reported_title.clone()),
                         }
                     })
                     .collect::<Vec<_>>();

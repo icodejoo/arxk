@@ -1500,16 +1500,10 @@ pub struct TerminalView {
     pane_resize_drag: Option<PaneResizeDragState>,
     native_split_generation: u64,
     pane_move_drag: Option<PaneMoveDragState>,
-    /// 窗格 id -> 终端上报的标题，用于窗格左上角的标题标签。
-    pane_titles: HashMap<String, String>,
-    /// 窗格 id -> 用户自定义的手动标题，优先级高于终端上报标题。
-    pane_manual_titles: HashMap<String, String>,
-    /// 窗格 id -> shell 上报的当前目录（OSC 7 / OSC 9;9），用于窗格标签的路径文字。
-    pane_cwds: HashMap<String, String>,
-    /// git 分支监听器（按仓库去重），首次收到 cwd 时才创建。
-    git_watcher: Option<titles::git::ViewGitWatcher>,
-    /// git 监听器创建失败过：之后不再重试（已记日志），分支后缀不显示。
-    git_watch_unavailable: bool,
+    /// 窗格 id -> 侧表数据（手动名、终端上报标题、当前目录），窗格关闭后回收。
+    pane_meta: HashMap<String, titles::source::PaneMeta>,
+    /// git 分支监听三态（按仓库去重），首次收到 cwd 时才创建，创建失败不再重试。
+    git_watch: titles::git::GitWatch,
     /// 快捷键弹窗（点击顶栏左侧 logo 打开）是否显示。
     shortcuts_popup_open: bool,
     /// 快捷键弹窗列表的滚动状态。
@@ -3458,11 +3452,8 @@ impl TerminalView {
             pane_resize_drag: None,
             native_split_generation: 0,
             pane_move_drag: None,
-            pane_titles: HashMap::new(),
-            pane_manual_titles: HashMap::new(),
-            pane_cwds: HashMap::new(),
-            git_watcher: None,
-            git_watch_unavailable: false,
+            pane_meta: HashMap::new(),
+            git_watch: titles::git::GitWatch::Uninit,
             shortcuts_popup_open: false,
             shortcuts_scroll: ScrollHandle::new(),
             tab_colors: HashMap::new(),
@@ -4286,7 +4277,7 @@ impl TerminalView {
                             }
                         }
                         TerminalEvent::ResetTitle => {
-                            if self.pane_titles.remove(pane_id.as_str()).is_some() {
+                            if self.clear_pane_reported_title(pane_id.as_str()) {
                                 self.schedule_persist_native_pane_meta(cx);
                                 if tab_index == active_tab {
                                     should_redraw = true;
@@ -4376,7 +4367,7 @@ impl TerminalView {
                             }
                             if pane_is_active {
                                 self.session.tabs[tab_index].last_prompt_cwd =
-                                    self.pane_cwds.get(pane_id.as_str()).cloned();
+                                    self.pane_cwd(pane_id.as_str()).map(str::to_owned);
                             }
                         }
                     }

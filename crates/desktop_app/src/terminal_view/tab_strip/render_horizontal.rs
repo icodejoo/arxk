@@ -314,7 +314,7 @@ impl TerminalView {
             let label = Self::format_tab_label_for_render_measured(
                 &tab_title,
                 available_text_px,
-                |candidate| {
+                &mut |candidate| {
                     self.measure_tab_title_width(window, font_family, font_family_key, candidate)
                 },
             );
@@ -398,7 +398,7 @@ impl TerminalView {
             Self::format_tab_label_for_render_measured(
                 &slot.title,
                 available_text_px,
-                |candidate| {
+                &mut |candidate| {
                     self.measure_tab_title_width(window, font_family, font_family_key, candidate)
                 },
             )

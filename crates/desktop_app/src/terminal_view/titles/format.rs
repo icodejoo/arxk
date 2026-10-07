@@ -2,6 +2,8 @@ use super::super::*;
 
 /// 分支后缀最多占可用宽度的比例；超过就不再为它预留，改为整体截断。
 const BRANCH_SUFFIX_MAX_SHARE: f32 = 0.6;
+/// 省略号文本。
+const ELLIPSIS: &str = "...";
 
 impl TerminalView {
     pub(crate) fn truncate_tab_title(title: &str) -> String {
@@ -39,10 +41,12 @@ impl TerminalView {
         }
     }
 
+    /// 是否像路径（含 `/` 或 `\`）。
     fn is_path_like_tab_title(title: &str) -> bool {
         title.contains('/') || title.contains('\\')
     }
 
+    /// 路径中间省略：共保留 `preserved_chars` 个字符，优先保住最后一层目录（`basename_len`）。
     fn squeezed_path_tab_label_for_preserved_chars(
         chars: &[char],
         basename_len: usize,
@@ -53,7 +57,7 @@ impl TerminalView {
         }
 
         if preserved_chars == 0 {
-            return "...".to_string();
+            return ELLIPSIS.to_string();
         }
 
         let (head_chars, tail_chars) = if preserved_chars == 1 {
@@ -70,7 +74,7 @@ impl TerminalView {
         for ch in chars.iter().take(head_chars) {
             formatted.push(*ch);
         }
-        formatted.push_str("...");
+        formatted.push_str(ELLIPSIS);
         for ch in chars
             .iter()
             .skip(chars.len().saturating_sub(tail_chars))
@@ -82,6 +86,7 @@ impl TerminalView {
         formatted
     }
 
+    /// 尾部截断：保留开头 `preserved_chars` 个字符，后面接 `...`。
     fn end_truncated_tab_label_for_preserved_chars(
         chars: &[char],
         preserved_chars: usize,
@@ -89,56 +94,72 @@ impl TerminalView {
         if chars.is_empty() {
             return String::new();
         }
-
-        if preserved_chars == 0 {
-            return "...".to_string();
-        }
-
-        let mut formatted = String::with_capacity(preserved_chars + 3);
-        for ch in chars.iter().take(preserved_chars) {
-            formatted.push(*ch);
-        }
-        formatted.push_str("...");
+        let mut formatted: String = chars.iter().take(preserved_chars).collect();
+        formatted.push_str(ELLIPSIS);
         formatted
     }
 
-    fn fitting_dots_for_width<F>(available_text_px: f32, measure_text_px: &mut F) -> String
-    where
-        F: FnMut(&str) -> f32,
-    {
-        if available_text_px <= f32::EPSILON {
+    /// 中间省略：共保留 `preserved_chars` 个字符，头部多一个（奇数时），中间接 `...`。
+    fn middle_squeezed_tab_label_for_preserved_chars(
+        chars: &[char],
+        preserved_chars: usize,
+    ) -> String {
+        if chars.is_empty() {
             return String::new();
         }
+        let head_chars = preserved_chars.div_ceil(2);
+        let tail_chars = preserved_chars - head_chars;
+        let mut formatted: String = chars.iter().take(head_chars).collect();
+        formatted.push_str(ELLIPSIS);
+        formatted.extend(chars.iter().skip(chars.len().saturating_sub(tail_chars)));
+        formatted
+    }
 
-        for dots in ["...", "..", "."] {
-            if measure_text_px(dots) <= available_text_px {
+    /// 放不下任何字符时，挑一个放得下的省略号（`...`、`..`、`.`），都放不下返回空串。
+    fn fitting_dots_for_width(
+        available_text_px: f32,
+        measure: &mut dyn FnMut(&str) -> f32,
+    ) -> String {
+        for dots in [ELLIPSIS, "..", "."] {
+            if measure(dots) <= available_text_px {
                 return dots.to_string();
             }
         }
-
         String::new()
     }
 
-    /// 按可用宽度压缩标签文字：路径保留开头和最后一层目录，其余尾部截断。
+    /// 二分查找能放下的最大保留字符数，用 `build` 生成候选；一个字符都放不下时退化成省略号。
+    fn search_fit(
+        chars: &[char],
+        available_text_px: f32,
+        measure: &mut dyn FnMut(&str) -> f32,
+        build: &dyn Fn(usize) -> String,
+    ) -> String {
+        let (mut low, mut high) = (0usize, chars.len());
+        while low < high {
+            let mid = (low + high).div_ceil(2);
+            if measure(&build(mid)) <= available_text_px {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
+        }
+        let fitted = build(low);
+        if measure(&fitted) <= available_text_px {
+            fitted
+        } else {
+            Self::fitting_dots_for_width(available_text_px, measure)
+        }
+    }
+
+    /// 按可用宽度压缩标签文字：路径保留开头和最后一层目录，普通标题保留两侧，中间用 `...`。
     ///
     /// - `title`：待显示的文字；末尾的 `🔱分支` 后缀会整体保留（分支名里的 `/` 不当路径处理）。
     /// - `available_text_px`：可用宽度（像素）。
-    /// - `measure_text_px`：量字函数。
+    /// - `measure`：量字函数。
     ///
     /// 返回放得下的文字；一点都放不下返回空串。
-    pub(crate) fn format_tab_label_for_render_measured<F>(
-        title: &str,
-        available_text_px: f32,
-        mut measure_text_px: F,
-    ) -> String
-    where
-        F: FnMut(&str) -> f32,
-    {
-        Self::fit_label(title, available_text_px, &mut measure_text_px)
-    }
-
-    /// `format_tab_label_for_render_measured` 的实现（用 `dyn` 以便处理分支后缀时递归）。
-    fn fit_label(
+    pub(crate) fn format_tab_label_for_render_measured(
         title: &str,
         available_text_px: f32,
         measure: &mut dyn FnMut(&str) -> f32,
@@ -151,14 +172,14 @@ impl TerminalView {
         if title.is_empty() || available_text_px <= f32::EPSILON {
             return String::new();
         }
-
         if measure(title) <= available_text_px {
             return title.to_string();
         }
 
-        // `{标题}::{分支}`：分支名可能含 `/`（feature/x），不能让它参与路径压缩，
-        // 否则仓库目录名和 `::` 会被当成路径碎片丢掉。先给后缀留足宽度，只压缩前面的标题。
-        let mut plain_only = false;
+        let chars: Vec<char> = title.chars().collect();
+
+        // `{标题}🔱{分支}`：分支名可能含 `/`（feature/x），不能让它参与路径压缩，
+        // 否则仓库目录名和分隔符会被当成路径碎片丢掉。先给后缀留足宽度，只压缩前面的标题。
         if let Some((base, branch)) = title.rsplit_once(super::git::BRANCH_SEPARATOR)
             && !base.is_empty()
             && !branch.is_empty()
@@ -166,71 +187,33 @@ impl TerminalView {
             let suffix = format!("{}{branch}", super::git::BRANCH_SEPARATOR);
             let suffix_px = measure(&suffix);
             if suffix_px < available_text_px * BRANCH_SUFFIX_MAX_SHARE {
-                let fitted_base = Self::fit_label(base, available_text_px - suffix_px, measure);
+                let fitted_base = Self::format_tab_label_for_render_measured(
+                    base,
+                    available_text_px - suffix_px,
+                    measure,
+                );
                 if !fitted_base.is_empty() {
                     return fitted_base + &suffix;
                 }
             }
-            // 后缀太长或标题一点也放不下：整体按普通文字截断，不做路径压缩。
-            plain_only = true;
+            // 后缀太长或标题一点也放不下：整体按普通文字尾部截断，不做路径压缩。
+            return Self::search_fit(&chars, available_text_px, measure, &|n| {
+                Self::end_truncated_tab_label_for_preserved_chars(&chars, n)
+            });
         }
 
-        let mut measure_text_px = |text: &str| measure(text);
-        if plain_only || !Self::is_path_like_tab_title(title) {
-            let chars: Vec<char> = title.chars().collect();
-            if chars.is_empty() {
-                return String::new();
-            }
-
-            let mut low = 0usize;
-            let mut high = chars.len();
-            while low < high {
-                let mid = (low + high).div_ceil(2);
-                let candidate = Self::end_truncated_tab_label_for_preserved_chars(&chars, mid);
-                if measure_text_px(candidate.as_str()) <= available_text_px {
-                    low = mid;
-                } else {
-                    high = mid.saturating_sub(1);
-                }
-            }
-
-            let fitted = Self::end_truncated_tab_label_for_preserved_chars(&chars, low);
-            if measure_text_px(fitted.as_str()) <= available_text_px {
-                return fitted;
-            }
-
-            return Self::fitting_dots_for_width(available_text_px, &mut measure_text_px);
-        }
-
-        let chars: Vec<char> = title.chars().collect();
-        if chars.is_empty() {
-            return String::new();
-        }
-        let basename_len = chars
-            .iter()
-            .rposition(|ch| *ch == '/' || *ch == '\\')
-            .map_or(chars.len(), |index| chars.len().saturating_sub(index + 1));
-        let candidate_for = |preserved_chars: usize| {
-            Self::squeezed_path_tab_label_for_preserved_chars(&chars, basename_len, preserved_chars)
-        };
-
-        let mut low = 0usize;
-        let mut high = chars.len();
-        while low < high {
-            let mid = (low + high).div_ceil(2);
-            let candidate = candidate_for(mid);
-            if measure_text_px(candidate.as_str()) <= available_text_px {
-                low = mid;
-            } else {
-                high = mid.saturating_sub(1);
-            }
-        }
-
-        let fitted = candidate_for(low);
-        if measure_text_px(fitted.as_str()) <= available_text_px {
-            fitted
+        if Self::is_path_like_tab_title(title) {
+            let basename_len = chars
+                .iter()
+                .rposition(|ch| *ch == '/' || *ch == '\\')
+                .map_or(chars.len(), |index| chars.len() - index - 1);
+            Self::search_fit(&chars, available_text_px, measure, &|n| {
+                Self::squeezed_path_tab_label_for_preserved_chars(&chars, basename_len, n)
+            })
         } else {
-            Self::fitting_dots_for_width(available_text_px, &mut measure_text_px)
+            Self::search_fit(&chars, available_text_px, measure, &|n| {
+                Self::middle_squeezed_tab_label_for_preserved_chars(&chars, n)
+            })
         }
     }
 }
@@ -257,7 +240,11 @@ mod tests {
         let width = synthetic_text_width(title);
 
         assert_eq!(
-            TerminalView::format_tab_label_for_render_measured(title, width, synthetic_text_width),
+            TerminalView::format_tab_label_for_render_measured(
+                title,
+                width,
+                &mut synthetic_text_width
+            ),
             title
         );
     }
@@ -269,7 +256,7 @@ mod tests {
         let formatted = TerminalView::format_tab_label_for_render_measured(
             title,
             available,
-            synthetic_text_width,
+            &mut synthetic_text_width,
         );
 
         assert!(formatted.contains("..."));
@@ -285,7 +272,7 @@ mod tests {
             TerminalView::format_tab_label_for_render_measured(
                 title,
                 synthetic_text_width("..."),
-                synthetic_text_width,
+                &mut synthetic_text_width,
             ),
             "..."
         );
@@ -293,27 +280,75 @@ mod tests {
             TerminalView::format_tab_label_for_render_measured(
                 title,
                 synthetic_text_width(".."),
-                synthetic_text_width,
+                &mut synthetic_text_width,
             ),
             ".."
         );
         assert_eq!(
-            TerminalView::format_tab_label_for_render_measured(title, 0.0, synthetic_text_width),
+            TerminalView::format_tab_label_for_render_measured(
+                title,
+                0.0,
+                &mut synthetic_text_width
+            ),
             ""
         );
     }
 
+    /// CJK 按 2 列、其余 1 列的宽度估算，与窗格标题的量字方式一致。
+    fn column_width(text: &str) -> f32 {
+        unicode_width::UnicodeWidthStr::width(text) as f32
+    }
+
     #[test]
-    fn measured_tab_title_fit_end_truncates_non_path_titles() {
+    fn measured_tab_title_fit_middle_squeezes_non_path_titles() {
         let title = "cargo test --workspace --all-features";
-        assert_eq!(
-            TerminalView::format_tab_label_for_render_measured(
-                title,
-                synthetic_text_width("cargo test..."),
-                synthetic_text_width,
-            ),
-            "cargo test..."
+        let formatted = TerminalView::format_tab_label_for_render_measured(
+            title,
+            column_width("cargo ...atures"),
+            &mut column_width,
         );
+        assert_eq!(formatted, "cargo ...atures");
+    }
+
+    #[test]
+    fn measured_tab_title_fit_middle_squeezes_cjk_titles_by_columns() {
+        // 总宽 20 列放进 11 列：保留 4 个全角字符（8 列）加 3 列省略号。
+        let title = "修复登录页面偶发闪屏问题";
+        let formatted = TerminalView::format_tab_label_for_render_measured(
+            title,
+            column_width("修复...问题"),
+            &mut column_width,
+        );
+        assert_eq!(formatted, "修复...问题");
+        let mixed = TerminalView::format_tab_label_for_render_measured(
+            "Bingo主站H5首页改版需求",
+            12.0,
+            &mut column_width,
+        );
+        assert!(mixed.starts_with("Bi") && mixed.contains("...") && mixed.ends_with("需求"));
+        assert!(column_width(&mixed) <= 12.0, "{mixed}");
+    }
+
+    #[test]
+    fn measured_tab_title_fit_non_path_dots_for_tiny_widths() {
+        let title = "plain title that is long";
+        assert_eq!(
+            TerminalView::format_tab_label_for_render_measured(title, 3.0, &mut column_width),
+            "..."
+        );
+        assert_eq!(
+            TerminalView::format_tab_label_for_render_measured(title, 2.0, &mut column_width),
+            ".."
+        );
+    }
+
+    #[test]
+    fn measured_tab_title_fit_keeps_branch_suffix_with_middle_squeezed_plain_title() {
+        let title = "修复登录页面偶发闪屏问题🔱main";
+        let available = column_width("修复...问题🔱main");
+        let formatted =
+            TerminalView::format_tab_label_for_render_measured(title, available, &mut column_width);
+        assert_eq!(formatted, "修复...问题🔱main");
     }
 
     #[test]
@@ -323,7 +358,7 @@ mod tests {
         let formatted = TerminalView::format_tab_label_for_render_measured(
             title,
             available,
-            synthetic_text_width,
+            &mut synthetic_text_width,
         );
 
         assert!(formatted.ends_with("docs🔱feature/x"), "{formatted}");
@@ -338,7 +373,7 @@ mod tests {
         let formatted = TerminalView::format_tab_label_for_render_measured(
             title,
             available,
-            synthetic_text_width,
+            &mut synthetic_text_width,
         );
 
         assert!(formatted.starts_with("repo🔱"), "{formatted}");
@@ -353,7 +388,7 @@ mod tests {
         let formatted = TerminalView::format_tab_label_for_render_measured(
             title,
             available,
-            synthetic_text_width,
+            &mut synthetic_text_width,
         );
 
         assert!(synthetic_text_width(&formatted) <= available);

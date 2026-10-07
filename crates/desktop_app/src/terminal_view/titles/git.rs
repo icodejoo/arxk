@@ -177,6 +177,8 @@ struct HeadOutcome {
     changed: HashSet<String>,
     /// 探测期间又来了新事件，需要再探测一次。
     rerun: bool,
+    /// 目录仍在，已幂等地重挂了一次监听（旧监听可能随目录被删除重建而失效）。
+    rewatched: bool,
 }
 
 /// 某个 git 目录的 HEAD 探测状态。
@@ -325,14 +327,26 @@ impl ViewGitWatcher {
                 resolved_at: now,
             },
         );
-        if let Some(dir) = result.dir
-            && !self.watched.contains_key(&dir)
-        {
-            match self.watcher.watch(&dir, RecursiveMode::NonRecursive) {
-                Ok(()) => {
-                    self.watched.insert(dir, result.head);
+        if let Some(dir) = result.dir {
+            if self.watched.contains_key(&dir) {
+                // 解析又落到同一目录：它可能被删除后立刻重建（HEAD 没变也一样），
+                // 旧监听会悄悄失效，所以幂等地重挂一次，并采用这次读到的最新 HEAD。
+                if self.rewatch(&dir) {
+                    if let Some(head) = result.head
+                        && let Some(slot) = self.watched.get_mut(&dir)
+                    {
+                        *slot = Some(head);
+                    }
+                } else {
+                    self.watched.remove(&dir);
                 }
-                Err(error) => log::warn!("Failed to watch git dir {}: {error}", dir.display()),
+            } else {
+                match self.watcher.watch(&dir, RecursiveMode::NonRecursive) {
+                    Ok(()) => {
+                        self.watched.insert(dir, result.head);
+                    }
+                    Err(error) => log::warn!("Failed to watch git dir {}: {error}", dir.display()),
+                }
             }
         }
         // 旧仓库可能已无人引用。
@@ -342,6 +356,18 @@ impl ViewGitWatcher {
             HashSet::new()
         } else {
             HashSet::from([result.cwd])
+        }
+    }
+
+    /// 幂等地重挂某个 git 目录的监听（先卸后挂）；成功返回 true，失败记日志返回 false。
+    fn rewatch(&mut self, dir: &Path) -> bool {
+        let _ = self.watcher.unwatch(dir);
+        match self.watcher.watch(dir, RecursiveMode::NonRecursive) {
+            Ok(()) => true,
+            Err(error) => {
+                log::warn!("Failed to rewatch git dir {}: {error}", dir.display());
+                false
+            }
         }
     }
 
@@ -372,14 +398,14 @@ impl ViewGitWatcher {
             .collect()
     }
 
-    /// 处理一次 HEAD 探测结果：目录消失才释放监听并作废指向它的 cwd 缓存；
-    /// 目录还在时只在 HEAD 变了才更新，不重挂监听。
+    /// 处理一次 HEAD 探测结果：目录消失（或重挂失败）就释放监听并作废指向它的 cwd 缓存；
+    /// 目录还在时先幂等重挂一次监听（应对删除后立刻重建、HEAD 没变的情况），再在 HEAD 变了时更新。
     fn apply_head_probe(&mut self, probe: HeadProbe) -> HeadOutcome {
         let rerun = self.head_probes.remove(&probe.dir) == Some(ProbeState::Dirty);
         if !self.watched.contains_key(&probe.dir) {
             return HeadOutcome::default();
         }
-        if !probe.exists {
+        if !probe.exists || !self.rewatch(&probe.dir) {
             let _ = self.watcher.unwatch(&probe.dir);
             self.watched.remove(&probe.dir);
             let changed = self.cwds_in(&probe.dir);
@@ -387,7 +413,7 @@ impl ViewGitWatcher {
                 .retain(|_, entry| entry.dir.as_ref() != Some(&probe.dir));
             return HeadOutcome {
                 changed,
-                rerun: false,
+                ..HeadOutcome::default()
             };
         }
         let mut changed = HashSet::new();
@@ -397,7 +423,11 @@ impl ViewGitWatcher {
             *slot = probe.head;
             changed = self.cwds_in(&probe.dir);
         }
-        HeadOutcome { changed, rerun }
+        HeadOutcome {
+            changed,
+            rerun,
+            rewatched: true,
+        }
     }
 
     /// 某个 cwd 当前所在的分支名（或短 hash）；非 git 目录、尚未解析或无法确定分支返回 None。
@@ -407,55 +437,80 @@ impl ViewGitWatcher {
     }
 }
 
+/// 视图的 git 监听三态：未创建、创建失败（不再重试）、可用。
+pub(crate) enum GitWatch {
+    /// 还没创建；首次收到窗格 cwd 时才创建。
+    Uninit,
+    /// 创建失败过：已记日志，之后不再重试，分支后缀不显示。
+    Unavailable,
+    /// 监听器可用。
+    Ready(Box<ViewGitWatcher>),
+}
+
+impl GitWatch {
+    /// 可用时返回监听器的可变引用。
+    fn ready_mut(&mut self) -> Option<&mut ViewGitWatcher> {
+        match self {
+            Self::Ready(watcher) => Some(&mut **watcher),
+            _ => None,
+        }
+    }
+}
+
 impl TerminalView {
     /// 某个窗格 cwd 所在的分支（缓存查询，可在渲染路径调用）；无 git 或未监听返回 None。
     pub(crate) fn branch_for_pane_cwd(&self, cwd: &str) -> Option<&str> {
-        self.git_watcher.as_ref()?.branch_for(cwd)
+        match &self.git_watch {
+            GitWatch::Ready(watcher) => watcher.branch_for(cwd),
+            _ => None,
+        }
     }
 
     /// 某个窗格的 git 监听是否需要重新对齐：监听器还没建、或该窗格 cwd 的仓库缓存过期且无在途解析。
     /// 监听器创建失败过则恒为 false，避免每个提示符都重试。只读缓存，不碰磁盘。
     pub(crate) fn git_watch_needs_sync(&self, pane_id: &str) -> bool {
-        if self.git_watch_unavailable {
-            return false;
-        }
-        match (&self.git_watcher, self.pane_cwds.get(pane_id)) {
-            (None, _) => true,
-            (Some(watcher), Some(cwd)) => watcher.is_stale(cwd, Instant::now()),
-            (Some(_), None) => false,
+        match (&self.git_watch, self.pane_cwd(pane_id)) {
+            (GitWatch::Unavailable, _) => false,
+            (GitWatch::Uninit, _) => true,
+            (GitWatch::Ready(watcher), Some(cwd)) => watcher.is_stale(cwd, Instant::now()),
+            (GitWatch::Ready(_), None) => false,
         }
     }
 
     /// 对齐 git 监听（首次调用时创建 watcher 与后台防抖任务），并为缺失/过期的 cwd 发起后台解析。
     /// 监听范围是所有存活窗格已知的 cwd；创建 watcher 失败后不再重试。本函数不做磁盘读取。
     pub(crate) fn sync_git_watch(&mut self, cx: &mut Context<Self>) {
-        if self.git_watch_unavailable {
+        if matches!(self.git_watch, GitWatch::Unavailable) {
             return;
         }
         let live = self.session.live_pane_ids();
-        // 还没有任何窗格上报过目录时不必创建系统监听器。
-        if self.git_watcher.is_none() && !self.pane_cwds.keys().any(|id| live.contains(id.as_str()))
-        {
-            return;
-        }
-        let mut watcher = if let Some(watcher) = self.git_watcher.take() {
-            watcher
-        } else {
-            let Some((watcher, rx)) = ViewGitWatcher::new() else {
-                self.git_watch_unavailable = true;
+        if matches!(self.git_watch, GitWatch::Uninit) {
+            // 还没有任何窗格上报过目录时不必创建系统监听器。
+            if !self
+                .pane_meta
+                .iter()
+                .any(|(id, meta)| meta.cwd.is_some() && live.contains(id.as_str()))
+            {
                 return;
-            };
-            Self::spawn_git_debounce(rx, cx);
-            watcher
+            }
+            if let Some((watcher, rx)) = ViewGitWatcher::new() {
+                Self::spawn_git_debounce(rx, cx);
+                self.git_watch = GitWatch::Ready(Box::new(watcher));
+            } else {
+                self.git_watch = GitWatch::Unavailable;
+                return;
+            }
+        }
+        let Some(watcher) = self.git_watch.ready_mut() else {
+            return;
         };
         let requests = watcher.sync(
-            self.pane_cwds
+            self.pane_meta
                 .iter()
                 .filter(|(id, _)| live.contains(id.as_str()))
-                .map(|(_, cwd)| cwd.as_str()),
+                .filter_map(|(_, meta)| meta.cwd.as_deref()),
             Instant::now(),
         );
-        self.git_watcher = Some(watcher);
         for request in requests {
             Self::spawn_git_resolve(request, cx);
         }
@@ -471,8 +526,8 @@ impl TerminalView {
             let _ = cx.update(|cx| {
                 this.update(cx, |view, cx| {
                     let changed = view
-                        .git_watcher
-                        .as_mut()
+                        .git_watch
+                        .ready_mut()
                         .map(|w| w.apply_resolved(result, Instant::now()))
                         .unwrap_or_default();
                     view.finish_git_change(&changed, cx);
@@ -491,7 +546,7 @@ impl TerminalView {
                 .await;
             let _ = cx.update(|cx| {
                 this.update(cx, |view, cx| {
-                    let Some(watcher) = view.git_watcher.as_mut() else {
+                    let Some(watcher) = view.git_watch.ready_mut() else {
                         return;
                     };
                     let dir = probe.dir.clone();
@@ -530,7 +585,7 @@ impl TerminalView {
                 let alive = cx
                     .update(|cx| {
                         this.update(cx, |view, cx| {
-                            let Some(watcher) = view.git_watcher.as_mut() else {
+                            let Some(watcher) = view.git_watch.ready_mut() else {
                                 return;
                             };
                             for dir in changed {
@@ -808,12 +863,45 @@ mod tests {
     }
 
     #[test]
+    fn recreated_git_dir_with_same_head_is_rewatched_on_probe() {
+        let (tmp, git, cwd) = temp_repo("main");
+        let (mut w, _rx) = ViewGitWatcher::new().unwrap();
+        settle(&mut w, [cwd.as_str()], Instant::now());
+        // 目录在探测前就被删除并重建，HEAD 内容不变：旧监听失效但没人知道。
+        fs::remove_dir_all(&git).unwrap();
+        fs::create_dir(tmp.path().join(".git")).unwrap();
+        fs::write(git.join(HEAD_FILE), "ref: refs/heads/main\n").unwrap();
+        let outcome = probe_now(&mut w, &git);
+        assert!(outcome.rewatched);
+        assert!(outcome.changed.is_empty());
+        assert!(w.watched.contains_key(&git));
+        assert_eq!(w.branch_for(&cwd), Some("main"));
+    }
+
+    #[test]
+    fn resolving_same_dir_again_rewatches_and_adopts_fresh_head() {
+        let (tmp, git, cwd) = temp_repo("main");
+        let (mut w, _rx) = ViewGitWatcher::new().unwrap();
+        let now = Instant::now();
+        settle(&mut w, [cwd.as_str()], now);
+        // 缓存过期后重新解析到同一目录（期间 .git 被删除重建，分支也变了）。
+        fs::remove_dir_all(&git).unwrap();
+        fs::create_dir(tmp.path().join(".git")).unwrap();
+        fs::write(git.join(HEAD_FILE), "ref: refs/heads/other\n").unwrap();
+        let changed = settle(&mut w, [cwd.as_str()], now + CWD_CACHE_TTL);
+        assert_eq!(changed, HashSet::from([cwd.clone()]));
+        assert!(w.watched.contains_key(&git));
+        assert_eq!(w.branch_for(&cwd), Some("other"));
+    }
+
+    #[test]
     fn unchanged_head_reports_nothing_and_keeps_watch() {
         let (_tmp, git, cwd) = temp_repo("main");
         let (mut w, _rx) = ViewGitWatcher::new().unwrap();
         settle(&mut w, [cwd.as_str()], Instant::now());
         let outcome = probe_now(&mut w, &git);
         assert!(outcome.changed.is_empty() && !outcome.rerun);
+        assert!(outcome.rewatched);
         assert!(w.watched.contains_key(&git));
         assert_eq!(w.branch_for(&cwd), Some("main"));
     }

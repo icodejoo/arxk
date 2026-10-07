@@ -1701,11 +1701,9 @@ impl TerminalView {
             self.notify_overlay(cx);
             return false;
         };
-        let current = self
-            .pane_manual_titles
-            .get(pane_id.as_str())
-            .cloned()
-            .unwrap_or_default();
+        let current = Self::resolve_pane_title(&self.pane_meta, pane_id.as_str())
+            .unwrap_or_default()
+            .to_string();
         self.command_palette.set_pane_rename_target(Some(pane_id));
         self.open_command_palette_in_mode(CommandPaletteMode::PaneRename, cx);
         if self.command_palette.mode() != CommandPaletteMode::PaneRename {

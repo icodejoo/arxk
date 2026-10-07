@@ -1,11 +1,8 @@
 use super::*;
 
-/// 把输入解析成有限的 `f32`；格式错误或 NaN / inf 一律返回 `Err(())`。
-fn parse_finite_f32(text: &str) -> Result<f32, ()> {
-    text.parse::<f32>()
-        .ok()
-        .filter(|number| number.is_finite())
-        .ok_or(())
+/// 把输入解析成有限的 `f32`；格式错误或 NaN / inf 一律返回 `None`。
+fn parse_finite_f32(text: &str) -> Option<f32> {
+    text.parse::<f32>().ok().filter(|number| number.is_finite())
 }
 
 impl SettingsWindow {
@@ -141,7 +138,7 @@ impl SettingsWindow {
                 Ok(())
             }
             EditableField::BackgroundOpacity => {
-                let parsed = parse_finite_f32(value.trim_end_matches('%')).map_err(|_| {
+                let parsed = parse_finite_f32(value.trim_end_matches('%')).ok_or_else(|| {
                     t!("Background opacity must be a number from 0 to 100").to_string()
                 })?;
                 let opacity = (parsed / 100.0).clamp(0.0, 1.0);
@@ -183,7 +180,7 @@ impl SettingsWindow {
             }
             EditableField::FontSize => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Font size must be a positive number").to_string())?;
+                    .ok_or_else(|| t!("Font size must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Font size must be greater than 0").to_string());
                 }
@@ -195,7 +192,7 @@ impl SettingsWindow {
             }
             EditableField::LineHeight => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Line height must be a number").to_string())?;
+                    .ok_or_else(|| t!("Line height must be a number").to_string())?;
                 if !(termy_core::config_core::MIN_LINE_HEIGHT
                     ..=termy_core::config_core::MAX_LINE_HEIGHT)
                     .contains(&parsed)
@@ -215,7 +212,7 @@ impl SettingsWindow {
             }
             EditableField::PaddingX => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Horizontal padding must be a number").to_string())?;
+                    .ok_or_else(|| t!("Horizontal padding must be a number").to_string())?;
                 if parsed < 0.0 {
                     return Err(t!("Horizontal padding cannot be negative").to_string());
                 }
@@ -227,7 +224,7 @@ impl SettingsWindow {
             }
             EditableField::PaddingY => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Vertical padding must be a number").to_string())?;
+                    .ok_or_else(|| t!("Vertical padding must be a number").to_string())?;
                 if parsed < 0.0 {
                     return Err(t!("Vertical padding cannot be negative").to_string());
                 }
@@ -360,7 +357,7 @@ impl SettingsWindow {
             }
             EditableField::ScrollMultiplier => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Scroll multiplier must be a number").to_string())?;
+                    .ok_or_else(|| t!("Scroll multiplier must be a number").to_string())?;
                 let parsed = parsed.clamp(0.1, 1000.0);
                 self.config.mouse_scroll_multiplier = parsed;
                 config::set_root_setting(
@@ -462,12 +459,8 @@ impl SettingsWindow {
                 }
                 let has_percent_suffix = value.ends_with('%');
                 let normalized_input = value.trim_end_matches('%').trim();
-                let parsed = normalized_input
-                    .parse::<f32>()
-                    .map_err(|_| t!("Pane focus strength must be a finite number").to_string())?;
-                if !parsed.is_finite() {
-                    return Err(t!("Pane focus strength must be a finite number").to_string());
-                }
+                let parsed = parse_finite_f32(normalized_input)
+                    .ok_or_else(|| t!("Pane focus strength must be a finite number").to_string())?;
                 let normalized = if has_percent_suffix {
                     parsed / 100.0
                 } else {
@@ -650,7 +643,7 @@ impl SettingsWindow {
             }
             EditableField::SidebarWidth => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Sidebar width must be a positive number").to_string())?;
+                    .ok_or_else(|| t!("Sidebar width must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Sidebar width must be greater than 0").to_string());
                 }
@@ -707,7 +700,7 @@ impl SettingsWindow {
             }
             EditableField::WindowWidth => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Default width must be a positive number").to_string())?;
+                    .ok_or_else(|| t!("Default width must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Default width must be greater than 0").to_string());
                 }
@@ -719,7 +712,7 @@ impl SettingsWindow {
             }
             EditableField::WindowHeight => {
                 let parsed = parse_finite_f32(value)
-                    .map_err(|_| t!("Default height must be a positive number").to_string())?;
+                    .ok_or_else(|| t!("Default height must be a positive number").to_string())?;
                 if parsed <= 0.0 {
                     return Err(t!("Default height must be greater than 0").to_string());
                 }
