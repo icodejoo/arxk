@@ -1,7 +1,9 @@
 name: CI
 
-# 唯一的 CI：全量测试与三平台构建并行跑，只有构建成功才发布 GitHub Release；
-# 测试失败会让整个工作流变红，但不拦截发布。
+# 唯一的 CI：三平台构建，成功后发布 GitHub Release。
+# 全量测试默认不跑，需要时开启（跑起来与构建并行，失败会让工作流变红，但不拦截发布）：
+#   - 手动触发：勾选 run_tests；
+#   - 推 tag：tag 指向的提交信息里含 [test]。
 # fork 专用发布流程：不依赖 Apple 签名/公证 secrets，macOS 产出未签名 DMG。
 # 版本号唯一来源是 crates/desktop_app/Cargo.toml 的 version：
 #   应用内显示、安装包文件名、Git tag（v + 版本号）都由它派生，不再手填。
@@ -13,6 +15,11 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      run_tests:
+        description: "同时跑全量测试（大改动勾选；小改动不跑）"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -81,6 +88,10 @@ jobs:
 
   test:
     name: Workspace tests
+    # 开关：手动触发勾选 run_tests，或 tag 指向的提交信息含 [test]。
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.run_tests) ||
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[test]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
