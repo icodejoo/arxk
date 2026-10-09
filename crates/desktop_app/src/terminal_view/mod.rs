@@ -3612,7 +3612,8 @@ impl TerminalView {
             }
         })
         .detach();
-        cx.on_blur(&blur_focus_handle, window, |view, _window, cx| {
+        cx.on_blur(&blur_focus_handle, window, |view, window, cx| {
+            crate::system_caret::sync_system_caret(window, None);
             let released_mouse_presses = view.release_all_forwarded_mouse_presses();
             let released_keyboard_modifiers = view.release_forwarded_modifiers(cx);
             let cleared_tab_switch_hint_state = view.tab_strip.switch_hints.reset_hold_state();

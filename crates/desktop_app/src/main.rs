@@ -29,6 +29,7 @@ mod multiplexer;
 mod settings_view;
 mod ssh;
 mod startup;
+mod system_caret;
 mod terminal_view;
 mod text_editing;
 mod text_input;

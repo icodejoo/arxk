@@ -320,6 +320,11 @@ impl<V: TextInputProvider + gpui_kit::Render + EntityInputHandler> IntoElement
                     ElementInputHandler::new(bounds, view.clone()),
                     cx,
                 );
+                crate::system_caret::report_caret(
+                    window,
+                    &focus_handle,
+                    prepaint.cursor.as_ref().map(|quad| quad.bounds),
+                );
                 let painted_lines = window.with_content_mask(
                     Some(ContentMask {
                         bounds: prepaint.content_bounds,

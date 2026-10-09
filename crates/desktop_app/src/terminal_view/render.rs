@@ -3986,6 +3986,8 @@ impl Render for TerminalView {
                         ElementInputHandler::new(bounds, ime_view.clone()),
                         cx,
                     );
+                    let caret = ime_view.read(cx).system_caret_bounds(bounds);
+                    crate::system_caret::report_caret(window, &ime_focus_handle, caret);
                 }
             },
         )
@@ -4119,6 +4121,11 @@ impl Render for TerminalView {
                 div()
                     .id("terminal")
                     .track_focus(&focus_handle)
+                    // 以可写文本框（UIA Edit + 可写 ValuePattern）暴露终端，语音输入等工具据此判定可键入；
+                    // Role::Terminal 在 accesskit 里是只读 Document，会被判为不确定
+                    .role(gpui_kit::Role::MultilineTextInput)
+                    .aria_value("")
+                    .aria_label(t!("Terminal"))
                     .key_context(key_context)
                     .on_action(cx.listener(Self::handle_toggle_command_palette_action))
                     .on_action(cx.listener(Self::handle_import_colors_action))

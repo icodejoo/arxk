@@ -890,6 +890,11 @@ impl IntoElement for InlineInputElement {
                     ElementInputHandler::new(bounds, view.clone()),
                     cx,
                 );
+                crate::system_caret::report_caret(
+                    window,
+                    &focus_handle,
+                    prepaint.cursor.as_ref().map(|quad| quad.bounds),
+                );
 
                 // Collect layout data before painting (avoid borrow issues)
                 let num_lines = prepaint.lines.len();
@@ -1378,6 +1383,20 @@ impl TerminalView {
 }
 
 impl TerminalView {
+    /// 终端主输入的系统光标矩形（窗口逻辑像素），无光标时为 None。
+    pub(super) fn system_caret_bounds(
+        &self,
+        element_bounds: Bounds<Pixels>,
+    ) -> Option<Bounds<Pixels>> {
+        let cursor = self.ime_cursor_bounds()?;
+        let cell_width: f32 = self
+            .active_pane_ref()
+            .map(TerminalPane::terminal)
+            .map(|terminal| terminal.size().cell_width)
+            .unwrap_or_default();
+        Some(ime_candidate_bounds(cursor, element_bounds, 0, cell_width))
+    }
+
     pub(super) fn ime_cursor_bounds(&self) -> Option<Bounds<Pixels>> {
         let geometry = self.terminal_viewport_geometry()?;
         let pane = self.active_pane_ref()?;
